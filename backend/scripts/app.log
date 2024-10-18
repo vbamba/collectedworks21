@@ -1,0 +1,1046 @@
+2024-10-15 21:59:40,590 [INFO] Loading SentenceTransformer model...
+2024-10-15 21:59:40,627 [INFO] Use pytorch device_name: mps
+2024-10-15 21:59:40,627 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 21:59:43,188 [INFO] Model loaded.
+2024-10-15 21:59:43,188 [INFO] Loading FAISS index...
+2024-10-15 21:59:43,239 [INFO] FAISS index loaded successfully.
+2024-10-15 21:59:43,240 [INFO] Loading metadata...
+2024-10-15 21:59:43,644 [INFO] Metadata loaded successfully.
+2024-10-15 21:59:43,644 [INFO] Loading book mapping...
+2024-10-15 21:59:43,645 [INFO] Book mapping loaded successfully.
+2024-10-15 21:59:43,647 [INFO] Starting Flask server...
+2024-10-15 21:59:43,674 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-15 21:59:43,675 [INFO] [33mPress CTRL+C to quit[0m
+2024-10-15 21:59:43,676 [INFO]  * Restarting with stat
+2024-10-15 21:59:45,786 [INFO] Loading SentenceTransformer model...
+2024-10-15 21:59:45,794 [INFO] Use pytorch device_name: mps
+2024-10-15 21:59:45,794 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 21:59:47,244 [INFO] Model loaded.
+2024-10-15 21:59:47,245 [INFO] Loading FAISS index...
+2024-10-15 21:59:47,270 [INFO] FAISS index loaded successfully.
+2024-10-15 21:59:47,270 [INFO] Loading metadata...
+2024-10-15 21:59:47,632 [INFO] Metadata loaded successfully.
+2024-10-15 21:59:47,632 [INFO] Loading book mapping...
+2024-10-15 21:59:47,632 [INFO] Book mapping loaded successfully.
+2024-10-15 21:59:47,637 [INFO] Starting Flask server...
+2024-10-15 21:59:48,032 [WARNING]  * Debugger is active!
+2024-10-15 21:59:48,080 [INFO]  * Debugger PIN: 290-641-126
+2024-10-15 21:59:48,104 [INFO] Received request for filters.
+2024-10-15 21:59:48,105 [INFO] Received request for filters.
+2024-10-15 21:59:48,105 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,105 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,106 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:48,107 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:48,272 [INFO] Received request for filters.
+2024-10-15 21:59:48,272 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,272 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:48,397 [INFO] Received request for filters.
+2024-10-15 21:59:48,399 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,400 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:48,604 [INFO] Received request for filters.
+2024-10-15 21:59:48,604 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,606 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:48,813 [INFO] Received request for filters.
+2024-10-15 21:59:48,814 [INFO] Filters generated successfully.
+2024-10-15 21:59:48,814 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:48] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:49,019 [INFO] Received request for filters.
+2024-10-15 21:59:49,020 [INFO] Filters generated successfully.
+2024-10-15 21:59:49,020 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:49] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:49,236 [INFO] Received request for filters.
+2024-10-15 21:59:49,237 [INFO] Filters generated successfully.
+2024-10-15 21:59:49,237 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:49] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:49,444 [INFO] Received request for filters.
+2024-10-15 21:59:49,444 [INFO] Filters generated successfully.
+2024-10-15 21:59:49,445 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:49] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:49,656 [INFO] Received request for filters.
+2024-10-15 21:59:49,657 [INFO] Filters generated successfully.
+2024-10-15 21:59:49,658 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:49] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:49,845 [INFO] Received request for filters.
+2024-10-15 21:59:49,846 [INFO] Filters generated successfully.
+2024-10-15 21:59:49,846 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:49] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:50,052 [INFO] Received request for filters.
+2024-10-15 21:59:50,052 [INFO] Filters generated successfully.
+2024-10-15 21:59:50,053 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:50] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:50,258 [INFO] Received request for filters.
+2024-10-15 21:59:50,258 [INFO] Filters generated successfully.
+2024-10-15 21:59:50,260 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:50] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:50,460 [INFO] Received request for filters.
+2024-10-15 21:59:50,461 [INFO] Filters generated successfully.
+2024-10-15 21:59:50,461 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:50] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:50,669 [INFO] Received request for filters.
+2024-10-15 21:59:50,671 [INFO] Filters generated successfully.
+2024-10-15 21:59:50,671 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:50] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:50,887 [INFO] Received request for filters.
+2024-10-15 21:59:50,887 [INFO] Filters generated successfully.
+2024-10-15 21:59:50,888 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:50] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:51,090 [INFO] Received request for filters.
+2024-10-15 21:59:51,090 [INFO] Filters generated successfully.
+2024-10-15 21:59:51,091 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:51] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:51,298 [INFO] Received request for filters.
+2024-10-15 21:59:51,298 [INFO] Filters generated successfully.
+2024-10-15 21:59:51,299 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:51] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:51,506 [INFO] Received request for filters.
+2024-10-15 21:59:51,506 [INFO] Filters generated successfully.
+2024-10-15 21:59:51,506 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:51] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:51,713 [INFO] Received request for filters.
+2024-10-15 21:59:51,713 [INFO] Filters generated successfully.
+2024-10-15 21:59:51,714 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:51] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:51,925 [INFO] Received request for filters.
+2024-10-15 21:59:51,925 [INFO] Filters generated successfully.
+2024-10-15 21:59:51,926 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:51] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:52,129 [INFO] Received request for filters.
+2024-10-15 21:59:52,130 [INFO] Filters generated successfully.
+2024-10-15 21:59:52,130 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:52] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:52,329 [INFO] Received request for filters.
+2024-10-15 21:59:52,329 [INFO] Filters generated successfully.
+2024-10-15 21:59:52,330 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:52] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:52,543 [INFO] Received request for filters.
+2024-10-15 21:59:52,544 [INFO] Filters generated successfully.
+2024-10-15 21:59:52,544 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:52] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:52,753 [INFO] Received request for filters.
+2024-10-15 21:59:52,753 [INFO] Filters generated successfully.
+2024-10-15 21:59:52,753 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:52] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:52,953 [INFO] Received request for filters.
+2024-10-15 21:59:52,953 [INFO] Filters generated successfully.
+2024-10-15 21:59:52,954 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:52] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:53,161 [INFO] Received request for filters.
+2024-10-15 21:59:53,161 [INFO] Filters generated successfully.
+2024-10-15 21:59:53,162 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:53] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:53,366 [INFO] Received request for filters.
+2024-10-15 21:59:53,366 [INFO] Filters generated successfully.
+2024-10-15 21:59:53,367 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:53] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:53,573 [INFO] Received request for filters.
+2024-10-15 21:59:53,574 [INFO] Filters generated successfully.
+2024-10-15 21:59:53,575 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:53] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:53,788 [INFO] Received request for filters.
+2024-10-15 21:59:53,788 [INFO] Filters generated successfully.
+2024-10-15 21:59:53,789 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:53] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:53,992 [INFO] Received request for filters.
+2024-10-15 21:59:53,992 [INFO] Filters generated successfully.
+2024-10-15 21:59:53,992 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:53] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:54,188 [INFO] Received request for filters.
+2024-10-15 21:59:54,189 [INFO] Filters generated successfully.
+2024-10-15 21:59:54,189 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:54] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:54,392 [INFO] Received request for filters.
+2024-10-15 21:59:54,392 [INFO] Filters generated successfully.
+2024-10-15 21:59:54,393 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:54] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:54,602 [INFO] Received request for filters.
+2024-10-15 21:59:54,603 [INFO] Filters generated successfully.
+2024-10-15 21:59:54,603 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:54] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:54,812 [INFO] Received request for filters.
+2024-10-15 21:59:54,812 [INFO] Filters generated successfully.
+2024-10-15 21:59:54,813 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:54] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:55,032 [INFO] Received request for filters.
+2024-10-15 21:59:55,036 [INFO] Filters generated successfully.
+2024-10-15 21:59:55,037 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:55] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:55,228 [INFO] Received request for filters.
+2024-10-15 21:59:55,228 [INFO] Filters generated successfully.
+2024-10-15 21:59:55,228 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:55] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:55,430 [INFO] Received request for filters.
+2024-10-15 21:59:55,431 [INFO] Filters generated successfully.
+2024-10-15 21:59:55,431 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:55] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:55,640 [INFO] Received request for filters.
+2024-10-15 21:59:55,640 [INFO] Filters generated successfully.
+2024-10-15 21:59:55,641 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:55] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:55,835 [INFO] Received request for filters.
+2024-10-15 21:59:55,835 [INFO] Filters generated successfully.
+2024-10-15 21:59:55,836 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:55] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:56,047 [INFO] Received request for filters.
+2024-10-15 21:59:56,047 [INFO] Filters generated successfully.
+2024-10-15 21:59:56,048 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:56] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:56,255 [INFO] Received request for filters.
+2024-10-15 21:59:56,255 [INFO] Filters generated successfully.
+2024-10-15 21:59:56,256 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:56] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:56,450 [INFO] Received request for filters.
+2024-10-15 21:59:56,451 [INFO] Filters generated successfully.
+2024-10-15 21:59:56,452 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:56] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:56,664 [INFO] Received request for filters.
+2024-10-15 21:59:56,665 [INFO] Filters generated successfully.
+2024-10-15 21:59:56,666 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:56] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:56,871 [INFO] Received request for filters.
+2024-10-15 21:59:56,872 [INFO] Filters generated successfully.
+2024-10-15 21:59:56,873 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:56] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:57,079 [INFO] Received request for filters.
+2024-10-15 21:59:57,079 [INFO] Filters generated successfully.
+2024-10-15 21:59:57,080 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:57] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:57,286 [INFO] Received request for filters.
+2024-10-15 21:59:57,287 [INFO] Filters generated successfully.
+2024-10-15 21:59:57,287 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:57] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:57,496 [INFO] Received request for filters.
+2024-10-15 21:59:57,496 [INFO] Filters generated successfully.
+2024-10-15 21:59:57,498 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:57] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:57,702 [INFO] Received request for filters.
+2024-10-15 21:59:57,702 [INFO] Filters generated successfully.
+2024-10-15 21:59:57,703 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:57] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:57,923 [INFO] Received request for filters.
+2024-10-15 21:59:57,924 [INFO] Filters generated successfully.
+2024-10-15 21:59:57,924 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:57] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:58,126 [INFO] Received request for filters.
+2024-10-15 21:59:58,127 [INFO] Filters generated successfully.
+2024-10-15 21:59:58,127 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:58,323 [INFO] Received request for filters.
+2024-10-15 21:59:58,323 [INFO] Filters generated successfully.
+2024-10-15 21:59:58,324 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:58,531 [INFO] Received request for filters.
+2024-10-15 21:59:58,531 [INFO] Filters generated successfully.
+2024-10-15 21:59:58,532 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:58,745 [INFO] Received request for filters.
+2024-10-15 21:59:58,746 [INFO] Filters generated successfully.
+2024-10-15 21:59:58,746 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:58,945 [INFO] Received request for filters.
+2024-10-15 21:59:58,946 [INFO] Filters generated successfully.
+2024-10-15 21:59:58,946 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:59,152 [INFO] Received request for filters.
+2024-10-15 21:59:59,152 [INFO] Filters generated successfully.
+2024-10-15 21:59:59,153 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:59] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:59,363 [INFO] Received request for filters.
+2024-10-15 21:59:59,363 [INFO] Filters generated successfully.
+2024-10-15 21:59:59,364 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:59] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:59,570 [INFO] Received request for filters.
+2024-10-15 21:59:59,570 [INFO] Filters generated successfully.
+2024-10-15 21:59:59,571 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:59] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:59,784 [INFO] Received request for filters.
+2024-10-15 21:59:59,784 [INFO] Filters generated successfully.
+2024-10-15 21:59:59,785 [INFO] 127.0.0.1 - - [15/Oct/2024 21:59:59] "GET /filters HTTP/1.1" 200 -
+2024-10-15 21:59:59,999 [INFO] Received request for filters.
+2024-10-15 21:59:59,999 [INFO] Filters generated successfully.
+2024-10-15 22:00:00,012 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:00] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:00,227 [INFO] Received request for filters.
+2024-10-15 22:00:00,228 [INFO] Filters generated successfully.
+2024-10-15 22:00:00,230 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:00] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:00,406 [INFO] Received request for filters.
+2024-10-15 22:00:00,407 [INFO] Filters generated successfully.
+2024-10-15 22:00:00,408 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:00] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:00,604 [INFO] Received request for filters.
+2024-10-15 22:00:00,604 [INFO] Filters generated successfully.
+2024-10-15 22:00:00,605 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:00] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:00,815 [INFO] Received request for filters.
+2024-10-15 22:00:00,815 [INFO] Filters generated successfully.
+2024-10-15 22:00:00,816 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:00] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:01,023 [INFO] Received request for filters.
+2024-10-15 22:00:01,023 [INFO] Filters generated successfully.
+2024-10-15 22:00:01,024 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:01] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:01,224 [INFO] Received request for filters.
+2024-10-15 22:00:01,224 [INFO] Filters generated successfully.
+2024-10-15 22:00:01,225 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:01] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:01,428 [INFO] Received request for filters.
+2024-10-15 22:00:01,428 [INFO] Filters generated successfully.
+2024-10-15 22:00:01,429 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:01] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:01,641 [INFO] Received request for filters.
+2024-10-15 22:00:01,642 [INFO] Filters generated successfully.
+2024-10-15 22:00:01,642 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:01] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:01,839 [INFO] Received request for filters.
+2024-10-15 22:00:01,839 [INFO] Filters generated successfully.
+2024-10-15 22:00:01,840 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:01] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:02,055 [INFO] Received request for filters.
+2024-10-15 22:00:02,055 [INFO] Filters generated successfully.
+2024-10-15 22:00:02,056 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:02,252 [INFO] Received request for filters.
+2024-10-15 22:00:02,253 [INFO] Filters generated successfully.
+2024-10-15 22:00:02,253 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:02,464 [INFO] Received request for filters.
+2024-10-15 22:00:02,464 [INFO] Filters generated successfully.
+2024-10-15 22:00:02,465 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:02,656 [INFO] Received request for filters.
+2024-10-15 22:00:02,657 [INFO] Filters generated successfully.
+2024-10-15 22:00:02,658 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:02,868 [INFO] Received request for filters.
+2024-10-15 22:00:02,868 [INFO] Filters generated successfully.
+2024-10-15 22:00:02,869 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:03,077 [INFO] Received request for filters.
+2024-10-15 22:00:03,077 [INFO] Filters generated successfully.
+2024-10-15 22:00:03,078 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:03,272 [INFO] Received request for filters.
+2024-10-15 22:00:03,272 [INFO] Filters generated successfully.
+2024-10-15 22:00:03,273 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:03,478 [INFO] Received request for filters.
+2024-10-15 22:00:03,478 [INFO] Filters generated successfully.
+2024-10-15 22:00:03,479 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:03,722 [INFO] Received request for filters.
+2024-10-15 22:00:03,722 [INFO] Filters generated successfully.
+2024-10-15 22:00:03,729 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:03,890 [INFO] Received request for filters.
+2024-10-15 22:00:03,890 [INFO] Filters generated successfully.
+2024-10-15 22:00:03,892 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:04,094 [INFO] Received request for filters.
+2024-10-15 22:00:04,095 [INFO] Filters generated successfully.
+2024-10-15 22:00:04,095 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:04,307 [INFO] Received request for filters.
+2024-10-15 22:00:04,308 [INFO] Filters generated successfully.
+2024-10-15 22:00:04,308 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:04,511 [INFO] Received request for filters.
+2024-10-15 22:00:04,511 [INFO] Filters generated successfully.
+2024-10-15 22:00:04,512 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:04,732 [INFO] Received request for filters.
+2024-10-15 22:00:04,733 [INFO] Filters generated successfully.
+2024-10-15 22:00:04,733 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:04,929 [INFO] Received request for filters.
+2024-10-15 22:00:04,930 [INFO] Filters generated successfully.
+2024-10-15 22:00:04,931 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:05,129 [INFO] Received request for filters.
+2024-10-15 22:00:05,130 [INFO] Filters generated successfully.
+2024-10-15 22:00:05,132 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:05,332 [INFO] Received request for filters.
+2024-10-15 22:00:05,332 [INFO] Filters generated successfully.
+2024-10-15 22:00:05,333 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:05,539 [INFO] Received request for filters.
+2024-10-15 22:00:05,539 [INFO] Filters generated successfully.
+2024-10-15 22:00:05,540 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:05,749 [INFO] Received request for filters.
+2024-10-15 22:00:05,749 [INFO] Filters generated successfully.
+2024-10-15 22:00:05,750 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:05,953 [INFO] Received request for filters.
+2024-10-15 22:00:05,953 [INFO] Filters generated successfully.
+2024-10-15 22:00:05,955 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:06,173 [INFO] Received request for filters.
+2024-10-15 22:00:06,173 [INFO] Filters generated successfully.
+2024-10-15 22:00:06,174 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:06,398 [INFO] Received request for filters.
+2024-10-15 22:00:06,399 [INFO] Filters generated successfully.
+2024-10-15 22:00:06,399 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:06,582 [INFO] Received request for filters.
+2024-10-15 22:00:06,582 [INFO] Filters generated successfully.
+2024-10-15 22:00:06,583 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:06,794 [INFO] Received request for filters.
+2024-10-15 22:00:06,795 [INFO] Filters generated successfully.
+2024-10-15 22:00:06,796 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:06,999 [INFO] Received request for filters.
+2024-10-15 22:00:06,999 [INFO] Filters generated successfully.
+2024-10-15 22:00:07,000 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:07,210 [INFO] Received request for filters.
+2024-10-15 22:00:07,211 [INFO] Filters generated successfully.
+2024-10-15 22:00:07,212 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:07,417 [INFO] Received request for filters.
+2024-10-15 22:00:07,418 [INFO] Filters generated successfully.
+2024-10-15 22:00:07,419 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:07,629 [INFO] Received request for filters.
+2024-10-15 22:00:07,630 [INFO] Filters generated successfully.
+2024-10-15 22:00:07,631 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:07,821 [INFO] Received request for filters.
+2024-10-15 22:00:07,822 [INFO] Filters generated successfully.
+2024-10-15 22:00:07,822 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:08,033 [INFO] Received request for filters.
+2024-10-15 22:00:08,034 [INFO] Filters generated successfully.
+2024-10-15 22:00:08,034 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:08,237 [INFO] Received request for filters.
+2024-10-15 22:00:08,237 [INFO] Filters generated successfully.
+2024-10-15 22:00:08,238 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:08,440 [INFO] Received request for filters.
+2024-10-15 22:00:08,440 [INFO] Filters generated successfully.
+2024-10-15 22:00:08,441 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:08,642 [INFO] Received request for filters.
+2024-10-15 22:00:08,642 [INFO] Filters generated successfully.
+2024-10-15 22:00:08,644 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:08,872 [INFO] Received request for filters.
+2024-10-15 22:00:08,873 [INFO] Filters generated successfully.
+2024-10-15 22:00:08,874 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:09,049 [INFO] Received request for filters.
+2024-10-15 22:00:09,049 [INFO] Filters generated successfully.
+2024-10-15 22:00:09,050 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:09,256 [INFO] Received request for filters.
+2024-10-15 22:00:09,256 [INFO] Filters generated successfully.
+2024-10-15 22:00:09,257 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:09,467 [INFO] Received request for filters.
+2024-10-15 22:00:09,467 [INFO] Filters generated successfully.
+2024-10-15 22:00:09,469 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:09,677 [INFO] Received request for filters.
+2024-10-15 22:00:09,678 [INFO] Filters generated successfully.
+2024-10-15 22:00:09,679 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:09,885 [INFO] Received request for filters.
+2024-10-15 22:00:09,885 [INFO] Filters generated successfully.
+2024-10-15 22:00:09,886 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:10,089 [INFO] Received request for filters.
+2024-10-15 22:00:10,090 [INFO] Filters generated successfully.
+2024-10-15 22:00:10,090 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:10,292 [INFO] Received request for filters.
+2024-10-15 22:00:10,292 [INFO] Filters generated successfully.
+2024-10-15 22:00:10,293 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:10,500 [INFO] Received request for filters.
+2024-10-15 22:00:10,500 [INFO] Filters generated successfully.
+2024-10-15 22:00:10,501 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:10,705 [INFO] Received request for filters.
+2024-10-15 22:00:10,706 [INFO] Filters generated successfully.
+2024-10-15 22:00:10,707 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:10,923 [INFO] Received request for filters.
+2024-10-15 22:00:10,923 [INFO] Filters generated successfully.
+2024-10-15 22:00:10,924 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:11,118 [INFO] Received request for filters.
+2024-10-15 22:00:11,118 [INFO] Filters generated successfully.
+2024-10-15 22:00:11,119 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:11,325 [INFO] Received request for filters.
+2024-10-15 22:00:11,327 [INFO] Filters generated successfully.
+2024-10-15 22:00:11,329 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:11,531 [INFO] Received request for filters.
+2024-10-15 22:00:11,532 [INFO] Filters generated successfully.
+2024-10-15 22:00:11,532 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:11,737 [INFO] Received request for filters.
+2024-10-15 22:00:11,737 [INFO] Filters generated successfully.
+2024-10-15 22:00:11,738 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:11,941 [INFO] Received request for filters.
+2024-10-15 22:00:11,941 [INFO] Filters generated successfully.
+2024-10-15 22:00:11,942 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:12,148 [INFO] Received request for filters.
+2024-10-15 22:00:12,148 [INFO] Filters generated successfully.
+2024-10-15 22:00:12,149 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:12] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:12,357 [INFO] Received request for filters.
+2024-10-15 22:00:12,358 [INFO] Filters generated successfully.
+2024-10-15 22:00:12,358 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:12] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:12,562 [INFO] Received request for filters.
+2024-10-15 22:00:12,563 [INFO] Filters generated successfully.
+2024-10-15 22:00:12,563 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:12] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:12,773 [INFO] Received request for filters.
+2024-10-15 22:00:12,774 [INFO] Filters generated successfully.
+2024-10-15 22:00:12,775 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:12] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:12,987 [INFO] Received request for filters.
+2024-10-15 22:00:12,989 [INFO] Filters generated successfully.
+2024-10-15 22:00:12,990 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:12] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:13,183 [INFO] Received request for filters.
+2024-10-15 22:00:13,183 [INFO] Filters generated successfully.
+2024-10-15 22:00:13,184 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:13] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:13,385 [INFO] Received request for filters.
+2024-10-15 22:00:13,386 [INFO] Filters generated successfully.
+2024-10-15 22:00:13,387 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:13] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:13,598 [INFO] Received request for filters.
+2024-10-15 22:00:13,598 [INFO] Filters generated successfully.
+2024-10-15 22:00:13,598 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:13] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:13,807 [INFO] Received request for filters.
+2024-10-15 22:00:13,807 [INFO] Filters generated successfully.
+2024-10-15 22:00:13,808 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:13] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:14,019 [INFO] Received request for filters.
+2024-10-15 22:00:14,020 [INFO] Filters generated successfully.
+2024-10-15 22:00:14,020 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:14] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:14,220 [INFO] Received request for filters.
+2024-10-15 22:00:14,220 [INFO] Filters generated successfully.
+2024-10-15 22:00:14,221 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:14] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:14,433 [INFO] Received request for filters.
+2024-10-15 22:00:14,434 [INFO] Filters generated successfully.
+2024-10-15 22:00:14,435 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:14] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:14,649 [INFO] Received request for filters.
+2024-10-15 22:00:14,650 [INFO] Filters generated successfully.
+2024-10-15 22:00:14,650 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:14] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:14,855 [INFO] Received request for filters.
+2024-10-15 22:00:14,855 [INFO] Filters generated successfully.
+2024-10-15 22:00:14,856 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:14] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:15,056 [INFO] Received request for filters.
+2024-10-15 22:00:15,057 [INFO] Filters generated successfully.
+2024-10-15 22:00:15,058 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:15] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:15,266 [INFO] Received request for filters.
+2024-10-15 22:00:15,266 [INFO] Filters generated successfully.
+2024-10-15 22:00:15,267 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:15] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:15,479 [INFO] Received request for filters.
+2024-10-15 22:00:15,479 [INFO] Filters generated successfully.
+2024-10-15 22:00:15,480 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:15] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:15,689 [INFO] Received request for filters.
+2024-10-15 22:00:15,690 [INFO] Filters generated successfully.
+2024-10-15 22:00:15,691 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:15] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:15,895 [INFO] Received request for filters.
+2024-10-15 22:00:15,895 [INFO] Filters generated successfully.
+2024-10-15 22:00:15,897 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:15] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:16,103 [INFO] Received request for filters.
+2024-10-15 22:00:16,103 [INFO] Filters generated successfully.
+2024-10-15 22:00:16,104 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:16] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:16,310 [INFO] Received request for filters.
+2024-10-15 22:00:16,311 [INFO] Filters generated successfully.
+2024-10-15 22:00:16,311 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:16] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:16,518 [INFO] Received request for filters.
+2024-10-15 22:00:16,518 [INFO] Filters generated successfully.
+2024-10-15 22:00:16,519 [INFO] 127.0.0.1 - - [15/Oct/2024 22:00:16] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:00:37,313 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:00:37,323 [INFO] Use pytorch device_name: mps
+2024-10-15 22:00:37,323 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:00:40,122 [INFO] Model loaded.
+2024-10-15 22:00:40,123 [INFO] Loading FAISS index...
+2024-10-15 22:00:40,157 [INFO] FAISS index loaded successfully.
+2024-10-15 22:00:40,157 [INFO] Loading metadata...
+2024-10-15 22:00:40,545 [INFO] Metadata loaded successfully.
+2024-10-15 22:00:40,545 [INFO] Loading book mapping...
+2024-10-15 22:00:40,546 [INFO] Book mapping loaded successfully.
+2024-10-15 22:00:40,548 [INFO] Starting Flask server...
+2024-10-15 22:00:40,565 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-15 22:00:40,565 [INFO] [33mPress CTRL+C to quit[0m
+2024-10-15 22:00:40,566 [INFO]  * Restarting with stat
+2024-10-15 22:00:43,192 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:00:43,201 [INFO] Use pytorch device_name: mps
+2024-10-15 22:00:43,201 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:00:45,689 [INFO] Model loaded.
+2024-10-15 22:00:45,690 [INFO] Loading FAISS index...
+2024-10-15 22:00:45,722 [INFO] FAISS index loaded successfully.
+2024-10-15 22:00:45,723 [INFO] Loading metadata...
+2024-10-15 22:00:46,045 [INFO] Metadata loaded successfully.
+2024-10-15 22:00:46,045 [INFO] Loading book mapping...
+2024-10-15 22:00:46,046 [INFO] Book mapping loaded successfully.
+2024-10-15 22:00:46,047 [INFO] Starting Flask server...
+2024-10-15 22:00:46,065 [WARNING]  * Debugger is active!
+2024-10-15 22:00:46,086 [INFO]  * Debugger PIN: 290-641-126
+2024-10-15 22:01:02,795 [INFO] Received request for filters.
+2024-10-15 22:01:02,797 [INFO] Filters generated successfully.
+2024-10-15 22:01:02,798 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:02,971 [INFO] Received request for filters.
+2024-10-15 22:01:02,972 [INFO] Filters generated successfully.
+2024-10-15 22:01:02,972 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:02] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:03,177 [INFO] Received request for filters.
+2024-10-15 22:01:03,178 [INFO] Filters generated successfully.
+2024-10-15 22:01:03,178 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:03,389 [INFO] Received request for filters.
+2024-10-15 22:01:03,390 [INFO] Filters generated successfully.
+2024-10-15 22:01:03,391 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:03,592 [INFO] Received request for filters.
+2024-10-15 22:01:03,592 [INFO] Filters generated successfully.
+2024-10-15 22:01:03,594 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:03,795 [INFO] Received request for filters.
+2024-10-15 22:01:03,796 [INFO] Filters generated successfully.
+2024-10-15 22:01:03,796 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:03] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:04,006 [INFO] Received request for filters.
+2024-10-15 22:01:04,007 [INFO] Filters generated successfully.
+2024-10-15 22:01:04,007 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:04,223 [INFO] Received request for filters.
+2024-10-15 22:01:04,223 [INFO] Filters generated successfully.
+2024-10-15 22:01:04,224 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:04,418 [INFO] Received request for filters.
+2024-10-15 22:01:04,419 [INFO] Filters generated successfully.
+2024-10-15 22:01:04,420 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:04,639 [INFO] Received request for filters.
+2024-10-15 22:01:04,640 [INFO] Filters generated successfully.
+2024-10-15 22:01:04,640 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:04,922 [INFO] Received request for filters.
+2024-10-15 22:01:04,923 [INFO] Filters generated successfully.
+2024-10-15 22:01:04,923 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:04] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:05,056 [INFO] Received request for filters.
+2024-10-15 22:01:05,056 [INFO] Filters generated successfully.
+2024-10-15 22:01:05,057 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:05,262 [INFO] Received request for filters.
+2024-10-15 22:01:05,263 [INFO] Filters generated successfully.
+2024-10-15 22:01:05,263 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:05,475 [INFO] Received request for filters.
+2024-10-15 22:01:05,476 [INFO] Filters generated successfully.
+2024-10-15 22:01:05,476 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:05,683 [INFO] Received request for filters.
+2024-10-15 22:01:05,684 [INFO] Filters generated successfully.
+2024-10-15 22:01:05,684 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:05,893 [INFO] Received request for filters.
+2024-10-15 22:01:05,895 [INFO] Filters generated successfully.
+2024-10-15 22:01:05,898 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:05] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:06,097 [INFO] Received request for filters.
+2024-10-15 22:01:06,097 [INFO] Filters generated successfully.
+2024-10-15 22:01:06,098 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:06,304 [INFO] Received request for filters.
+2024-10-15 22:01:06,304 [INFO] Filters generated successfully.
+2024-10-15 22:01:06,305 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:06,506 [INFO] Received request for filters.
+2024-10-15 22:01:06,507 [INFO] Filters generated successfully.
+2024-10-15 22:01:06,507 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:06,718 [INFO] Received request for filters.
+2024-10-15 22:01:06,718 [INFO] Filters generated successfully.
+2024-10-15 22:01:06,719 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:06,925 [INFO] Received request for filters.
+2024-10-15 22:01:06,925 [INFO] Filters generated successfully.
+2024-10-15 22:01:06,926 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:06] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:07,132 [INFO] Received request for filters.
+2024-10-15 22:01:07,132 [INFO] Filters generated successfully.
+2024-10-15 22:01:07,133 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:07,329 [INFO] Received request for filters.
+2024-10-15 22:01:07,330 [INFO] Filters generated successfully.
+2024-10-15 22:01:07,331 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:07,541 [INFO] Received request for filters.
+2024-10-15 22:01:07,541 [INFO] Filters generated successfully.
+2024-10-15 22:01:07,542 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:07,750 [INFO] Received request for filters.
+2024-10-15 22:01:07,750 [INFO] Filters generated successfully.
+2024-10-15 22:01:07,752 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:07,965 [INFO] Received request for filters.
+2024-10-15 22:01:07,965 [INFO] Filters generated successfully.
+2024-10-15 22:01:07,966 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:07] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:08,158 [INFO] Received request for filters.
+2024-10-15 22:01:08,158 [INFO] Filters generated successfully.
+2024-10-15 22:01:08,159 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:08,370 [INFO] Received request for filters.
+2024-10-15 22:01:08,370 [INFO] Filters generated successfully.
+2024-10-15 22:01:08,372 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:08,573 [INFO] Received request for filters.
+2024-10-15 22:01:08,573 [INFO] Filters generated successfully.
+2024-10-15 22:01:08,574 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:08,784 [INFO] Received request for filters.
+2024-10-15 22:01:08,784 [INFO] Filters generated successfully.
+2024-10-15 22:01:08,785 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:08,993 [INFO] Received request for filters.
+2024-10-15 22:01:08,994 [INFO] Filters generated successfully.
+2024-10-15 22:01:08,995 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:08] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:09,199 [INFO] Received request for filters.
+2024-10-15 22:01:09,200 [INFO] Filters generated successfully.
+2024-10-15 22:01:09,200 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:09,387 [INFO] Received request for filters.
+2024-10-15 22:01:09,388 [INFO] Filters generated successfully.
+2024-10-15 22:01:09,389 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:09,595 [INFO] Received request for filters.
+2024-10-15 22:01:09,595 [INFO] Filters generated successfully.
+2024-10-15 22:01:09,596 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:09,813 [INFO] Received request for filters.
+2024-10-15 22:01:09,813 [INFO] Filters generated successfully.
+2024-10-15 22:01:09,814 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:09] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:10,016 [INFO] Received request for filters.
+2024-10-15 22:01:10,016 [INFO] Filters generated successfully.
+2024-10-15 22:01:10,017 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:10,227 [INFO] Received request for filters.
+2024-10-15 22:01:10,227 [INFO] Filters generated successfully.
+2024-10-15 22:01:10,228 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:10,430 [INFO] Received request for filters.
+2024-10-15 22:01:10,431 [INFO] Filters generated successfully.
+2024-10-15 22:01:10,432 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:10,640 [INFO] Received request for filters.
+2024-10-15 22:01:10,641 [INFO] Filters generated successfully.
+2024-10-15 22:01:10,642 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:10,844 [INFO] Received request for filters.
+2024-10-15 22:01:10,844 [INFO] Filters generated successfully.
+2024-10-15 22:01:10,845 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:10] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:11,054 [INFO] Received request for filters.
+2024-10-15 22:01:11,054 [INFO] Filters generated successfully.
+2024-10-15 22:01:11,055 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:11,266 [INFO] Received request for filters.
+2024-10-15 22:01:11,266 [INFO] Filters generated successfully.
+2024-10-15 22:01:11,267 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:01:11,461 [INFO] Received request for filters.
+2024-10-15 22:01:11,462 [INFO] Filters generated successfully.
+2024-10-15 22:01:11,462 [INFO] 127.0.0.1 - - [15/Oct/2024 22:01:11] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:04:46,576 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:04:46,587 [INFO] Use pytorch device_name: mps
+2024-10-15 22:04:46,587 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:04:49,488 [INFO] Model loaded.
+2024-10-15 22:04:49,489 [INFO] Loading FAISS index...
+2024-10-15 22:04:49,536 [INFO] FAISS index loaded successfully.
+2024-10-15 22:04:49,537 [INFO] Loading metadata...
+2024-10-15 22:04:49,901 [INFO] Metadata loaded successfully.
+2024-10-15 22:04:49,901 [INFO] Loading book mapping...
+2024-10-15 22:04:49,902 [INFO] Book mapping loaded successfully.
+2024-10-15 22:04:49,904 [INFO] Starting Flask server...
+2024-10-15 22:04:49,928 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-15 22:04:49,928 [INFO] [33mPress CTRL+C to quit[0m
+2024-10-15 22:04:49,929 [INFO]  * Restarting with stat
+2024-10-15 22:04:52,182 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:04:52,192 [INFO] Use pytorch device_name: mps
+2024-10-15 22:04:52,193 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:04:56,017 [INFO] Model loaded.
+2024-10-15 22:04:56,018 [INFO] Loading FAISS index...
+2024-10-15 22:04:56,040 [INFO] FAISS index loaded successfully.
+2024-10-15 22:04:56,040 [INFO] Loading metadata...
+2024-10-15 22:04:56,392 [INFO] Metadata loaded successfully.
+2024-10-15 22:04:56,392 [INFO] Loading book mapping...
+2024-10-15 22:04:56,393 [INFO] Book mapping loaded successfully.
+2024-10-15 22:04:56,394 [INFO] Starting Flask server...
+2024-10-15 22:04:56,407 [WARNING]  * Debugger is active!
+2024-10-15 22:04:56,425 [INFO]  * Debugger PIN: 290-641-126
+2024-10-15 22:12:16,778 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:12:16,787 [INFO] Use pytorch device_name: mps
+2024-10-15 22:12:16,787 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:12:19,259 [INFO] Model loaded.
+2024-10-15 22:12:19,259 [INFO] Loading FAISS index...
+2024-10-15 22:12:19,311 [INFO] FAISS index loaded successfully.
+2024-10-15 22:12:19,311 [INFO] Loading metadata...
+2024-10-15 22:12:19,867 [INFO] Metadata loaded successfully.
+2024-10-15 22:12:19,868 [INFO] Loading book mapping...
+2024-10-15 22:12:19,869 [INFO] Book mapping loaded successfully.
+2024-10-15 22:12:19,871 [INFO] Starting Flask server...
+2024-10-15 22:12:19,933 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-15 22:12:19,933 [INFO] [33mPress CTRL+C to quit[0m
+2024-10-15 22:12:19,934 [INFO]  * Restarting with stat
+2024-10-15 22:12:22,041 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:12:22,052 [INFO] Use pytorch device_name: mps
+2024-10-15 22:12:22,052 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:12:23,450 [INFO] Model loaded.
+2024-10-15 22:12:23,451 [INFO] Loading FAISS index...
+2024-10-15 22:12:23,473 [INFO] FAISS index loaded successfully.
+2024-10-15 22:12:23,473 [INFO] Loading metadata...
+2024-10-15 22:12:23,792 [INFO] Metadata loaded successfully.
+2024-10-15 22:12:23,793 [INFO] Loading book mapping...
+2024-10-15 22:12:23,793 [INFO] Book mapping loaded successfully.
+2024-10-15 22:12:23,794 [INFO] Starting Flask server...
+2024-10-15 22:12:23,807 [WARNING]  * Debugger is active!
+2024-10-15 22:12:23,825 [INFO]  * Debugger PIN: 290-641-126
+2024-10-15 22:12:26,669 [INFO] Received request for filters.
+2024-10-15 22:12:26,669 [INFO] Filters generated successfully.
+2024-10-15 22:12:26,670 [INFO] 127.0.0.1 - - [15/Oct/2024 22:12:26] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:12:44,465 [INFO] Received search request: query='All can be done', search_type='both', top_k=10, filters={}
+2024-10-15 22:12:44,465 [INFO] Initiating search for query: 'All can be done' with filters: {} and search_type: 'both'
+2024-10-15 22:12:44,607 [INFO] Found 4 exact matches.
+2024-10-15 22:12:45,077 [INFO] FAISS search completed. Retrieved 30 results.
+2024-10-15 22:12:45,079 [INFO] Found 6 semantic matches.
+2024-10-15 22:12:45,079 [INFO] Returning total 10 unique results.
+2024-10-15 22:12:45,080 [INFO] Search completed. Returning 10 results.
+2024-10-15 22:12:45,080 [INFO] 127.0.0.1 - - [15/Oct/2024 22:12:45] "GET /search?query=All+can+be+done&top_k=10 HTTP/1.1" 200 -
+2024-10-15 22:15:58,406 [INFO] Received request for filters.
+2024-10-15 22:15:58,407 [INFO] Filters generated successfully.
+2024-10-15 22:15:58,409 [INFO] 127.0.0.1 - - [15/Oct/2024 22:15:58] "GET /filters HTTP/1.1" 200 -
+2024-10-15 22:19:24,762 [INFO]  * Detected change in '/Users/vbamba/Projects/collectedworks/scripts/create_embeddings.py', reloading
+2024-10-15 22:19:25,479 [INFO]  * Restarting with stat
+2024-10-15 22:19:28,755 [INFO] Loading SentenceTransformer model...
+2024-10-15 22:19:28,787 [INFO] Use pytorch device_name: mps
+2024-10-15 22:19:28,787 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-15 22:19:30,981 [INFO] Model loaded.
+2024-10-15 22:19:30,981 [INFO] Loading FAISS index...
+2024-10-15 22:19:31,011 [INFO] FAISS index loaded successfully.
+2024-10-15 22:19:31,011 [INFO] Loading metadata...
+2024-10-15 22:19:31,373 [INFO] Metadata loaded successfully.
+2024-10-15 22:19:31,374 [INFO] Loading book mapping...
+2024-10-15 22:19:31,375 [INFO] Book mapping loaded successfully.
+2024-10-15 22:19:31,377 [INFO] Starting Flask server...
+2024-10-15 22:19:31,429 [WARNING]  * Debugger is active!
+2024-10-15 22:19:31,451 [INFO]  * Debugger PIN: 290-641-126
+2024-10-16 15:01:17,113 [INFO] Loading SentenceTransformer model...
+2024-10-16 15:01:17,138 [INFO] Use pytorch device_name: mps
+2024-10-16 15:01:17,139 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-16 15:01:19,347 [INFO] Model loaded.
+2024-10-16 15:01:19,347 [INFO] Loading FAISS index...
+2024-10-16 15:01:19,386 [INFO] FAISS index loaded successfully.
+2024-10-16 15:01:19,387 [INFO] Loading metadata...
+2024-10-16 15:01:19,588 [INFO] Metadata loaded successfully.
+2024-10-16 15:01:19,589 [INFO] Loading book mapping...
+2024-10-16 15:01:19,590 [INFO] Book mapping loaded successfully.
+2024-10-16 15:01:19,596 [INFO] Starting Flask server...
+2024-10-16 15:01:19,714 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-16 15:01:19,715 [INFO] [33mPress CTRL+C to quit[0m
+2024-10-16 15:01:19,716 [INFO]  * Restarting with stat
+2024-10-16 15:01:22,066 [INFO] Loading SentenceTransformer model...
+2024-10-16 15:01:22,075 [INFO] Use pytorch device_name: mps
+2024-10-16 15:01:22,076 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-16 15:01:24,069 [INFO] Model loaded.
+2024-10-16 15:01:24,070 [INFO] Loading FAISS index...
+2024-10-16 15:01:24,089 [INFO] FAISS index loaded successfully.
+2024-10-16 15:01:24,089 [INFO] Loading metadata...
+2024-10-16 15:01:24,250 [INFO] Metadata loaded successfully.
+2024-10-16 15:01:24,250 [INFO] Loading book mapping...
+2024-10-16 15:01:24,250 [INFO] Book mapping loaded successfully.
+2024-10-16 15:01:24,251 [INFO] Starting Flask server...
+2024-10-16 15:01:24,262 [WARNING]  * Debugger is active!
+2024-10-16 15:01:24,279 [INFO]  * Debugger PIN: 290-641-126
+2024-10-16 15:01:53,672 [INFO] Received search request: query='All life is yoga', search_type='both', top_k=10, filters={}
+2024-10-16 15:01:53,673 [INFO] Initiating search for query: 'All life is yoga' with filters: {} and search_type: 'both'
+2024-10-16 15:01:53,762 [INFO] Found 4 exact matches.
+2024-10-16 15:01:54,652 [INFO] FAISS search completed. Retrieved 30 results.
+2024-10-16 15:01:54,653 [INFO] Found 6 semantic matches.
+2024-10-16 15:01:54,653 [INFO] Returning total 9 unique results.
+2024-10-16 15:01:54,653 [INFO] Search completed. Returning 9 results.
+2024-10-16 15:01:54,654 [INFO] 127.0.0.1 - - [16/Oct/2024 15:01:54] "GET /search?query=All%20life%20is%20yoga&search_type=both&top_k=10 HTTP/1.1" 200 -
+2024-10-16 15:03:20,858 [INFO] Received search request: query='All can be done', search_type='both', top_k=10, filters={}
+2024-10-16 15:03:20,859 [INFO] Initiating search for query: 'All can be done' with filters: {} and search_type: 'both'
+2024-10-16 15:03:20,968 [INFO] Found 5 exact matches.
+2024-10-16 15:03:21,561 [INFO] FAISS search completed. Retrieved 30 results.
+2024-10-16 15:03:21,563 [INFO] Found 5 semantic matches.
+2024-10-16 15:03:21,563 [INFO] Returning total 10 unique results.
+2024-10-16 15:03:21,563 [INFO] Search completed. Returning 10 results.
+2024-10-16 15:03:21,564 [INFO] 127.0.0.1 - - [16/Oct/2024 15:03:21] "GET /search?query=All%20can%20be%20done&search_type=both&top_k=10 HTTP/1.1" 200 -
+2024-10-16 15:07:28,490 [INFO]  * Detected change in '/Users/vbamba/Projects/collectedworks/scripts/faiss_distance.py', reloading
+2024-10-16 15:07:29,020 [INFO]  * Restarting with stat
+2024-10-16 15:07:31,816 [INFO] Loading SentenceTransformer model...
+2024-10-16 15:07:31,828 [INFO] Use pytorch device_name: mps
+2024-10-16 15:07:31,828 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-16 15:07:34,157 [INFO] Model loaded.
+2024-10-16 15:07:34,158 [INFO] Loading FAISS index...
+2024-10-16 15:07:34,214 [INFO] FAISS index loaded successfully.
+2024-10-16 15:07:34,215 [INFO] Loading metadata...
+2024-10-16 15:07:34,396 [INFO] Metadata loaded successfully.
+2024-10-16 15:07:34,397 [INFO] Loading book mapping...
+2024-10-16 15:07:34,397 [INFO] Book mapping loaded successfully.
+2024-10-16 15:07:34,399 [INFO] Starting Flask server...
+2024-10-16 15:07:34,492 [WARNING]  * Debugger is active!
+2024-10-16 15:07:34,509 [INFO]  * Debugger PIN: 290-641-126
+2024-10-16 15:22:03,721 [INFO] Received request for filters.
+2024-10-16 15:22:03,722 [INFO] Filters generated successfully.
+2024-10-16 15:22:03,727 [INFO] 127.0.0.1 - - [16/Oct/2024 15:22:03] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:27:50,391 [INFO]  * Detected change in '/Users/vbamba/Projects/collectedworks/scripts/app.py', reloading
+2024-10-16 15:27:51,198 [INFO]  * Restarting with stat
+2024-10-16 15:27:54,428 [INFO] Loading SentenceTransformer model...
+2024-10-16 15:27:54,449 [INFO] Use pytorch device_name: mps
+2024-10-16 15:27:54,449 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-16 15:27:56,838 [INFO] Model loaded.
+2024-10-16 15:27:56,839 [INFO] Loading FAISS index...
+2024-10-16 15:27:56,887 [INFO] FAISS index loaded successfully.
+2024-10-16 15:27:56,887 [INFO] Loading metadata...
+2024-10-16 15:27:57,271 [INFO] Metadata loaded successfully.
+2024-10-16 15:27:57,326 [INFO] Loading book mapping...
+2024-10-16 15:27:57,328 [INFO] Book mapping loaded successfully.
+2024-10-16 15:27:57,331 [INFO] Starting Flask server...
+2024-10-16 15:27:57,366 [WARNING]  * Debugger is active!
+2024-10-16 15:27:57,385 [INFO]  * Debugger PIN: 290-641-126
+2024-10-16 15:31:40,268 [INFO] Received request for filters.
+2024-10-16 15:31:40,269 [INFO] Filters generated successfully.
+2024-10-16 15:31:40,274 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:40] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:40,439 [INFO] Received request for filters.
+2024-10-16 15:31:40,439 [INFO] Filters generated successfully.
+2024-10-16 15:31:40,440 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:40] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:40,650 [INFO] Received request for filters.
+2024-10-16 15:31:40,650 [INFO] Filters generated successfully.
+2024-10-16 15:31:40,651 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:40] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:40,851 [INFO] Received request for filters.
+2024-10-16 15:31:40,851 [INFO] Filters generated successfully.
+2024-10-16 15:31:40,852 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:40] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:41,068 [INFO] Received request for filters.
+2024-10-16 15:31:41,068 [INFO] Filters generated successfully.
+2024-10-16 15:31:41,069 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:41] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:41,264 [INFO] Received request for filters.
+2024-10-16 15:31:41,264 [INFO] Filters generated successfully.
+2024-10-16 15:31:41,265 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:41] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:41,476 [INFO] Received request for filters.
+2024-10-16 15:31:41,476 [INFO] Filters generated successfully.
+2024-10-16 15:31:41,477 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:41] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:41,689 [INFO] Received request for filters.
+2024-10-16 15:31:41,690 [INFO] Filters generated successfully.
+2024-10-16 15:31:41,690 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:41] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:41,880 [INFO] Received request for filters.
+2024-10-16 15:31:41,881 [INFO] Filters generated successfully.
+2024-10-16 15:31:41,884 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:41] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:42,141 [INFO] Received request for filters.
+2024-10-16 15:31:42,142 [INFO] Filters generated successfully.
+2024-10-16 15:31:42,144 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:42] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:42,329 [INFO] Received request for filters.
+2024-10-16 15:31:42,330 [INFO] Filters generated successfully.
+2024-10-16 15:31:42,331 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:42] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:42,510 [INFO] Received request for filters.
+2024-10-16 15:31:42,510 [INFO] Filters generated successfully.
+2024-10-16 15:31:42,511 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:42] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:42,708 [INFO] Received request for filters.
+2024-10-16 15:31:42,709 [INFO] Filters generated successfully.
+2024-10-16 15:31:42,710 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:42] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:42,918 [INFO] Received request for filters.
+2024-10-16 15:31:42,919 [INFO] Filters generated successfully.
+2024-10-16 15:31:42,919 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:42] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:43,124 [INFO] Received request for filters.
+2024-10-16 15:31:43,125 [INFO] Filters generated successfully.
+2024-10-16 15:31:43,125 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:43] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:43,329 [INFO] Received request for filters.
+2024-10-16 15:31:43,329 [INFO] Filters generated successfully.
+2024-10-16 15:31:43,330 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:43] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:43,546 [INFO] Received request for filters.
+2024-10-16 15:31:43,546 [INFO] Filters generated successfully.
+2024-10-16 15:31:43,548 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:43] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:43,735 [INFO] Received request for filters.
+2024-10-16 15:31:43,735 [INFO] Filters generated successfully.
+2024-10-16 15:31:43,736 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:43] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:43,939 [INFO] Received request for filters.
+2024-10-16 15:31:43,939 [INFO] Filters generated successfully.
+2024-10-16 15:31:43,940 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:43] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:44,149 [INFO] Received request for filters.
+2024-10-16 15:31:44,149 [INFO] Filters generated successfully.
+2024-10-16 15:31:44,150 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:44] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:44,351 [INFO] Received request for filters.
+2024-10-16 15:31:44,353 [INFO] Filters generated successfully.
+2024-10-16 15:31:44,353 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:44] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:44,566 [INFO] Received request for filters.
+2024-10-16 15:31:44,567 [INFO] Filters generated successfully.
+2024-10-16 15:31:44,568 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:44] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:44,762 [INFO] Received request for filters.
+2024-10-16 15:31:44,762 [INFO] Filters generated successfully.
+2024-10-16 15:31:44,764 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:44] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:44,965 [INFO] Received request for filters.
+2024-10-16 15:31:44,965 [INFO] Filters generated successfully.
+2024-10-16 15:31:44,966 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:44] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:45,183 [INFO] Received request for filters.
+2024-10-16 15:31:45,183 [INFO] Filters generated successfully.
+2024-10-16 15:31:45,185 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:45] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:45,381 [INFO] Received request for filters.
+2024-10-16 15:31:45,382 [INFO] Filters generated successfully.
+2024-10-16 15:31:45,382 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:45] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:45,587 [INFO] Received request for filters.
+2024-10-16 15:31:45,587 [INFO] Filters generated successfully.
+2024-10-16 15:31:45,589 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:45] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:45,793 [INFO] Received request for filters.
+2024-10-16 15:31:45,795 [INFO] Filters generated successfully.
+2024-10-16 15:31:45,796 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:45] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:46,000 [INFO] Received request for filters.
+2024-10-16 15:31:46,001 [INFO] Filters generated successfully.
+2024-10-16 15:31:46,001 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:46] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:46,205 [INFO] Received request for filters.
+2024-10-16 15:31:46,206 [INFO] Filters generated successfully.
+2024-10-16 15:31:46,206 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:46] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:46,442 [INFO] Received request for filters.
+2024-10-16 15:31:46,443 [INFO] Filters generated successfully.
+2024-10-16 15:31:46,443 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:46] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:46,630 [INFO] Received request for filters.
+2024-10-16 15:31:46,630 [INFO] Filters generated successfully.
+2024-10-16 15:31:46,631 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:46] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:46,827 [INFO] Received request for filters.
+2024-10-16 15:31:46,827 [INFO] Filters generated successfully.
+2024-10-16 15:31:46,828 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:46] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:47,032 [INFO] Received request for filters.
+2024-10-16 15:31:47,033 [INFO] Filters generated successfully.
+2024-10-16 15:31:47,034 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:47] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:47,242 [INFO] Received request for filters.
+2024-10-16 15:31:47,243 [INFO] Filters generated successfully.
+2024-10-16 15:31:47,244 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:47] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:47,443 [INFO] Received request for filters.
+2024-10-16 15:31:47,443 [INFO] Filters generated successfully.
+2024-10-16 15:31:47,444 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:47] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:47,656 [INFO] Received request for filters.
+2024-10-16 15:31:47,657 [INFO] Filters generated successfully.
+2024-10-16 15:31:47,657 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:47] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:47,863 [INFO] Received request for filters.
+2024-10-16 15:31:47,864 [INFO] Filters generated successfully.
+2024-10-16 15:31:47,865 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:47] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:48,060 [INFO] Received request for filters.
+2024-10-16 15:31:48,060 [INFO] Filters generated successfully.
+2024-10-16 15:31:48,061 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:48] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:48,265 [INFO] Received request for filters.
+2024-10-16 15:31:48,265 [INFO] Filters generated successfully.
+2024-10-16 15:31:48,266 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:48] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:48,478 [INFO] Received request for filters.
+2024-10-16 15:31:48,479 [INFO] Filters generated successfully.
+2024-10-16 15:31:48,479 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:48] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:48,673 [INFO] Received request for filters.
+2024-10-16 15:31:48,673 [INFO] Filters generated successfully.
+2024-10-16 15:31:48,675 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:48] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:48,882 [INFO] Received request for filters.
+2024-10-16 15:31:48,883 [INFO] Filters generated successfully.
+2024-10-16 15:31:48,884 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:48] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:49,085 [INFO] Received request for filters.
+2024-10-16 15:31:49,085 [INFO] Filters generated successfully.
+2024-10-16 15:31:49,085 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:49] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:49,300 [INFO] Received request for filters.
+2024-10-16 15:31:49,301 [INFO] Filters generated successfully.
+2024-10-16 15:31:49,301 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:49] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:49,504 [INFO] Received request for filters.
+2024-10-16 15:31:49,505 [INFO] Filters generated successfully.
+2024-10-16 15:31:49,506 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:49] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:49,717 [INFO] Received request for filters.
+2024-10-16 15:31:49,717 [INFO] Filters generated successfully.
+2024-10-16 15:31:49,718 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:49] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:49,932 [INFO] Received request for filters.
+2024-10-16 15:31:49,933 [INFO] Filters generated successfully.
+2024-10-16 15:31:49,934 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:49] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:31:50,128 [INFO] Received request for filters.
+2024-10-16 15:31:50,128 [INFO] Filters generated successfully.
+2024-10-16 15:31:50,129 [INFO] 127.0.0.1 - - [16/Oct/2024 15:31:50] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:09,539 [INFO] Received request for filters.
+2024-10-16 15:32:09,540 [INFO] Filters generated successfully.
+2024-10-16 15:32:09,541 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:09] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:09,726 [INFO] Received request for filters.
+2024-10-16 15:32:09,726 [INFO] Filters generated successfully.
+2024-10-16 15:32:09,728 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:09] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:09,924 [INFO] Received request for filters.
+2024-10-16 15:32:09,924 [INFO] Filters generated successfully.
+2024-10-16 15:32:09,926 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:09] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:10,128 [INFO] Received request for filters.
+2024-10-16 15:32:10,129 [INFO] Filters generated successfully.
+2024-10-16 15:32:10,129 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:10] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:10,336 [INFO] Received request for filters.
+2024-10-16 15:32:10,336 [INFO] Filters generated successfully.
+2024-10-16 15:32:10,337 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:10] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:10,563 [INFO] Received request for filters.
+2024-10-16 15:32:10,564 [INFO] Filters generated successfully.
+2024-10-16 15:32:10,565 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:10] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:10,754 [INFO] Received request for filters.
+2024-10-16 15:32:10,754 [INFO] Filters generated successfully.
+2024-10-16 15:32:10,755 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:10] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:10,958 [INFO] Received request for filters.
+2024-10-16 15:32:10,958 [INFO] Filters generated successfully.
+2024-10-16 15:32:10,959 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:10] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:11,163 [INFO] Received request for filters.
+2024-10-16 15:32:11,164 [INFO] Filters generated successfully.
+2024-10-16 15:32:11,165 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:11] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:11,384 [INFO] Received request for filters.
+2024-10-16 15:32:11,384 [INFO] Filters generated successfully.
+2024-10-16 15:32:11,385 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:11] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:11,580 [INFO] Received request for filters.
+2024-10-16 15:32:11,581 [INFO] Filters generated successfully.
+2024-10-16 15:32:11,584 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:11] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:11,785 [INFO] Received request for filters.
+2024-10-16 15:32:11,786 [INFO] Filters generated successfully.
+2024-10-16 15:32:11,787 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:11] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:11,994 [INFO] Received request for filters.
+2024-10-16 15:32:11,994 [INFO] Filters generated successfully.
+2024-10-16 15:32:11,995 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:11] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:12,199 [INFO] Received request for filters.
+2024-10-16 15:32:12,200 [INFO] Filters generated successfully.
+2024-10-16 15:32:12,200 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:12] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:12,408 [INFO] Received request for filters.
+2024-10-16 15:32:12,408 [INFO] Filters generated successfully.
+2024-10-16 15:32:12,409 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:12] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:12,615 [INFO] Received request for filters.
+2024-10-16 15:32:12,615 [INFO] Filters generated successfully.
+2024-10-16 15:32:12,616 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:12] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:12,826 [INFO] Received request for filters.
+2024-10-16 15:32:12,827 [INFO] Filters generated successfully.
+2024-10-16 15:32:12,827 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:12] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:13,031 [INFO] Received request for filters.
+2024-10-16 15:32:13,031 [INFO] Filters generated successfully.
+2024-10-16 15:32:13,033 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:13] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:32:13,241 [INFO] Received request for filters.
+2024-10-16 15:32:13,242 [INFO] Filters generated successfully.
+2024-10-16 15:32:13,243 [INFO] 127.0.0.1 - - [16/Oct/2024 15:32:13] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:20,048 [INFO] Received request for filters.
+2024-10-16 15:36:20,049 [INFO] Filters generated successfully.
+2024-10-16 15:36:20,050 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:20] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:20,254 [INFO] Received request for filters.
+2024-10-16 15:36:20,254 [INFO] Filters generated successfully.
+2024-10-16 15:36:20,255 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:20] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:20,456 [INFO] Received request for filters.
+2024-10-16 15:36:20,456 [INFO] Filters generated successfully.
+2024-10-16 15:36:20,457 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:20] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:20,662 [INFO] Received request for filters.
+2024-10-16 15:36:20,663 [INFO] Filters generated successfully.
+2024-10-16 15:36:20,663 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:20] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:20,879 [INFO] Received request for filters.
+2024-10-16 15:36:20,879 [INFO] Filters generated successfully.
+2024-10-16 15:36:20,880 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:20] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:21,074 [INFO] Received request for filters.
+2024-10-16 15:36:21,074 [INFO] Filters generated successfully.
+2024-10-16 15:36:21,075 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:21] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:21,289 [INFO] Received request for filters.
+2024-10-16 15:36:21,291 [INFO] Filters generated successfully.
+2024-10-16 15:36:21,292 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:21] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:21,495 [INFO] Received request for filters.
+2024-10-16 15:36:21,495 [INFO] Filters generated successfully.
+2024-10-16 15:36:21,500 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:21] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:21,712 [INFO] Received request for filters.
+2024-10-16 15:36:21,713 [INFO] Filters generated successfully.
+2024-10-16 15:36:21,713 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:21] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:21,908 [INFO] Received request for filters.
+2024-10-16 15:36:21,908 [INFO] Filters generated successfully.
+2024-10-16 15:36:21,909 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:21] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:22,115 [INFO] Received request for filters.
+2024-10-16 15:36:22,116 [INFO] Filters generated successfully.
+2024-10-16 15:36:22,117 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:22] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:22,323 [INFO] Received request for filters.
+2024-10-16 15:36:22,323 [INFO] Filters generated successfully.
+2024-10-16 15:36:22,324 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:22] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:22,525 [INFO] Received request for filters.
+2024-10-16 15:36:22,525 [INFO] Filters generated successfully.
+2024-10-16 15:36:22,527 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:22] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:22,727 [INFO] Received request for filters.
+2024-10-16 15:36:22,728 [INFO] Filters generated successfully.
+2024-10-16 15:36:22,728 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:22] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:22,935 [INFO] Received request for filters.
+2024-10-16 15:36:22,936 [INFO] Filters generated successfully.
+2024-10-16 15:36:22,936 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:22] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:23,146 [INFO] Received request for filters.
+2024-10-16 15:36:23,146 [INFO] Filters generated successfully.
+2024-10-16 15:36:23,147 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:23] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:23,354 [INFO] Received request for filters.
+2024-10-16 15:36:23,354 [INFO] Filters generated successfully.
+2024-10-16 15:36:23,355 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:23] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:23,570 [INFO] Received request for filters.
+2024-10-16 15:36:23,571 [INFO] Filters generated successfully.
+2024-10-16 15:36:23,572 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:23] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:23,769 [INFO] Received request for filters.
+2024-10-16 15:36:23,770 [INFO] Filters generated successfully.
+2024-10-16 15:36:23,772 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:23] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:23,980 [INFO] Received request for filters.
+2024-10-16 15:36:23,981 [INFO] Filters generated successfully.
+2024-10-16 15:36:23,985 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:23] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:24,179 [INFO] Received request for filters.
+2024-10-16 15:36:24,180 [INFO] Filters generated successfully.
+2024-10-16 15:36:24,180 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:24] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:24,384 [INFO] Received request for filters.
+2024-10-16 15:36:24,384 [INFO] Filters generated successfully.
+2024-10-16 15:36:24,386 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:24] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:24,591 [INFO] Received request for filters.
+2024-10-16 15:36:24,592 [INFO] Filters generated successfully.
+2024-10-16 15:36:24,592 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:24] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:24,806 [INFO] Received request for filters.
+2024-10-16 15:36:24,806 [INFO] Filters generated successfully.
+2024-10-16 15:36:24,807 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:24] "GET /filters HTTP/1.1" 200 -
+2024-10-16 15:36:25,011 [INFO] Received request for filters.
+2024-10-16 15:36:25,011 [INFO] Filters generated successfully.
+2024-10-16 15:36:25,012 [INFO] 127.0.0.1 - - [16/Oct/2024 15:36:25] "GET /filters HTTP/1.1" 200 -
