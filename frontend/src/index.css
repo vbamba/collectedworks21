@@ -1,0 +1,18 @@
+/* frontend/src/index.css */
+
+body.dark-mode {
+  background-color: #181818;
+  color: #f8f9fa;
+}
+
+body.dark-mode .card {
+  background-color: #282828;
+  color: #f8f9fa;
+}
+
+body.dark-mode .form-select,
+body.dark-mode .form-control {
+  background-color: #282828;
+  color: #f8f9fa;
+  border-color: #444;
+}

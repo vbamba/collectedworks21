@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.env
+.venv
+
+# Node
+/frontend/node_modules
+/frontend/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Others
+/backend/indexes/faiss_index.bin
