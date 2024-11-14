@@ -20,7 +20,7 @@ logging.basicConfig(
 
 # Load the Hugging Face model
 logging.info("Loading SentenceTransformer model...")
-model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2', device='cpu')
 logging.info("Model loaded successfully.")
 
 def normalize_text(text):
@@ -240,9 +240,9 @@ def create_embeddings_from_pdfs(pdf_directory, index_output_dir, base_pdf_url, b
 
 # Example usage
 if __name__ == "__main__":
-    pdf_directory = '/Users/vbamba/Projects/collectedworks/pdfs'
-    index_output_dir = '/Users/vbamba/Projects/collectedworks/indexes'
-    base_pdf_url = 'http://127.0.0.1:5000/pdfs'  # Adjust based on your server's URL
+    pdf_directory = '/Users/vbamba/Projects/collectedworks21/backend/pdf'
+    index_output_dir = '/Users/vbamba/Projects/collectedworks21/backend/indexes'
+    base_pdf_url = 'http://127.0.0.1:5001/pdfs'  # Adjust based on your server's URL
     book_mapping_path = os.path.join(index_output_dir, 'book_mapping.json')
 
     # Create the FAISS index with chunking

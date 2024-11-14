@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 # Load FAISS index
-index = faiss.read_index('/Users/vbamba/Projects/collectedworks/indexes/faiss_index.bin')
+index = faiss.read_index('/Users/vbamba/Projects/collectedworks21/backend/indexes/faiss_index.bin')
 
 # Perform a full scan to collect distances
 query_embedding = np.random.random((1, index.d)).astype('float32')

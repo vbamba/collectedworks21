@@ -43706,3 +43706,47 @@
 2024-10-16 10:30:03,506 [INFO] Index output directory created at /Users/vbamba/Projects/collectedworks/indexes.
 2024-10-16 10:30:03,578 [INFO] FAISS index saved successfully.
 2024-10-16 10:30:04,448 [INFO] Metadata saved successfully.
+2024-10-22 10:56:48,155 [INFO] Loading SentenceTransformer model...
+2024-10-22 10:56:48,181 [INFO] Use pytorch device_name: mps
+2024-10-22 10:56:48,181 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-22 10:56:50,887 [INFO] Model loaded successfully.
+2024-10-22 10:56:50,891 [INFO] Book mapping loaded successfully.
+2024-10-22 10:56:50,891 [INFO] Total PDFs processed: 0
+2024-10-22 10:56:50,891 [INFO] Total pages processed: 0
+2024-10-22 10:56:50,891 [INFO] Total chunks created: 0
+2024-10-22 10:56:50,891 [INFO] Embeddings shape: (0,)
+2024-10-22 10:56:50,891 [WARNING] No embeddings were generated. Please check your PDFs and extraction process.
+2024-10-22 10:57:36,816 [INFO] Loading SentenceTransformer model...
+2024-10-22 10:57:36,826 [INFO] Use pytorch device_name: mps
+2024-10-22 10:57:36,826 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-22 10:57:39,146 [INFO] Model loaded successfully.
+2024-10-22 10:57:39,147 [INFO] Book mapping loaded successfully.
+2024-10-22 10:57:39,147 [INFO] Processing PDF: /Users/vbamba/Projects/collectedworks21/backend/pdf/sriaurobindo/03-04CollectedPlaysAndStories.pdf
+2024-10-22 10:57:46,900 [INFO] Extracted text from 1018 pages.
+2024-10-22 10:57:46,901 [INFO] Page 1: 1 chunks created.
+2024-10-22 10:57:47,544 [INFO] Page 2: 1 chunks created.
+2024-10-22 11:01:05,616 [INFO] Loading SentenceTransformer model...
+2024-10-22 11:01:05,626 [INFO] Use pytorch device_name: mps
+2024-10-22 11:01:05,626 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-22 11:01:08,110 [INFO] Model loaded successfully.
+2024-10-22 11:01:08,111 [INFO] Book mapping loaded successfully.
+2024-10-22 11:01:08,112 [INFO] Processing PDF: /Users/vbamba/Projects/collectedworks21/backend/pdf/sriaurobindo/03-04CollectedPlaysAndStories.pdf
+2024-10-22 11:01:16,072 [INFO] Extracted text from 1018 pages.
+2024-10-22 11:01:16,073 [INFO] Page 1: 1 chunks created.
+2024-10-22 11:01:16,409 [INFO] Page 2: 1 chunks created.
+2024-10-22 13:21:35,689 [INFO] Loading SentenceTransformer model...
+2024-10-22 13:21:35,718 [INFO] Use pytorch device_name: mps
+2024-10-22 13:21:35,718 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-22 13:21:38,917 [INFO] Model loaded successfully.
+2024-10-22 13:21:38,918 [INFO] Book mapping loaded successfully.
+2024-10-22 13:21:38,919 [INFO] Processing PDF: /Users/vbamba/Projects/collectedworks21/backend/pdf/sriaurobindo/03-04CollectedPlaysAndStories.pdf
+2024-10-22 13:21:46,665 [INFO] Extracted text from 1018 pages.
+2024-10-22 13:21:46,665 [INFO] Page 1: 1 chunks created.
+2024-10-22 13:21:47,265 [INFO] Page 2: 1 chunks created.
+2024-10-22 13:25:35,460 [INFO] Loading SentenceTransformer model...
+2024-10-22 13:25:35,460 [INFO] Load pretrained SentenceTransformer: sentence-transformers/all-mpnet-base-v2
+2024-10-22 13:25:36,743 [INFO] Model loaded successfully.
+2024-10-22 13:25:36,744 [INFO] Book mapping loaded successfully.
+2024-10-22 13:25:36,744 [INFO] Processing PDF: /Users/vbamba/Projects/collectedworks21/backend/pdf/sriaurobindo/03-04CollectedPlaysAndStories.pdf
+2024-10-22 13:25:44,594 [INFO] Extracted text from 1018 pages.
+2024-10-22 13:25:44,595 [INFO] Page 1: 1 chunks created.
