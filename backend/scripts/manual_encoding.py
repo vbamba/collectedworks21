@@ -14,7 +14,7 @@ snippet_embedding = model.encode(snippet, convert_to_numpy=True).astype('float32
 snippet_embedding = np.expand_dims(snippet_embedding, axis=0)
 
 # Load FAISS index
-index = faiss.read_index('/Users/vbamba/Projects/collectedworks/indexes/faiss_index.bin')
+index = faiss.read_index('/Users/vbamba/Projects/collectedworks21/backend/indexes/faiss_index.bin')
 
 # Perform search
 distances, indices = index.search(snippet_embedding, 1)

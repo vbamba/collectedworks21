@@ -25,13 +25,13 @@ def verify_metadata(pdf_filename, expected_fields=None, metadata_path='metadata.
                     print(f"  [WARNING] {field} mismatch: expected '{expected_value}', found '{actual_value}'")
     
 if __name__ == "__main__":
-    pdf_filename = "33-34Savitri.pdf"
+    pdf_filename = "The-Mother-MCW-Vol10-On-Aphorisms.pdf"
     expected_fields = {
-        "book_title": "Savitri",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
+        "book_title": "On Aphorisms.",
+        "author": "THe Mother",
+        "group": "CWM",
         "priority": 99
     }
-    metadata_path = '/Users/vbamba/Projects/collectedworks/indexes/metadata.json'
+    metadata_path = '/Users/vbamba/Projects/collectedworks21/backend/indexes/metadata.json'
     
     verify_metadata(pdf_filename, expected_fields, metadata_path)

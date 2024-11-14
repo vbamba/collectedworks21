@@ -190,6 +190,8 @@ def create_embeddings_from_pdfs(pdf_directory, index_output_dir, base_pdf_url, b
     # Convert embeddings to numpy array
     try:
         embeddings_np = np.array(embeddings).astype('float32')
+        #normalize  both your embeddings and query vectors to unit length. This allows the inner product to effectively represent cosine similarity.
+        faiss.normalize_L2(embeddings_np)       
         logging.info(f"Embeddings shape: {embeddings_np.shape}")
     except Exception as e:
         logging.error(f"Error converting embeddings to numpy array: {e}")
@@ -198,7 +200,9 @@ def create_embeddings_from_pdfs(pdf_directory, index_output_dir, base_pdf_url, b
     # Create FAISS index
     if embeddings_np.size > 0:
         try:
-            index = faiss.IndexFlatL2(embeddings_np.shape[1])  # L2 distance metric
+            #index = faiss.IndexFlatL2(embeddings_np.shape[1])  # L2 distance metric
+            # Use IndexFlatIP using Inner Product for cosine similarity
+            index = faiss.IndexFlatIP(embeddings_np.shape[1])            
             index.add(embeddings_np)  # Add embeddings to the FAISS index
             logging.info(f"FAISS index created with {index.ntotal} embeddings.")
         except Exception as e:
@@ -234,9 +238,9 @@ def create_embeddings_from_pdfs(pdf_directory, index_output_dir, base_pdf_url, b
 
 # Example usage
 if __name__ == "__main__":
-    pdf_directory = '/Users/vbamba/Projects/collectedworks/pdfs'
-    index_output_dir = '/Users/vbamba/Projects/collectedworks/indexes'
-    base_pdf_url = 'http://127.0.0.1:5000/pdfs'  # Adjust based on your server's URL
+    pdf_directory = '/Users/vbamba/Projects/collectedworks21/backend/pdf'
+    index_output_dir = '/Users/vbamba/Projects/collectedworks21/backend/indexes'
+    base_pdf_url = 'http://127.0.0.1:5001/pdfs'  # Adjust based on your server's URL
     book_mapping_path = os.path.join(index_output_dir, 'book_mapping.json')
 
     # Create the FAISS index with chunking

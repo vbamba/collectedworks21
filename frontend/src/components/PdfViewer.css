@@ -1,0 +1,22 @@
+/* frontend/src/components/PdfViewer.css */
+
+.pdf-container {
+    width: 100%;
+    height: auto;
+    position: relative;
+}
+
+mark {
+    background-color: yellow;
+    color: black;
+}
+
+body.dark-mode mark {
+    background-color: orange;
+    color: black;
+}
+
+/* Optional: Smooth transitions */
+.pdf-container {
+    transition: background-color 0.3s, color 0.3s;
+}
