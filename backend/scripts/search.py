@@ -64,6 +64,7 @@ def get_query_embedding_cached(query, model_name='sentence-transformers/all-mpne
         logger.error(f"Error generating embedding for query '{query}': {e}", exc_info=True)
         raise RuntimeError(f"Error generating embedding for query '{query}': {e}")
 
+
 def perform_exact_match_search(query_normalized, metadata, filters, min_snippet_length):
     logger.info("Performing exact match search...")
     exact_matches = []
@@ -219,7 +220,7 @@ def perform_semantic_search_old(query, index, metadata, filters, min_snippet_len
     return semantic_matches, matched_indices
 
 def search(query, index_path, metadata_path, top_k=50, filters=None, search_type='all',
-           model_name='sentence-transformers/all-mpnet-base-v2', min_snippet_length=20):
+           model_name='sentence-transformers/all-mpnet-base-v2', min_snippet_length=10):
     logger.info(f"Starting search for query: '{query}' with top_k={top_k}, filters={filters}, search_type={search_type}")
 
     if filters is None:

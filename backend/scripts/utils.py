@@ -61,50 +61,89 @@ def prepare_text_for_matching(text):
 
 
 def highlight_query(text, query):
+    """
+    Highlights exact matches of the query in the text.
+    """
     # Normalize text and query
     normalized_text = prepare_text_for_matching(text)
-    query_words = prepare_text_for_matching(query).split()
-    # Iterate over query words and highlight them
-    for word in query_words:
-        # Escape the word for regex
-        word_regex = re.escape(word)
-        # Use regex to replace the word with highlighted version
-        text = re.sub(f'({word_regex})', r'<mark>\1</mark>', text, flags=re.IGNORECASE)
-    return text
-
-
-def highlight_query_old(text, query):
-    # Use the original text for displaying, but normalize for matching
     normalized_query = prepare_text_for_matching(query)
-    normalized_text = prepare_text_for_matching(text)
-
-    # Find all occurrences of the normalized query in the normalized text
-    pattern = re.escape(normalized_query)
-    matches = list(re.finditer(pattern, normalized_text, flags=re.IGNORECASE))
-
+    
+    # Escape special characters in the query and add word boundaries
+    query_regex = r'\b' + re.escape(normalized_query) + r'\b'
+    
+    # Find all matches in the normalized text
+    matches = list(re.finditer(query_regex, normalized_text, flags=re.IGNORECASE))
+    
     # Offset to adjust positions due to added <mark> tags
     offset = 0
+    original_text = text
+    
     for match in matches:
         start, end = match.span()
         # Adjust positions based on previous replacements
         start += offset
         end += offset
-
+        
         # Extract the original text corresponding to the matched span
-        original_text_span = text[start:end]
-
+        original_text_span = original_text[start:end]
+        
         # Replace the original text with highlighted text
         highlighted_span = f"<mark>{original_text_span}</mark>"
-
+        
         # Update the text with the highlighted span
-        text = text[:start] + highlighted_span + text[end:]
-
+        original_text = original_text[:start] + highlighted_span + original_text[end:]
+        
         # Update the offset
         offset += len(highlighted_span) - (end - start)
+    
+    return original_text
 
-    return text
 
 def extract_matching_sentences(text, query, max_lines=10, min_chars=200, max_chars=500):
+    lines = text.split('\n')
+    normalized_query = prepare_text_for_matching(query)
+    found_indices = []
+    
+    # Modified search logic
+    for i, line in enumerate(lines):
+        line_normalized = prepare_text_for_matching(line)
+        # Check if the entire normalized query appears in the normalized line
+        if normalized_query in line_normalized:
+            found_indices.append(i)
+        # As a fallback, check for individual words
+        elif any(word in line_normalized for word in normalized_query.split()):
+            found_indices.append(i)
+            
+    if found_indices:
+        start = max(0, found_indices[0] - 5)
+        end = min(len(lines), found_indices[-1] + 6)
+        context_lines = lines[start:end]
+        highlighted_lines = [highlight_query(line, query) for line in context_lines]
+        snippet = '\n'.join(highlighted_lines)
+        
+        # Ensure snippet meets min_chars requirement
+        if len(snippet) < min_chars:
+            start = max(0, start - 5)
+            end = min(len(lines), end + 5)
+            context_lines = lines[start:end]
+            highlighted_lines = [highlight_query(line, query) for line in context_lines]
+            snippet = '\n'.join(highlighted_lines)
+    else:
+        # If no matching line is found, return the beginning of the text
+        snippet = text[:max_chars]
+        snippet = highlight_query(snippet, query)
+        
+    # Replace newlines with '<br/>'
+    snippet = snippet.replace('\n', '<br/>')
+    # Allow only <br> and <mark> tags
+    allowed_tags = ['br', 'mark']
+    snippet = bleach.clean(snippet, tags=allowed_tags, strip=True)
+    # Truncate to max_chars
+    snippet = snippet[:max_chars]
+    return snippet
+
+
+def extract_matching_sentences_last(text, query, max_lines=10, min_chars=200, max_chars=500):
     lines = text.split('\n')
     query_words = prepare_text_for_matching(query).split()
     found_indices = []
@@ -141,42 +180,6 @@ def extract_matching_sentences(text, query, max_lines=10, min_chars=200, max_cha
     snippet = snippet[:max_chars]
     return snippet
 
-def extract_matching_sentences_last(text, query, max_lines=10, min_chars=200, max_chars=500):
-    lines = text.split('\n')
-    query_words = prepare_text_for_matching(query).split()
-    found_indices = []
-    for i, line in enumerate(lines):
-        line_normalized = prepare_text_for_matching(line)
-        if all(word in line_normalized for word in query_words):
-            found_indices.append(i)
-            break  # Stop after finding the first line with all words
-        elif any(word in line_normalized for word in query_words):
-            found_indices.append(i)
-    if found_indices:
-        start = max(0, found_indices[0] - 5)
-        end = min(len(lines), found_indices[-1] + 6)
-        context_lines = lines[start:end]
-        highlighted_lines = [highlight_query(line, query) for line in context_lines]
-        snippet = '\n'.join(highlighted_lines)
-        # Ensure snippet meets min_chars requirement
-        if len(snippet) < min_chars:
-            start = max(0, start - 5)
-            end = min(len(lines), end + 5)
-            context_lines = lines[start:end]
-            highlighted_lines = [highlight_query(line, query) for line in context_lines]
-            snippet = '\n'.join(highlighted_lines)
-    else:
-        # If no matching line is found, return the beginning of the text
-        snippet = text[:max_chars]
-        snippet = highlight_query(snippet, query)
-    # Replace newlines with '<br/>'
-    snippet = snippet.replace('\n', '<br/>')
-    # Allow only <br> and <mark> tags
-    allowed_tags = ['br', 'mark']
-    snippet = bleach.clean(snippet, tags=allowed_tags, strip=True)
-    # Truncate to max_chars
-    snippet = snippet[:max_chars]
-    return snippet
 
 def extract_matching_sentences_lm(text, query, max_lines=10, min_chars=200, max_chars=500):
     query_lower = query.lower()
