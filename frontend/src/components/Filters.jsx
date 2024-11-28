@@ -7,6 +7,7 @@ const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
         const { name, value } = e.target;
         setSelectedFilters({ ...selectedFilters, [name]: value });
     };
+  
 
     // Display book titles based on selected group or default to all sorted titles
     const filteredBooks = selectedFilters.group
@@ -20,13 +21,6 @@ const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
         Disciples: "Works of Disciples"
     };
 
-    // Search type descriptions
-    const searchTypeDescriptions = {
-        all: "All",
-        exact: "Exact Match",
-        all_words: "All Words",        
-        semantic: "Semantic Search"
-    };
 
     return (
         <div className="row mb-3">
@@ -64,21 +58,8 @@ const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
                 </select>
             </div>
 
-            {/* Search Type Filter */}
-            <div className="col-md-4">
-                <select
-                    name="search_type"
-                    className="form-select"
-                    value={selectedFilters.search_type}
-                    onChange={handleChange}
-                >
-                    {Object.entries(searchTypeDescriptions).map(([value, label]) => (
-                        <option key={value} value={value}>
-                            {label}
-                        </option>
-                    ))}
-                </select>
-            </div>
+
+
         </div>
     );
 };

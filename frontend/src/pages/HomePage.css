@@ -1,3 +1,9 @@
+.homepage-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
 .page-header {
     display: flex;
     align-items: center;
@@ -7,8 +13,38 @@
 }
 
 .header-image {
-    width: 130px;
-    height: 75px;
-    object-fit: cover;
-    margin-right: 1rem; /* Add space between image and text */
+    height: 50px;
+    width: auto;
+    margin-right: 15px;
+}
+
+.results-container {
+    margin-top: 20px;
+}
+
+.results-list {
+    margin-bottom: 20px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: #007bff;
+}
+
+.pagination {
+    margin-top: 2rem;
+}
+
+.page-link {
+    cursor: pointer;
+}
+
+.page-link:focus {
+    box-shadow: none;
+}
+
+.alert {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
