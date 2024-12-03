@@ -1,7 +1,10 @@
 // frontend/src/services/api.js
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5001';
+
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+//const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5001';
+//const API_BASE_URL = '/api';
 
 /**
  * Fetches filter options from the backend.

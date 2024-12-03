@@ -64,6 +64,18 @@ def get_query_embedding_cached(query, model_name='sentence-transformers/all-mpne
         logger.error(f"Error generating embedding for query '{query}': {e}", exc_info=True)
         raise RuntimeError(f"Error generating embedding for query '{query}': {e}")
 
+def clean_pdf_url(url):
+    """Remove hostname from PDF URL if present."""
+    if url.startswith(('http://', 'https://')):
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            return parsed.path
+        except:
+            # If parsing fails, return the original or empty string
+            return url
+    return url
+
 
 def perform_exact_match_search(query_normalized, metadata, filters, min_snippet_length):
     logger.info("Performing exact match search...")
@@ -83,7 +95,8 @@ def perform_exact_match_search(query_normalized, metadata, filters, min_snippet_
                         'file_path': meta.get('file_path', ''),
                         'group': meta.get('group', 'Unknown'),
                         'page_number': meta.get('page_number', 'N/A'),
-                        'pdf_url': meta.get('pdf_url', ''),
+                        'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
+                        #'pdf_url': meta.get('pdf_url', ''),
                         'priority': meta.get('priority', 0),
                         'category_priority': 1,
                         'snippet': snippet,
@@ -117,7 +130,8 @@ def perform_all_words_match_search(query_words_set, metadata, filters, min_snipp
                         'file_path': meta.get('file_path', ''),
                         'group': meta.get('group', 'Unknown'),
                         'page_number': meta.get('page_number', 'N/A'),
-                        'pdf_url': meta.get('pdf_url', ''),
+                        'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
+                        #'pdf_url': meta.get('pdf_url', ''),
                         'priority': meta.get('priority', 0),
                         'category_priority': 3,  # Will update if also semantic match
                         'snippet': snippet,
@@ -161,7 +175,8 @@ def perform_semantic_search(query, index, metadata, filters, min_snippet_length,
                     'file_path': meta.get('file_path', ''),
                     'group': meta.get('group', 'Unknown'),
                     'page_number': meta.get('page_number', 'N/A'),
-                    'pdf_url': meta.get('pdf_url', ''),
+                    'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
+                    #'pdf_url': meta.get('pdf_url', ''),
                     'priority': meta.get('priority', 0),
                     'category_priority': 4,
                     'snippet': snippet,
@@ -206,7 +221,8 @@ def perform_semantic_search_old(query, index, metadata, filters, min_snippet_len
                     'file_path': meta.get('file_path', ''),
                     'group': meta.get('group', 'Unknown'),
                     'page_number': meta.get('page_number', 'N/A'),
-                    'pdf_url': meta.get('pdf_url', ''),
+                    'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
+                    #'pdf_url': meta.get('pdf_url', ''),
                     'priority': meta.get('priority', 0),
                     'category_priority': 4,
                     'snippet': snippet,

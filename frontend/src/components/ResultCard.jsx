@@ -7,8 +7,13 @@ import DOMPurify from 'dompurify';
 const ResultCard = ({ result, searchTerm }) => {
     const { book_title, page_number, pdf_url, snippet, distance } = result;
 
+        // At the top of ResultCard.jsx
+    const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_PDF_URL || '';
+
     // Construct the PDF URL with the correct page
-    const pdfUrlWithPage = `${encodeURI(pdf_url.split('#page=')[0])}#page=${page_number}`;
+    const pdfUrlWithPage = `${BACKEND_BASE_URL}${encodeURI(pdf_url.split('#page=')[0])}#page=${page_number}`;
+
+    //const pdfUrlWithPage = `${encodeURI(pdf_url.split('#page=')[0])}#page=${page_number}`;
 
     // Sanitize the snippet and replace \n with <br/>
     const sanitizedSnippet = DOMPurify.sanitize(

@@ -50,7 +50,7 @@ if not book_mapping_path.exists():
 #metadata = load_metadata(str(metadata_path))
 
 # Route to serve PDF files
-@main.route('/pdfs/<path:filename>', methods=['GET'])
+@main.route('/api/pdfs/<path:filename>', methods=['GET'])
 def serve_pdf(filename):
     """
     Serve PDF files from the PDF_DIRECTORY, including subdirectories.
@@ -64,7 +64,7 @@ def serve_pdf(filename):
         return jsonify({'error': 'File not found.'}), 404
         
         
-@main.route('/filters', methods=['GET'])
+@main.route('/api/filters', methods=['GET'])
 def get_filters():
     app_logger.info("Fetching filters")
 
@@ -103,7 +103,7 @@ def get_filters():
 
 
 
-@main.route('/search', methods=['GET'])
+@main.route('/api/search', methods=['GET'])
 def search_api():
 
     query = request.args.get('query', '')
