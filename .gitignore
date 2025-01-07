@@ -114,4 +114,5 @@ poetry.lock
 
 # Others
 /backend/indexes/faiss_index.bin
+/backend/indexes/metadata.json
 .aider*
