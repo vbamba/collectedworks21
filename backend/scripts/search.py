@@ -6,7 +6,14 @@ import numpy as np
 import logging
 from sentence_transformers import SentenceTransformer
 from functools import lru_cache
-from .utils import extract_matching_sentences, extract_all_words_snippet, extract_exact_words_snippet, extract_semantic_snippet, apply_filters, prepare_text_for_matching
+from collections import Counter  
+from .utils import (
+    extract_all_words_snippet,
+    extract_exact_words_snippet,
+    extract_semantic_snippet,
+    apply_filters,
+    prepare_text_for_matching
+)
 
 # Initialize the logger
 logger = logging.getLogger(__name__)
@@ -76,6 +83,22 @@ def clean_pdf_url(url):
             return url
     return url
 
+def build_result_dict(meta, snippet, idx, category_priority, distance=0.0):
+    return {
+        'idx': idx,
+        'author': meta.get('author', 'Unknown'),
+        'book_title': meta.get('book_title', 'Unknown'),
+        'chapter_name': meta.get('chapter_name', 'N/A'),
+        'file_path': meta.get('file_path', ''),
+        'group': meta.get('group', 'Unknown'),
+        'page_number': meta.get('page_number', 'N/A'),
+        'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
+        'priority': meta.get('priority', 0),
+        'category_priority': category_priority,
+        'snippet': snippet,
+        'distance': distance
+    }
+
 
 def perform_exact_match_search(query, query_normalized, metadata, filters, min_snippet_length, remove_punctuation=True):
     logger.info("Performing exact match search...")
@@ -95,21 +118,9 @@ def perform_exact_match_search(query, query_normalized, metadata, filters, min_s
                 snippet = extract_exact_words_snippet(meta['snippet'], snippet_normalized, query_normalized, start_index, end_index)
                 if len(snippet) >= min_snippet_length:
                     logger.debug(f"Highlighted snippet: {snippet}")
-                    exact_matches.append({
-                        'idx': idx,
-                        'author': meta.get('author', 'Unknown'),
-                        'book_title': meta.get('book_title', 'Unknown'),
-                        'chapter_name': meta.get('chapter_name', 'N/A'),
-                        'file_path': meta.get('file_path', ''),
-                        'group': meta.get('group', 'Unknown'),
-                        'page_number': meta.get('page_number', 'N/A'),
-                        'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
-                        #'pdf_url': meta.get('pdf_url', ''),
-                        'priority': meta.get('priority', 0),
-                        'category_priority': 1,
-                        'snippet':snippet,
-                        'distance': 0.0
-                    })
+                    exact_matches.append(build_result_dict(
+                        meta, snippet, idx, category_priority=1, distance=0.0
+                    ))
                     matched_indices.add(idx)
                     logger.debug(f"Exact match found at index {idx}")
         else:
@@ -129,25 +140,12 @@ def perform_all_words_match_search(query_words_set, metadata, filters, min_snipp
             snippet_words_set = set(snippet_normalized.split())
             if query_words_set.issubset(snippet_words_set):
                 logger.info(f"Matched all words snippet {snippet_words_set}.")
-                #snippet = extract_matching_sentences(meta['snippet'], ' '.join(query_words_set), remove_punctuation)
                 snippet = extract_all_words_snippet(meta['snippet'], ' '.join(query_words_set), remove_punctuation)
                 
                 if len(snippet) >= min_snippet_length:
-                    all_words_matches.append({
-                        'idx': idx,
-                        'author': meta.get('author', 'Unknown'),
-                        'book_title': meta.get('book_title', 'Unknown'),
-                        'chapter_name': meta.get('chapter_name', 'N/A'),
-                        'file_path': meta.get('file_path', ''),
-                        'group': meta.get('group', 'Unknown'),
-                        'page_number': meta.get('page_number', 'N/A'),
-                        'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
-                        #'pdf_url': meta.get('pdf_url', ''),
-                        'priority': meta.get('priority', 0),
-                        'category_priority': 3,  # Will update if also semantic match
-                        'snippet': snippet,
-                        'distance': 0.1  # Default small distance
-                    })
+                    all_words_matches.append(build_result_dict(
+                        meta, snippet, idx, category_priority=3, distance=0.1
+                    ))                    
                     matched_indices.add(idx)
                     logger.debug(f"All words match found at index {idx}")
         else:
@@ -178,21 +176,9 @@ def perform_semantic_search(query, index, metadata, filters, min_snippet_length,
         if apply_filters([meta], filters):
             snippet = extract_semantic_snippet(meta['snippet'], query, remove_punctuation)
             if len(snippet) >= min_snippet_length:
-                semantic_matches.append({
-                    'idx': idx,
-                    'author': meta.get('author', 'Unknown'),
-                    'book_title': meta.get('book_title', 'Unknown'),
-                    'chapter_name': meta.get('chapter_name', 'N/A'),
-                    'file_path': meta.get('file_path', ''),
-                    'group': meta.get('group', 'Unknown'),
-                    'page_number': meta.get('page_number', 'N/A'),
-                    'pdf_url': clean_pdf_url(meta.get('pdf_url', '')),
-                    #'pdf_url': meta.get('pdf_url', ''),
-                    'priority': meta.get('priority', 0),
-                    'category_priority': 4,
-                    'snippet': snippet,
-                    'distance': float(distance)
-                })
+                semantic_matches.append(build_result_dict(
+                    meta, snippet, idx, category_priority=4, distance=float(distance)
+                ))                     
                 matched_indices.add(idx)
                 logger.debug(f"Semantic match found at index {idx} with distance {distance}")
             # Stop if we have enough matches
@@ -230,27 +216,14 @@ def search(query, index_path, metadata_path, top_k=50, filters=None, search_type
     if search_type == 'all_words':
         search_type = 'all'
 
+    # --- EXACT MATCH BLOCK ---
     if search_type in ['all', 'exact']:
         # Perform exact match search
         exact_matches, exact_matched_indices = perform_exact_match_search(query, query_normalized, metadata, filters, min_snippet_length, remove_punctuation)
         combined_results.extend(exact_matches)
         matched_indices.update(exact_matched_indices)
-
-        if search_type == 'exact':
-            # Remove 'idx' from results
-            for res in combined_results:
-                res.pop('idx', None)
-            # Sort and return
-            sorted_results = sorted(
-                combined_results,
-                key=lambda x: (
-                    x['category_priority'],
-                    -x['priority'],
-                    x['distance']
-                )
-            )
-            return sorted_results[:top_k]
-
+        
+    # --- ALL WORDS BLOCK ---
     if search_type in ['all', 'all_words']:
         # Perform all words match search
         all_words_matches, all_words_matched_indices = perform_all_words_match_search(
@@ -259,21 +232,7 @@ def search(query, index_path, metadata_path, top_k=50, filters=None, search_type
         combined_results.extend(all_words_matches)
         matched_indices.update(all_words_matched_indices)
 
-        if search_type == 'all_words':
-            # Remove 'idx' from results
-            for res in combined_results:
-                res.pop('idx', None)
-            # Sort and return
-            sorted_results = sorted(
-                combined_results,
-                key=lambda x: (
-                    x['category_priority'],
-                    -x['priority'],
-                    x['distance']
-                )
-            )
-            return sorted_results[:top_k]
-
+    # --- SEMANTIC BLOCK ---
     if search_type in ['all', 'semantic']:
         # Perform semantic search
         semantic_matches, semantic_matched_indices = perform_semantic_search(
@@ -305,143 +264,27 @@ def search(query, index_path, metadata_path, top_k=50, filters=None, search_type
     for res in combined_results:
         res.pop('idx', None)
 
+    # --- Count how many hits per file_path and store it in "match_count" ---
+    file_counts = Counter(item['file_path'] for item in combined_results)
+    for res in combined_results:
+        filepath = res.get('file_path', '')
+        res['match_count'] = file_counts.get(filepath, 1)
+
     # Sort combined results
     sorted_results = sorted(
         combined_results,
         key=lambda x: (
-            x['category_priority'],
+            x['category_priority'], 
             -x['priority'],
+            -x['match_count'],     # NEW sub-sort: prefer books with *more* matches
             -x['distance'] if x['distance'] is not None else float('-inf')
         )
     )
 
-
+    all_count = len(sorted_results)
     # Return top_k results
     final_results = sorted_results[:top_k]
-    logger.info(f"Returning combined and sorted results. Total results: {len(final_results)}")
+    logger.info(f"Returning {len(final_results)} out of {all_count} combined results.")    
     return final_results
 
-def search_last(query, index_path, metadata_path, top_k=10, filters=None, search_type='all',
-           model_name='sentence-transformers/all-mpnet-base-v2', min_snippet_length=20):
-    """
-    Performs a search with options for exact match, all words match, and semantic matching.
 
-    Parameters:
-    - query (str): The search query.
-    - index_path (str): Path to the FAISS index file.
-    - metadata_path (str): Path to the metadata JSON file.
-    - top_k (int): Number of top results to return.
-    - filters (dict): Filters to apply on the search results.
-    - search_type (str): 'all', 'exact', 'semantic', or 'all_words'.
-    - model_name (str): Name of the SentenceTransformer model to use.
-    - min_snippet_length (int): Minimum length of snippet to include.
-
-    Returns:
-    - List of search results containing metadata and relevance scores.
-    """
-    logger.info(f"Starting search for query: '{query}' with top_k={top_k}, filters={filters}, search_type={search_type}")
-
-    if filters is None:
-        filters = {}
-
-    # Load FAISS index and metadata using caching
-    index = load_faiss_index_cached(index_path)
-    metadata = load_metadata_cached(metadata_path)
-
-    # Initialize the model using caching
-    model = initialize_model_cached(model_name)
-
-    # Normalize the query
-    query_normalized = prepare_text_for_matching(query)
-    query_words = query_normalized.split()
-    query_words_set = set(query_words)
-
-    combined_results = []
-    matched_indices = set()
-
-    if search_type in ['all', 'exact']:
-        # Perform exact match search
-        exact_matches, exact_matched_indices = perform_exact_match_search(query_normalized, metadata, filters, min_snippet_length)
-        combined_results.extend(exact_matches)
-        matched_indices.update(exact_matched_indices)
-
-        if search_type == 'exact':
-            # Remove 'idx' from results
-            for res in combined_results:
-                res.pop('idx', None)
-            # Sort and return
-            sorted_results = sorted(
-                combined_results,
-                key=lambda x: (
-                    x['category_priority'],
-                    -x['priority'],
-                    x['distance']
-                )
-            )
-            return sorted_results[:top_k]
-
-    if search_type in ['all', 'all_words']:
-        # Perform all words match search
-        all_words_matches, all_words_matched_indices = perform_all_words_match_search(
-            query_words_set, metadata, filters, min_snippet_length, matched_indices
-        )
-        combined_results.extend(all_words_matches)
-        matched_indices.update(all_words_matched_indices)
-
-        if search_type == 'all_words':
-            # Remove 'idx' from results
-            for res in combined_results:
-                res.pop('idx', None)
-            # Sort and return
-            sorted_results = sorted(
-                combined_results,
-                key=lambda x: (
-                    x['category_priority'],
-                    -x['priority'],
-                    x['distance']
-                )
-            )
-            return sorted_results[:top_k]
-
-    if search_type in ['all', 'semantic']:
-        # Perform semantic search
-        semantic_matches, semantic_matched_indices = perform_semantic_search(
-            query, index, metadata, filters, min_snippet_length, matched_indices, model_name
-        )
-        #matched_indices.update(semantic_matched_indices)
-
-        if search_type == 'all':
-            # Update category_priority for all words matches that are also in semantic matches
-            semantic_indices = {res['idx'] for res in semantic_matches}
-            for result in combined_results:
-                if result.get('category_priority') == 3 and result['idx'] in semantic_indices:
-                    result['category_priority'] = 2  # Combined match
-                    # Update distance from semantic match
-                    for sem_result in semantic_matches:
-                        if sem_result['idx'] == result['idx']:
-                            result['distance'] = sem_result['distance']
-                            break
-            # Remove duplicates from semantic matches
-            semantic_matches = [res for res in semantic_matches if res['idx'] not in matched_indices]
-            combined_results.extend(semantic_matches)
-        else:
-            combined_results.extend(semantic_matches)
-
-    # Remove 'idx' from results as it's no longer needed
-    for res in combined_results:
-        res.pop('idx', None)
-
-    # Sort combined results
-    sorted_results = sorted(
-        combined_results,
-        key=lambda x: (
-            x['category_priority'],
-            -x['priority'],
-            x['distance'] if x['distance'] is not None else float('inf')
-        )
-    )
-
-    # Return top_k results
-    final_results = sorted_results[:top_k]
-    logger.info(f"Returning combined and sorted results. Total results: {len(final_results)}")
-    return final_results

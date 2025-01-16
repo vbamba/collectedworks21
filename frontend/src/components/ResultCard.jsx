@@ -1,63 +1,120 @@
+// frontend/src/components/ResultCard.jsx
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import DOMPurify from 'dompurify';
+import { Link } from 'react-router-dom';
 
-const ResultCard = ({ result, searchTerm, maxLines = 10 }) => {
-    const { book_title, page_number, pdf_url, snippet, distance } = result;
+const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
+  const { 
+    book_title, 
+    page_number, 
+    pdf_url, 
+    snippet, 
+    distance 
+  } = result;
 
-    // Base URL for the backend
-    const BACKEND_BASE_URL = process.env.REACT_APP_BACKEND_PDF_URL || '';
-    const pdfUrlWithPage = `${BACKEND_BASE_URL}${encodeURI(pdf_url.split('#page=')[0])}#page=${page_number}`;
+  // Dynamically determine the backend base URL
+  const BACKEND_BASE_URL =
+    process.env.REACT_APP_BACKEND_PDF_URL || window.location.origin;
 
-    // Function to limit the snippet to a certain number of lines
-    const truncateSnippet = (htmlSnippet, maxLines) => {
-        const lines = htmlSnippet.split('<br/>');
-        if (lines.length > maxLines) {
-            return lines.slice(0, maxLines).join('<br/>') + '<br/>...';
-        }
-        return htmlSnippet;
-    };
+  // Generate the full PDF URL including the page number
+  const pdfUrlWithPage = `${BACKEND_BASE_URL}${encodeURI(
+    pdf_url.split('#page=')[0]
+  )}#page=${page_number}`;
 
-    // Sanitize and highlight the snippet
-    const sanitizedSnippet = DOMPurify.sanitize(
-        truncateSnippet(
-            (snippet || 'No snippet available.')
-                .replace(/\n/g, '<br/>')
-                .replace(new RegExp(`(${searchTerm})`, 'gi'), '<mark>$1</mark>'),
-            maxLines
-        )
-    );
+  // Generate the viewer link with the full file URL
+  const viewerLink = `/viewer?file=${encodeURIComponent(
+    `${BACKEND_BASE_URL}${pdf_url.split('#')[0]}`
+  )}&page=${page_number}`;
 
-    return (
-        <div className="card mb-3">
-            <div className="card-body">
-                <h5 className="card-title">
-                    <a href={pdfUrlWithPage} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-                        {book_title || 'Untitled'}
-                    </a>
-                </h5>
-                <p className="card-text" dangerouslySetInnerHTML={{ __html: sanitizedSnippet }}></p>
-                <div className="d-flex justify-content-between align-items-center">
-                    <a href={pdfUrlWithPage} target="_blank" rel="noopener noreferrer">
-                        Open PDF
-                    </a>
-                </div>
-                <small className="text-muted">Distance: {distance !== undefined ? distance.toFixed(2) : 'N/A'}</small>
-            </div>
+  // Simplified snippet cleaner: just convert newlines to <br/>
+  // and remove any completely empty lines. No merging short lines.
+  const cleanSnippet = (snippet) => {
+    return snippet
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('<br/>');
+  };
+
+  const truncateSnippet = (htmlSnippet, maxLines) => {
+    const lines = htmlSnippet.split('<br/>');
+    if (lines.length > maxLines) {
+      return lines.slice(0, maxLines).join('<br/>') + '<br/>...';
+    }
+    return htmlSnippet;
+  };
+
+  // Convert snippet
+  const rawSnippet = snippet || 'No snippet available.';
+  // Add highlighting for the searchTerm
+  const highlightedSnippet = rawSnippet
+    .replace(/\n/g, '\n')
+    .replace(new RegExp(`(${searchTerm})`, 'gi'), '<mark>$1</mark>');
+
+  // Clean and then truncate
+  const cleaned = cleanSnippet(highlightedSnippet);
+  const truncated = truncateSnippet(cleaned, maxLines);
+
+  // Finally sanitize
+  const sanitizedSnippet = DOMPurify.sanitize(truncated);
+
+  // If the user did an 'all' search, show distance label
+  let distanceLabel = '';
+  if (searchType === 'all') {
+    if (distance === 0.0) {
+      distanceLabel = 'Exact Match';
+    } else if (distance === 0.1) {
+      distanceLabel = 'All Words';
+    } else {
+      const distValue = distance !== undefined ? distance.toFixed(2) : 'N/A';
+      distanceLabel = `Semantic Match (${distValue})`;
+    }
+  }
+
+  return (
+    <div className="card mb-3">
+      <div className="card-body">
+        <h5 className="card-title">
+          <a
+            href={viewerLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-none"
+          >
+            {book_title || 'Untitled'}
+          </a>
+        </h5>
+        <p
+          className="card-text"
+          dangerouslySetInnerHTML={{ __html: sanitizedSnippet }}
+        ></p>
+        <div className="d-flex justify-content-between align-items-center">
+          <Link to={viewerLink} target="_blank" className="btn btn-primary">
+            Open PDF
+          </Link>
         </div>
-    );
+        {/* Only show distance label if searchType='all' */}
+        {distanceLabel && (
+          <small className="text-muted">{distanceLabel}</small>
+        )}
+      </div>
+    </div>
+  );
 };
 
 ResultCard.propTypes = {
-    result: PropTypes.shape({
-        book_title: PropTypes.string,
-        page_number: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        pdf_url: PropTypes.string,
-        snippet: PropTypes.string,
-        distance: PropTypes.number
-    }).isRequired,
-    searchTerm: PropTypes.string.isRequired,
-    maxLines: PropTypes.number
+  result: PropTypes.shape({
+    book_title: PropTypes.string,
+    page_number: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    pdf_url: PropTypes.string,
+    snippet: PropTypes.string,
+    distance: PropTypes.number
+  }).isRequired,
+  searchTerm: PropTypes.string.isRequired,
+  searchType: PropTypes.string,
+  maxLines: PropTypes.number
 };
 
 export default ResultCard;

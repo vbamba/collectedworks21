@@ -1,24 +1,32 @@
-// frontend/src/components/PdfViewer.jsx
-
 import React from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import './PdfViewer.css';
+import { useLocation } from 'react-router-dom';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
-// Set the workerSrc to point to the correct worker script
-pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
+const PdfViewer = () => {
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const fileUrl = decodeURIComponent(params.get('file')); // Decode the full URL
+    const pageNumber = parseInt(params.get('page'), 10) || 1;
 
-const PdfViewer = ({ url, searchTerm }) => {
-    const pageNumber = url.split('#page=')[1] ? parseInt(url.split('#page=')[1], 10) : 1;
+    const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
+    if (!fileUrl) {
+        return <p>Error: No PDF file provided.</p>;
+    }
 
     return (
-        <div className="pdf-container">
-            <Document
-                file={url}
-                onLoadError={error => console.error('Error loading PDF:', error)}
-            >
-                <Page pageNumber={pageNumber} />
-            </Document>
+        <div style={{ height: '100vh' }}>
+            {/* Explicitly use the correct worker version */}
+            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                <Viewer
+                    fileUrl={fileUrl}
+                    plugins={[defaultLayoutPluginInstance]}
+                    initialPage={pageNumber - 1} // PDF.js pages are 0-indexed
+                />
+            </Worker>
         </div>
     );
 };

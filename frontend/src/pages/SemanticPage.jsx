@@ -1,17 +1,16 @@
-// frontend/src/pages/HomePage.jsx
+// frontend/src/pages/SemanticPage.jsx
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { debounce } from 'lodash';
-import SearchBar from '../components/SearchBar';
+import SemanticSearchBar from '../components/SemanticSearchBar';
 import Filters from '../components/Filters';
-// We'll import our new BookAccordion
 import BookAccordion from '../components/BookAccordion';
 import ResultCard from '../components/ResultCard';
 import { fetchFilters, performSearch } from '../services/api';
-import './HomePage.css';
+import './HomePage.css'; // or a new css
 
-const HomePage = () => {
+const SemanticPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({
@@ -20,11 +19,12 @@ const HomePage = () => {
     book_titles: [],
     book_titles_by_group: {},
   });
+  // Force search_type = 'semantic'
   const [selectedFilters, setSelectedFilters] = useState({
     author: '',
     group: '',
     book_title: '',
-    search_type: 'all',
+    search_type: 'semantic',
   });
 
   const [allResults, setAllResults] = useState([]);
@@ -36,9 +36,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // -----------------------
-  // Fetch filters on mount
-  // -----------------------
+  // fetch filters
   useEffect(() => {
     const getFilters = async () => {
       try {
@@ -58,21 +56,25 @@ const HomePage = () => {
     getFilters();
   }, []);
 
-  // -----------------------
-  // Parse query params
-  // -----------------------
+  // parse query params
   useEffect(() => {
     const urlQuery = searchParams.get('query') || '';
     const author = searchParams.get('author') || '';
     const group = searchParams.get('group') || '';
     const book_title = searchParams.get('book_title') || '';
-    const search_type = searchParams.get('search_type') || 'all';
+    // we always override search_type with 'semantic' anyway, but let's read it in case
+    // const st = searchParams.get('search_type') || 'semantic';
 
     setQuery(urlQuery);
-    setSelectedFilters({ author, group, book_title, search_type });
+    setSelectedFilters({
+      author,
+      group,
+      book_title,
+      search_type: 'semantic',
+    });
 
     if (urlQuery.trim()) {
-      debouncedSearch(urlQuery, { author, group, book_title, search_type });
+      debouncedSearch(urlQuery, { author, group, book_title, search_type: 'semantic' });
     } else {
       setAllResults([]);
       setGroupCounts({});
@@ -81,9 +83,7 @@ const HomePage = () => {
     }
   }, [searchParams]);
 
-  // -----------------------
-  // Debounced search
-  // -----------------------
+  // debounced search
   const debouncedSearch = useMemo(() => {
     return debounce(async (newQuery, newFilters) => {
       if (!newQuery.trim()) {
@@ -93,7 +93,8 @@ const HomePage = () => {
       setLoading(true);
       setError('');
       try {
-        const data = await performSearch(newQuery, newFilters, 100);
+        // Force newFilters.search_type = 'semantic'
+        const data = await performSearch(newQuery, { ...newFilters, search_type: 'semantic' }, 100);
         if (data.results && Array.isArray(data.results)) {
           setAllResults(data.results);
         } else {
@@ -110,56 +111,42 @@ const HomePage = () => {
     }, 300);
   }, []);
 
-  // -----------------------
-  // Called by SearchBar
-  // -----------------------
+  // handle search
   const handleSearch = () => {
-    const { author, group, book_title, search_type } = selectedFilters;
+    const { author, group, book_title } = selectedFilters;
+    // Force search_type=semantic
     setSearchParams({
       query,
       author,
       group,
       book_title,
-      search_type,
+      search_type: 'semantic',
     });
   };
 
-  // -----------------------
-  // Grouping logic
-  // -----------------------
-  // We'll group by book_title. If you'd prefer file_path, just do r.file_path as the key.
-  const groupByBook = useMemo(() => {
-    const byBook = {};
-    allResults.forEach((res) => {
-      const key = res.book_title || 'Unknown Book';
-      if (!byBook[key]) {
-        byBook[key] = [];
-      }
-      byBook[key].push(res);
+  // handle reset
+  const resetSearch = () => {
+    setQuery('');
+    setSelectedFilters({
+      author: '',
+      group: '',
+      book_title: '',
+      search_type: 'semantic',
     });
-    return byBook;
-  }, [allResults]);
+    setSearchParams({}); // clear URL
+    setAllResults([]);
+    setGroupCounts({});
+    setActiveGroup('');
+    setCurrentPage(1);
+  };
 
-  // -----------------------
-  // Group filter by local "activeGroup"
-  // This is distinct from grouping by book_title.
-  // So "activeGroup" is the 'CWSA', 'CWM', etc. filter, correct?
-  // We'll do the same approach as you had: 
-  //   if no activeGroup, show all
-  //   else show only results with r.group === activeGroup.
-  // But we do that after we've grouped by book_title above.
-  // Actually it's simpler to filter first, then group. 
-  // We'll keep your approach of "displayedResults" from the original code:
-  // -----------------------
+  // filtering
   const displayedResults = useMemo(() => {
-    if (!activeGroup) {
-      return allResults;
-    } else {
-      return allResults.filter((item) => item.group === activeGroup);
-    }
+    if (!activeGroup) return allResults;
+    return allResults.filter((item) => item.group === activeGroup);
   }, [allResults, activeGroup]);
 
-  // For pagination, apply to displayedResults
+  // pagination
   const totalPages = Math.ceil(displayedResults.length / resultsPerPage);
   const indexOfLastResult = currentPage * resultsPerPage;
   const indexOfFirstResult = indexOfLastResult - resultsPerPage;
@@ -168,9 +155,7 @@ const HomePage = () => {
   const displayPage = (page) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-
-    // Force the scroll to top of page
-    window.scrollTo({ top: 0, behavior: 'smooth' });    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getPaginationRange = () => {
@@ -178,22 +163,16 @@ const HomePage = () => {
     const showPages = 5;
     let start = Math.max(1, currentPage - Math.floor(showPages / 2));
     let end = Math.min(totalPages, start + showPages - 1);
-
     if (end - start + 1 < showPages) {
       start = Math.max(1, end - showPages + 1);
     }
-
     for (let i = start; i <= end; i++) {
       range.push(i);
     }
     return range;
   };
 
-  // ---------------------------------------
-  // New grouping logic for final rendering
-  // We want to group the currentResults by book_title => bookGroups
-  // Then for each group, if length > 1 => BookAccordion, else => single ResultCard
-  // ---------------------------------------
+  // group by book
   const groupedByBook = useMemo(() => {
     const byBook = {};
     currentResults.forEach((res) => {
@@ -208,47 +187,44 @@ const HomePage = () => {
 
   return (
     <div className="homepage-container">
-      {/* Header */}
       <header className="page-header d-flex align-items-center mb-4">
         <img
           src="/images/sri_ma.jpg"
           alt="Logo"
           className="header-image me-2"
         />
-        <h3>Search Works of Sri Aurobindo and The Mother</h3>
+        <h3 className="mb-0">Ask a Question</h3>
       </header>
 
-      {/* Search Bar */}
-      <SearchBar
+      {/* Use the simpler SemanticSearchBar with no checkboxes */}
+      <SemanticSearchBar
         query={query}
         setQuery={setQuery}
         handleSearch={handleSearch}
         loading={loading}
-        selectedFilters={selectedFilters}
-        setSelectedFilters={setSelectedFilters}
+        resetSearch={resetSearch}
       />
 
-      {/* Filters */}
+      {/* We can still keep filters for author, group, etc. if you want */}
       <Filters
         filters={filters}
         selectedFilters={selectedFilters}
         setSelectedFilters={setSelectedFilters}
       />
 
-      {/* Error Message */}
       {error && (
         <div className="alert alert-danger" role="alert">
           {error}
         </div>
       )}
 
-      {/* Group Buttons for "Collections" */}
       {Object.keys(groupCounts).length > 0 && (
         <div className="mb-3">
           <strong>Collections Found:</strong>{' '}
-          {/* "All" pseudo-button */}
           <button
-            className={`btn btn-sm ${!activeGroup ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+            className={`btn btn-sm ${
+              !activeGroup ? 'btn-primary' : 'btn-outline-primary'
+            } me-1`}
             onClick={() => setActiveGroup('')}
           >
             All Collections ({allResults.length})
@@ -260,7 +236,9 @@ const HomePage = () => {
               <button
                 key={grp}
                 onClick={() => setActiveGroup(grp)}
-                className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+                className={`btn btn-sm ${
+                  isActive ? 'btn-primary' : 'btn-outline-primary'
+                } me-1`}
               >
                 {grp} ({count})
               </button>
@@ -269,7 +247,6 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* Results Container */}
       <div className="results-container">
         {loading ? (
           <div className="text-center my-4">
@@ -280,34 +257,32 @@ const HomePage = () => {
         ) : currentResults.length > 0 ? (
           <>
             <div className="results-list">
-              {/* Here we group the currentResults by book_title */}
               {Object.entries(groupedByBook).map(([bookTitle, bookResults]) => {
                 if (bookResults.length > 1) {
-                  // More than one match => use BookAccordion
                   return (
                     <BookAccordion
                       key={bookTitle}
                       bookTitle={bookTitle}
                       results={bookResults}
+                      // we can pass searchType='semantic' always
                       searchTerm={query}
-                      searchType={selectedFilters.search_type}
+                      searchType="semantic"
                     />
                   );
                 } else {
-                  // Single match => just one card
                   return (
                     <ResultCard
                       key={bookTitle}
                       result={bookResults[0]}
                       searchTerm={query}
-                      searchType={selectedFilters.search_type}
+                      // always semantic
+                      searchType="semantic"
                     />
                   );
                 }
               })}
             </div>
 
-            {/* Pagination */}
             {displayedResults.length > resultsPerPage && (
               <nav aria-label="Search results pagination" className="mt-4">
                 <ul className="pagination justify-content-center">
@@ -360,4 +335,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default SemanticPage;

@@ -18,6 +18,7 @@ const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
     const groupDescriptions = {
         CWSA: "Collected Works of Sri Aurobindo",
         CWM: "Collected Works of The Mother",
+        Agenda: "Agenda",        
         Disciples: "Works of Disciples"
     };
 
