@@ -1,23 +1,29 @@
+/* homepage.css */
+
+/* Container */
 .homepage-container {
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
+/* Header Section */
 .page-header {
     display: flex;
     align-items: center;
-    font-size: 1.2rem; /* Reduced font size */
-    padding: 0.5rem 0; /* Reduced padding */
+    font-size: 1.2rem; /* Reduced font size (slightly bigger than default, but smaller than h1) */
+    padding: 0.5rem 0;
     white-space: nowrap; /* Prevent text wrapping */
 }
 
+/* Updated: Smaller header-image */
 .header-image {
-    height: 50px;
+    height: 35px; /* was 50px */
     width: auto;
     margin-right: 15px;
 }
 
+/* Results Container */
 .results-container {
     margin-top: 20px;
 }
@@ -26,12 +32,14 @@
     margin-bottom: 20px;
 }
 
+/* Spinner size */
 .spinner-border {
     width: 3rem;
     height: 3rem;
     color: #007bff;
 }
 
+/* Pagination */
 .pagination {
     margin-top: 2rem;
 }
@@ -44,7 +52,38 @@
     box-shadow: none;
 }
 
+/* Alerts spacing */
 .alert {
     margin-top: 1rem;
     margin-bottom: 1rem;
+}
+
+/* -------------
+   BUTTON + INPUT STYLING
+   -------------
+   We can override or refine .btn or 
+   specifically target the search bar's input-group
+*/
+
+/* Make the "Search" and "Reset" buttons smaller */
+.btn-search, .btn-reset {
+    font-size: 0.85rem;      /* smaller text */
+    padding: 0.3rem 0.75rem; /* reduce padding */
+    /* remove or override any .btn-lg padding if your code sets it */
+}
+
+/* For the input, let's ensure it can expand on mobile */
+@media (max-width: 576px) {
+    /* On very small screens, let the input be full width
+       and the buttons stack or wrap if needed */
+    .input-group {
+        flex-wrap: wrap;
+    }
+    .input-group > .form-control {
+        flex: 1 1 100%; /* take up full width */
+        margin-bottom: 0.5rem;
+    }
+    .btn-search, .btn-reset {
+        margin-bottom: 0.5rem;
+    }
 }

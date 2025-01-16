@@ -1,6 +1,6 @@
 // frontend/src/components/SearchBar.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const SearchBar = ({
   query,
@@ -8,10 +8,17 @@ const SearchBar = ({
   handleSearch,
   loading,
   selectedFilters,
-  setSelectedFilters
+  setSelectedFilters,
+  showSearchTypeControls = true, // NEW PROP
+  onReset
 }) => {
-  // local state for toggling checkboxes
+  // We derive local state from selectedFilters.search_type
   const [searchType, setSearchType] = useState(selectedFilters.search_type || 'all');
+
+  useEffect(() => {
+    // Keep local 'searchType' in sync if selectedFilters changes externally
+    setSearchType(selectedFilters.search_type || 'all');
+  }, [selectedFilters]);
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -21,24 +28,17 @@ const SearchBar = ({
   const handleSearchTypeChange = (value) => {
     const newSearchType = searchType === value ? 'all' : value;
     setSearchType(newSearchType);
-    setSelectedFilters({ 
-      ...selectedFilters, 
-      search_type: newSearchType 
+    setSelectedFilters({
+      ...selectedFilters,
+      search_type: newSearchType,
     });
   };
 
-  // Reset button logic
   const handleReset = () => {
-    setQuery('');
-    setSelectedFilters({
-      author: '',
-      group: '',
-      book_title: '',
-      search_type: 'all'
-    });
-    // Optionally call handleSearch() 
-    // but if you want to clear out results, you might do that:
-    handleSearch();
+    // Clears the search text and resets the filters
+    if (onReset) {
+      onReset();
+    }
   };
 
   return (
@@ -59,10 +59,9 @@ const SearchBar = ({
             style={{ height: '38px' }}
           />
           <button
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-search"
             onClick={handleSearch}
             disabled={loading}
-            style={{ minWidth: '120px' }}
           >
             {loading ? (
               <>
@@ -77,8 +76,7 @@ const SearchBar = ({
           {/* Reset Button */}
           <button
             type="button"
-            className="btn btn-secondary btn-lg ms-2"
-            style={{ minWidth: '90px' }}
+            className="btn btn-secondary btn-reset ms-2"
             onClick={handleReset}
             disabled={loading}
           >
@@ -87,53 +85,55 @@ const SearchBar = ({
         </div>
       </div>
 
-      {/* Search Type Filter on new row */}
-      <div className="row">
-        <div className="col d-flex gap-4">
-          <div className="form-check">
-            <input
-              type="checkbox"
-              className="form-check-input"
-              id="exact"
-              value="exact"
-              checked={searchType === 'exact'}
-              onChange={(e) => handleSearchTypeChange(e.target.value)}
-              name="search_type"
-            />
-            <label className="form-check-label" htmlFor="exact">
-              Exact Match
-            </label>
-          </div>
-          <div className="form-check">
-            <input
-              type="checkbox"
-              className="form-check-input"
-              id="all_words"
-              value="all_words"
-              checked={searchType === 'all_words'}
-              onChange={(e) => handleSearchTypeChange(e.target.value)}
-              name="search_type"
-            />
-            <label className="form-check-label" htmlFor="all_words">
-              All Words
-            </label>
-          </div>
-          <div className="form-check">
-            <input
-              type="checkbox"
-              className="form-check-input"
-              id="semantic"
-              value="semantic"
-              checked={searchType === 'semantic'}
-              onChange={(e) => handleSearchTypeChange(e.target.value)}
-              name="search_type"
-            />
-            <label className="form-check-label" htmlFor="semantic">
-              Ask a Question
-            </label>
+      {/* Conditionally show checkboxes if showSearchTypeControls === true */}
+      {showSearchTypeControls && (
+        <div className="row">
+          <div className="col d-flex gap-4">
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="exact"
+                value="exact"
+                checked={searchType === 'exact'}
+                onChange={(e) => handleSearchTypeChange(e.target.value)}
+                name="search_type"
+              />
+              <label className="form-check-label" htmlFor="exact">
+                Exact Match
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="all_words"
+                value="all_words"
+                checked={searchType === 'all_words'}
+                onChange={(e) => handleSearchTypeChange(e.target.value)}
+                name="search_type"
+              />
+              <label className="form-check-label" htmlFor="all_words">
+                All Words
+              </label>
+            </div>
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="semantic"
+                value="semantic"
+                checked={searchType === 'semantic'}
+                onChange={(e) => handleSearchTypeChange(e.target.value)}
+                name="search_type"
+              />
+              <label className="form-check-label" htmlFor="semantic">
+                Ask a Question
+              </label>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </form>
   );
 };

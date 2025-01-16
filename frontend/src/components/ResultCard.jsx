@@ -73,6 +73,12 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
     }
   }
 
+  // Build the title with page number in brackets, e.g. "Book Title [Page 33]"
+  // We'll only show [Page X] if page_number is not undefined or 0
+  const titleWithPage = page_number
+    ? `${book_title || 'Untitled'}  -  page ${page_number}`
+    : (book_title || 'Untitled');
+
   return (
     <div className="card mb-3">
       <div className="card-body">
@@ -83,7 +89,7 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
             rel="noopener noreferrer"
             className="text-decoration-none"
           >
-            {book_title || 'Untitled'}
+            {titleWithPage}
           </a>
         </h5>
         <p
