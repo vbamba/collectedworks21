@@ -177,66 +177,39 @@ def highlight_exact_phrase(text, phrase):
 
 def highlight_query(text, query):
     """
-    Highlights exact matches of a single 'query' in 'text' by wrapping them in <mark>...</mark>.
+    Highlights all whole-word occurrences of a single query in the text.
+    Uses word boundaries and escapes any special regex characters in query.
+    This version is intended for single-word queries.
     """
-    normalized_text = prepare_text_for_matching(text)
-    normalized_query = prepare_text_for_matching(query)
-    if not normalized_query:
+    if not query:
         return text
-
-    query_regex = r'\b' + re.escape(normalized_query) + r'\b'
-    matches = list(re.finditer(query_regex, normalized_text, flags=re.IGNORECASE))
-
-    offset = 0
-    original_text = text
-
-    for match in matches:
-        start, end = match.span()
-        start += offset
-        end += offset
-
-        original_text_span = original_text[start:end]
-        highlighted_span = f"<mark>{original_text_span}</mark>"
-
-        original_text = original_text[:start] + highlighted_span + original_text[end:]
-        offset += len(highlighted_span) - (end - start)
-
-    return original_text
+    # Escape any regex special characters in query
+    escaped_query = re.escape(query.strip())
+    # Build a regex pattern with word boundaries and ignore-case
+    pattern = re.compile(r'\b' + escaped_query + r'\b', re.IGNORECASE)
+    # Replace matches with the wrapped version
+    # Using pattern.sub ensures non-overlapping replacements
+    highlighted_text = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
+    return highlighted_text
 
 def highlight_keywords(text, query_words):
     """
-    Highlights *all* non-stopword query words in 'text' in a single pass,
-    ignoring words explicitly listed in STOPWORDS.
-
-    Steps:
-      1) Filter out empty strings and STOPWORDS from query_words (case-insensitive).
-      2) Build a single combined regex that matches any of those words.
-      3) Use re.sub with a function to wrap them in <mark>.
-
-    Example:
-      query_words = ["love", "light", "i", "a", "the"]
-      after filtering => ["love", "light"] (assuming "i", "a", "the" are in STOPWORDS).
-      pattern => r'\b(?:love|light)\b'
+    Highlights all non-stopword query words in 'text' in one pass.
+    Builds a single combined regex that matches any of those words (as full words).
     """
-    # Lowercase them to match what we do in prepare_text_for_matching
-    # if you want a case-insensitive highlight.
-    filtered = []
-    for w in query_words:
-        lower_w = w.lower()
-        if lower_w and lower_w not in STOPWORDS:
-            filtered.append(lower_w)
-
+    # Filter query_words to remove any that are stopwords or empty.
+    filtered = [w.lower() for w in query_words if w and w.lower() not in STOPWORDS]
     if not filtered:
-        return text  # no words to highlight
+        return text
 
-    # Build the union pattern: \b(?:word1|word2|...)\b
-    pattern = r'\b(?:' + '|'.join(re.escape(word) for word in filtered) + r')\b'
+    # Build a union regex pattern for the filtered words.
+    # For example, if filtered contains ["surrender", "reject"], pattern becomes:
+    #   \b(?:surrender|reject)\b
+    pattern_str = r'\b(?:' + '|'.join(re.escape(word) for word in filtered) + r')\b'
+    pattern = re.compile(pattern_str, re.IGNORECASE)
+    highlighted_text = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
+    return highlighted_text
 
-    def replacer(match_obj):
-        span_text = match_obj.group(0)
-        return f"<mark>{span_text}</mark>"
-
-    return re.sub(pattern, replacer, text, flags=re.IGNORECASE)
 
 ############################
 # Snippet Cleaning & Poetry

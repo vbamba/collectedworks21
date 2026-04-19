@@ -5,6 +5,27 @@ import PropTypes from 'prop-types';
 import DOMPurify from 'dompurify';
 import { Link } from 'react-router-dom';
 
+/* ────────────────────────────────────────────────────────────────────────────
+   NEW: Build version used for cache‑busting. Set REACT_APP_BUILD_VERSION at
+   build/deploy time (e.g., a git SHA or date). Fallback ensures development
+   gets a per‑reload value, but in production you should set it explicitly.
+──────────────────────────────────────────────────────────────────────────── */
+const APP_VERSION =
+  process.env.REACT_APP_BUILD_VERSION || String(Date.now());
+
+/* ────────────────────────────────────────────────────────────────────────────
+   NEW: Helper to append ?v=<version> (or &v=...) to any URL safely.
+──────────────────────────────────────────────────────────────────────────── */
+function withVersion(url) {
+  try {
+    const u = new URL(url, window.location.origin);
+    u.searchParams.set('v', APP_VERSION);
+    return u.toString();
+  } catch {
+    const sep = url.includes('?') ? '&' : '?';
+    return `${url}${sep}v=${encodeURIComponent(APP_VERSION)}`;
+  }
+}
 const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
   const { 
     book_title, 
@@ -23,10 +44,19 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
     pdf_url.split('#page=')[0]
   )}#page=${page_number}`;
 
+    // Generate the viewer link with the full file URL
+  // ── CHANGED: wrap with withVersion() to force fresh load after deploys
+  const viewerLink = withVersion(
+    `/viewer?file=${encodeURIComponent(
+      `${BACKEND_BASE_URL}${pdf_url.split('#')[0]}`
+    )}&page=${page_number}`
+  );
+
+
   // Generate the viewer link with the full file URL
-  const viewerLink = `/viewer?file=${encodeURIComponent(
-    `${BACKEND_BASE_URL}${pdf_url.split('#')[0]}`
-  )}&page=${page_number}`;
+  // const viewerLink = `/viewer?file=${encodeURIComponent(
+  //  `${BACKEND_BASE_URL}${pdf_url.split('#')[0]}`
+  // )}&page=${page_number}`;
 
   // Simplified snippet cleaner: just convert newlines to <br/>
   // and remove any completely empty lines. No merging short lines.
@@ -62,16 +92,18 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
 
   // If the user did an 'all' search, show distance label
   let distanceLabel = '';
-  if (searchType === 'all') {
+  //if (searchType === 'all') {
     if (distance === 0.0) {
       distanceLabel = 'Exact Match';
     } else if (distance === 0.1) {
       distanceLabel = 'All Words';
+    } else if (distance === 0.2) {
+      distanceLabel = 'Any Words';
     } else {
       const distValue = distance !== undefined ? distance.toFixed(2) : 'N/A';
       distanceLabel = `Semantic Match (${distValue})`;
     }
-  }
+  //}
 
   // Build the title with page number in brackets, e.g. "Book Title [Page 33]"
   // We'll only show [Page X] if page_number is not undefined or 0
@@ -102,9 +134,7 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
           </Link>
         </div>
         {/* Only show distance label if searchType='all' */}
-        {distanceLabel && (
-          <small className="text-muted">{distanceLabel}</small>
-        )}
+        <small className="text-muted">{distanceLabel}</small>
       </div>
     </div>
   );

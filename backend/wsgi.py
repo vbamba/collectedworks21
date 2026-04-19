@@ -7,6 +7,7 @@ import os
 load_dotenv()
 
 app = create_app()
+app.config['JSON_AS_ASCII'] = False
 
 if __name__ == "__main__":
     port = int(os.getenv('PORT', 5000))

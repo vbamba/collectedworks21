@@ -23,7 +23,6 @@ const SearchPage = ({
     book_titles: [],
     book_titles_by_group: {},
   });
-  // We track the selected filters, forcing 'search_type' = defaultSearchType initially
   const [selectedFilters, setSelectedFilters] = useState({
     author: '',
     group: '',
@@ -34,9 +33,10 @@ const SearchPage = ({
   const [allResults, setAllResults] = useState([]);
   const [groupCounts, setGroupCounts] = useState({});
   const [activeGroup, setActiveGroup] = useState('');
+  const [activeBook,  setActiveBook]  = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const resultsPerPage = 10;
+  const resultsPerPage = 20;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -60,22 +60,16 @@ const SearchPage = ({
     getFilters();
   }, []);
 
-  // When the component mounts or searchParams changes, parse them
+  // Parse URL searchParams on mount/update
   useEffect(() => {
-    const urlQuery = searchParams.get('query') || '';
-    const author = searchParams.get('author') || '';
-    const group = searchParams.get('group') || '';
-    const book_title = searchParams.get('book_title') || '';
-    // If user tries to override search_type in the URL, we can either accept or override
-    const st = searchParams.get('search_type') || defaultSearchType;
+    const urlQuery   = searchParams.get('query')       || '';
+    const author     = searchParams.get('author')      || '';
+    const group      = searchParams.get('group')       || '';
+    const book_title = searchParams.get('book_title')  || '';
+    const st         = searchParams.get('search_type') || defaultSearchType;
 
     setQuery(urlQuery);
-    setSelectedFilters({
-      author,
-      group,
-      book_title,
-      search_type: st,
-    });
+    setSelectedFilters({ author, group, book_title, search_type: st });
 
     if (urlQuery.trim()) {
       debouncedSearch(urlQuery, { author, group, book_title, search_type: st });
@@ -86,6 +80,26 @@ const SearchPage = ({
       setCurrentPage(1);
     }
   }, [searchParams, defaultSearchType]);
+
+  // Tally how many results appear per book, respecting activeGroup
+  const bookCounts = useMemo(() => {
+    const counts = {};
+    allResults.forEach((r) => {
+      if (activeGroup && r.group !== activeGroup) return;
+      const title = r.book_title || 'Untitled';
+      counts[title] = (counts[title] || 0) + 1;
+    });
+    return counts;
+  }, [allResults, activeGroup]);
+
+  // Also compute totalBooksCount ignoring activeBook, but respecting activeGroup
+  const totalBooksCount = useMemo(() => {
+    let res = allResults;
+    if (activeGroup) {
+      res = res.filter((item) => item.group === activeGroup);
+    }
+    return res.length;
+  }, [allResults, activeGroup]);
 
   // Debounced search
   const debouncedSearch = useMemo(() => {
@@ -105,6 +119,7 @@ const SearchPage = ({
         }
         setGroupCounts(data.group_counts || {});
         setActiveGroup('');
+        setActiveBook('');
         setCurrentPage(1);
       } catch (err) {
         console.error('Error performing search:', err);
@@ -117,16 +132,10 @@ const SearchPage = ({
   // Called by the search bar
   const handleSearch = () => {
     const { author, group, book_title, search_type } = selectedFilters;
-    setSearchParams({
-      query,
-      author,
-      group,
-      book_title,
-      search_type,
-    });
+    setSearchParams({ query, author, group, book_title, search_type });
   };
 
-  // Reset search to defaults
+  // Reset
   const handleReset = () => {
     setQuery('');
     setSelectedFilters({
@@ -135,21 +144,27 @@ const SearchPage = ({
       book_title: '',
       search_type: defaultSearchType, 
     });
-    // Optionally clear searchParams
     setSearchParams({});
     setAllResults([]);
     setGroupCounts({});
     setActiveGroup('');
+    setActiveBook('');
     setCurrentPage(1);
   };
 
-  // local group filter
+  // Filter by group + book
   const displayedResults = useMemo(() => {
-    if (!activeGroup) return allResults;
-    return allResults.filter((item) => item.group === activeGroup);
-  }, [allResults, activeGroup]);
+    let res = allResults;
+    if (activeGroup) {
+      res = res.filter((item) => item.group === activeGroup);
+    }
+    if (activeBook) {
+      res = res.filter((item) => (item.book_title || 'Untitled') === activeBook);
+    }
+    return res;
+  }, [allResults, activeGroup, activeBook]);
 
-  // pagination
+  // Pagination
   const totalPages = Math.ceil(displayedResults.length / resultsPerPage);
   const indexOfLastResult = currentPage * resultsPerPage;
   const indexOfFirstResult = indexOfLastResult - resultsPerPage;
@@ -165,19 +180,17 @@ const SearchPage = ({
     const range = [];
     const showPages = 5;
     let start = Math.max(1, currentPage - Math.floor(showPages / 2));
-    let end = Math.min(totalPages, start + showPages - 1);
-
+    let end   = Math.min(totalPages, start + showPages - 1);
     if (end - start + 1 < showPages) {
       start = Math.max(1, end - showPages + 1);
     }
-
     for (let i = start; i <= end; i++) {
       range.push(i);
     }
     return range;
   };
 
-  // group by book
+  // group by book for the current page
   const groupedByBook = useMemo(() => {
     const byBook = {};
     currentResults.forEach((res) => {
@@ -197,9 +210,8 @@ const SearchPage = ({
           src="/images/sri_ma.jpg"
           alt="Logo"
           className="header-image me-2"
-          style={{ width: '100px', height: 'auto' }} // reduce the width to ~50px
+          style={{ width: '100px', height: 'auto' }}
         />
-        {/* Use the heading prop */}
         <h3 className="mb-0">{heading}</h3>
       </header>
 
@@ -226,33 +238,54 @@ const SearchPage = ({
         </div>
       )}
 
-      {/* Group Buttons for "Collections" */}
-      {Object.keys(groupCounts).length > 0 && (
-        <div className="mb-3">
+      {/* Collections Found */}
+      {(!selectedFilters.group && !selectedFilters.book_title) &&
+        Object.keys(groupCounts).length > 0 && (
+        <div className="mb-2">
           <strong>Collections Found:</strong>{' '}
           <button
-            className={`btn btn-sm ${
-              !activeGroup ? 'btn-primary' : 'btn-outline-primary'
-            } me-1`}
-            onClick={() => setActiveGroup('')}
+            className={`btn btn-sm ${!activeGroup ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+            onClick={() => {
+              setActiveGroup('');
+              setActiveBook('');
+            }}
           >
             All Collections ({allResults.length})
           </button>
+          {Object.entries(groupCounts).map(([grp, cnt]) => (
+            <button
+              key={grp}
+              onClick={() => {
+                setActiveGroup(grp);
+                setActiveBook('');
+              }}
+              className={`btn btn-sm ${activeGroup === grp ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+            >
+              {grp} ({cnt})
+            </button>
+          ))}
+        </div>
+      )}
 
-          {Object.entries(groupCounts).map(([grp, count]) => {
-            const isActive = activeGroup === grp;
-            return (
-              <button
-                key={grp}
-                onClick={() => setActiveGroup(grp)}
-                className={`btn btn-sm ${
-                  isActive ? 'btn-primary' : 'btn-outline-primary'
-                } me-1`}
-              >
-                {grp} ({count})
-              </button>
-            );
-          })}
+      {/* Books Found */}
+      {(!selectedFilters.book_title && Object.keys(bookCounts).length > 0) && (
+        <div className="mb-3">
+          <strong>Books Found:</strong>{' '}
+          <button
+            className={`btn btn-sm ${!activeBook ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+            onClick={() => setActiveBook('')}
+          >
+            All Books ({totalBooksCount})
+          </button>
+          {Object.entries(bookCounts).map(([title, cnt]) => (
+            <button
+              key={title}
+              onClick={() => setActiveBook(title)}
+              className={`btn btn-sm ${activeBook === title ? 'btn-primary' : 'btn-outline-primary'} me-1`}
+            >
+              {title} ({cnt})
+            </button>
+          ))}
         </div>
       )}
 
@@ -265,12 +298,51 @@ const SearchPage = ({
           </div>
         ) : currentResults.length > 0 ? (
           <>
+            {/* Top pagination */}
+            {displayedResults.length > resultsPerPage && (
+              <nav aria-label="Search results pagination (top)" className="mb-3">
+                <ul className="pagination justify-content-center">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => displayPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  {getPaginationRange().map((page) => (
+                    <li
+                      key={page}
+                      className={`page-item ${currentPage === page ? 'active' : ''}`}
+                    >
+                      <button
+                        className="page-link"
+                        onClick={() => displayPage(page)}
+                      >
+                        {page}
+                      </button>
+                    </li>
+                  ))}
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button
+                      className="page-link"
+                      onClick={() => displayPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            )}
+
             <div className="results-list">
               {Object.entries(groupedByBook).map(([bookTitle, bookResults]) => {
                 if (bookResults.length > 1) {
                   return (
                     <BookAccordion
-                      key={bookTitle}
+                      key={`${bookTitle}-${currentPage}`}
                       bookTitle={bookTitle}
                       results={bookResults}
                       searchTerm={query}
@@ -290,14 +362,11 @@ const SearchPage = ({
               })}
             </div>
 
+            {/* Bottom pagination */}
             {displayedResults.length > resultsPerPage && (
-              <nav aria-label="Search results pagination" className="mt-4">
+              <nav aria-label="Search results pagination (bottom)" className="mt-4">
                 <ul className="pagination justify-content-center">
-                  <li
-                    className={`page-item ${
-                      currentPage === 1 ? 'disabled' : ''
-                    }`}
-                  >
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                     <button
                       className="page-link"
                       onClick={() => displayPage(currentPage - 1)}
@@ -306,13 +375,10 @@ const SearchPage = ({
                       Previous
                     </button>
                   </li>
-
                   {getPaginationRange().map((page) => (
                     <li
                       key={page}
-                      className={`page-item ${
-                        currentPage === page ? 'active' : ''
-                      }`}
+                      className={`page-item ${currentPage === page ? 'active' : ''}`}
                     >
                       <button
                         className="page-link"
@@ -322,11 +388,8 @@ const SearchPage = ({
                       </button>
                     </li>
                   ))}
-
                   <li
-                    className={`page-item ${
-                      currentPage === totalPages ? 'disabled' : ''
-                    }`}
+                    className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
                   >
                     <button
                       className="page-link"

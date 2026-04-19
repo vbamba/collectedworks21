@@ -50,6 +50,7 @@ const TextResultCard = ({
     section_filename,
     book_slug,              // NEW (b.4): exposed in case SPA route needs it later
     slug,                   // NEW (b.4): exposed in case SPA route needs it later
+    parent_toc_title,       // CHANGED (b.5): journal sub-section breadcrumb from Pass-3; '' for TOC-level entries
     result_type,
     pdf_file,               // optional – legacy
     pdf_url,                // optional – preferred from backend
@@ -158,6 +159,15 @@ const TextResultCard = ({
           </a>
         </h5>
 
+        {/* CHANGED (b.5): one-line breadcrumb recovering the parent TOC entry
+            buried by Pass-3 sub-section splitting (e.g. "from March 14, 1952").
+            Hidden when empty so non-journal books are unaffected. */}
+        {parent_toc_title && (
+          <div className="text-muted small fst-italic mb-2">
+            from {parent_toc_title}
+          </div>
+        )}
+
         <p
           className="card-text"
           dangerouslySetInnerHTML={{ __html: limited }}
@@ -195,6 +205,7 @@ TextResultCard.propTypes = {
     chapter_slug_url:  PropTypes.string, // NEW (b.4): slug-based; preferred when present
     book_slug:         PropTypes.string, // NEW (b.4)
     slug:              PropTypes.string, // NEW (b.4)
+    parent_toc_title:  PropTypes.string, // CHANGED (b.5): Pass-3 sub-section breadcrumb; may be '' or omitted
     result_type:       PropTypes.string,
     pdf_file:          PropTypes.string,
     pdf_url:           PropTypes.string,

@@ -142,6 +142,7 @@ def _row_to_result(
         end_page,
         slug,           # NEW (b.3): per-section slug (may be '' for legacy rows)
         book_slug,      # NEW (b.3): per-book slug
+        parent_toc_title, # NEW (b.5): journal-sub-section breadcrumb; '' when not a sub-section
         snippet,
     ) = row
     try:
@@ -163,6 +164,7 @@ def _row_to_result(
         "end_page": end_page,
         "slug": slug or "",           # NEW (b.3)
         "book_slug": book_slug or "", # NEW (b.3)
+        "parent_toc_title": parent_toc_title or "",  # NEW (b.5)
         "pdf_url": "",
         "rowid": rowid,
     }
@@ -177,6 +179,7 @@ def _row_to_result(
         "end_page": end_page,
         "slug": slug or "",            # NEW (b.3)
         "book_slug": book_slug or "",  # NEW (b.3)
+        "parent_toc_title": parent_toc_title or "",  # NEW (b.5): exposed so TextResultCard can render a breadcrumb
         "rowid": rowid,
     })
     return enriched
@@ -223,6 +226,7 @@ def _sql_exact_phrase_candidates(phrase: str, limit: int, filters: Optional[Dict
         end_page,
         slug,            -- NEW (b.3): populated from split_pdf.py → chapters.db
         book_slug,       -- NEW (b.3): per-book slug for slug-based URLs
+        parent_toc_title,-- CHANGED (b.5): row_to_result unpacks 16 cols; exact-phrase SELECT had been missed, causing ValueError on all/any callers once b.5 landed
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}
@@ -303,6 +307,7 @@ def _exact_fallback_candidates(phrase: str, limit: int, filters: Optional[Dict[s
         end_page,
         slug,            -- NEW (b.3)
         book_slug,       -- NEW (b.3)
+        parent_toc_title,-- NEW (b.5): Pass-3 journal sub-section breadcrumb (empty for TOC-level entries)
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}
@@ -443,6 +448,7 @@ def search_all_words(
             end_page,
             slug,            -- NEW (b.3)
             book_slug,       -- NEW (b.3)
+            parent_toc_title,-- CHANGED (b.5): added so _row_to_result's 16-tuple unpack succeeds on the ALL-words filter path
             snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
           FROM chapters
           WHERE {where_sql}
@@ -490,6 +496,7 @@ def search_all_words(
                 end_page,
                 slug,            -- NEW (b.3)
                 book_slug,       -- NEW (b.3)
+                parent_toc_title,-- CHANGED (b.5): added on the ALL-words union path (CWSA/CWM+Agenda/Disciples) to match _row_to_result's 16-tuple unpack
                 snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
               FROM chapters
               WHERE {where_sql}
@@ -594,6 +601,7 @@ def search_any_words(
         end_page,
         slug,            -- NEW (b.3)
         book_slug,       -- NEW (b.3)
+        parent_toc_title,-- NEW (b.5): Pass-3 journal sub-section breadcrumb (empty for TOC-level entries)
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}

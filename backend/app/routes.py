@@ -534,10 +534,12 @@ def _render_chapter_template(collection: str, book: str, section: str):
     # build canonical /read/<coll>/<book_slug>/<slug> prev/next links. The old
     # template emitted relative `?collection_folder=...` URLs which broke on
     # the /read/<...> path (querystring replacement on a path-param URL).
+    # CHANGED (b.5): also select parent_toc_title so the chapter header can
+    # render a "from <parent>" breadcrumb on Pass-3 journal sub-sections.
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.execute(
         """
-        SELECT section_filename, slug, book_slug, book_title
+        SELECT section_filename, slug, book_slug, book_title, parent_toc_title
         FROM chapters
         WHERE collection_folder = ? AND book_folder = ?
         ORDER BY CAST(chapter AS INTEGER)
@@ -558,11 +560,16 @@ def _render_chapter_template(collection: str, book: str, section: str):
     except ValueError:
         prev_section = next_section = None
         prev_slug    = next_slug    = ''
+        # NEW (b.5): unknown section → no breadcrumb
+        parent_toc_title = ''
     else:
         prev_section = sections[idx - 1] if idx > 0 else None
         next_section = sections[idx + 1] if idx < len(sections) - 1 else None
         prev_slug    = section_slugs[idx - 1] if idx > 0 else ''
         next_slug    = section_slugs[idx + 1] if idx < len(sections) - 1 else ''
+        # NEW (b.5): breadcrumb for the *current* section; empty for TOC-level
+        # entries and legacy rows predating Pass 3.
+        parent_toc_title = rows[idx][4] or ''
 
     query       = request.args.get('query', '').strip()
     result_type = request.args.get('result_type', '').strip()
@@ -580,6 +587,8 @@ def _render_chapter_template(collection: str, book: str, section: str):
         book_slug=book_slug,
         prev_slug=prev_slug,
         next_slug=next_slug,
+        # NEW (b.5): non-empty only for Pass-3 journal sub-sections
+        parent_toc_title=parent_toc_title,
         query=query,
         result_type=result_type,
         build_version=BUILD_VERSION,  # ensure static links get cache-busted
@@ -708,14 +717,18 @@ def get_chapter():
                 blocks.append({'type':'lines','lines':wrapped})
 
     # nav + title
+    # CHANGED (b.5): pull parent_toc_title alongside section_filename so we can
+    # surface the journal-sub-section breadcrumb in the SPA chapter header.
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.execute(
-        "SELECT section_filename FROM chapters "
+        "SELECT section_filename, parent_toc_title FROM chapters "
         "WHERE collection_folder=? AND book_folder=? "
         "ORDER BY CAST(chapter AS INTEGER)",
         (collection, book)
     )
-    sections = [r[0] for r in cur.fetchall()]
+    section_rows = cur.fetchall()
+    sections = [r[0] for r in section_rows]
+    section_parents = [r[1] or '' for r in section_rows]
     cur = conn.execute(
         "SELECT book_title FROM chapters "
         "WHERE collection_folder=? AND book_folder=? LIMIT 1",
@@ -730,18 +743,35 @@ def get_chapter():
     ).title()
     book_title = row[0] if row and row[0] else fallback_title
 
+    # CHANGED (2026-04-19): also compute first/last section_filename so the SPA
+    # can render jump-to-start and jump-to-end links alongside prev/next. These
+    # are None when the book has 0 sections, or equal to prev/next when the
+    # current chapter is already at the boundary (client decides whether to
+    # hide or just visually disable).
+    first_section = sections[0] if sections else None
+    last_section = sections[-1] if sections else None
     try:
         idx = sections.index(section)
         prev_section = sections[idx-1] if idx>0 else None
         next_section = sections[idx+1] if idx < len(sections)-1 else None
+        # NEW (b.5): current section's breadcrumb (empty for TOC-level entries)
+        parent_toc_title = section_parents[idx]
     except ValueError:
         prev_section = next_section = None
+        parent_toc_title = ''
 
     return jsonify({
         'blocks'      : blocks,
         'book_title'  : book_title,
         'prev_section': prev_section,
         'next_section': next_section,
+        # CHANGED (2026-04-19): boundary links so readers can jump to the start
+        # or end of the book without clicking prev/next N times.
+        'first_section': first_section,
+        'last_section': last_section,
+        # NEW (b.5): Pass-3 sub-section breadcrumb; ChapterPage.jsx renders
+        # "from <parent_toc_title>" under the book title when non-empty.
+        'parent_toc_title': parent_toc_title,
     }), 200
 
 # ──────────────────────────────────────────────────────────────────────
@@ -805,15 +835,19 @@ def chapter_meta():
         abort(400, "collection_folder, book_folder and section_filename are required")
 
     conn = sqlite3.connect(str(DB_PATH))
+    # CHANGED (b.5): include parent_toc_title so chapter_meta can surface the
+    # journal-sub-section breadcrumb to any caller.
     cursor = conn.execute(
         """
-        SELECT section_filename FROM chapters
+        SELECT section_filename, parent_toc_title FROM chapters
          WHERE collection_folder=? AND book_folder=?
          ORDER BY CAST(chapter AS INTEGER)
         """,
         (collection, book)
     )
-    sections = [r[0] for r in cursor.fetchall()]
+    meta_rows = cursor.fetchall()
+    sections = [r[0] for r in meta_rows]
+    section_parents = [r[1] or '' for r in meta_rows]
 
     cursor = conn.execute(
         """
@@ -833,12 +867,15 @@ def chapter_meta():
         idx = sections.index(section)
     except ValueError:
         prev_section = next_section = None
+        parent_toc_title = ''
     else:
         prev_section = sections[idx-1] if idx > 0 else None
         next_section = sections[idx+1] if idx < len(sections)- 1 else None
+        parent_toc_title = section_parents[idx]  # NEW (b.5)
 
     return jsonify({
         'prev_section': prev_section,
         'next_section': next_section,
         'book_title': book_title,
+        'parent_toc_title': parent_toc_title,  # NEW (b.5)
     })
