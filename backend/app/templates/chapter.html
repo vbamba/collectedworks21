@@ -1,0 +1,196 @@
+<!-- templates/chapter.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+
+    <!-- Static assets via Flask (FIX 404) -->
+    <!-- CHANGED: use url_for + cache buster 'v' (build_version passed from routes) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ build_version }}">
+
+    <!-- Favicon (FIX 404) -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}?v={{ build_version }}">
+
+    <!-- Bootstrap CSS (CDN) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    >
+
+    <style>
+      /* Light, clean defaults that render nicely on both light/dark OS themes */
+      :root {
+        color-scheme: light dark;
+      }
+      body { padding: 2rem; font-size: 1.125rem; }
+      h1 { margin-bottom: 0; font-size: 1.25rem; font-weight: 700; }
+      .chapter-heading { display: block; font-weight: 700; margin: 1rem 0; font-size: 1.5rem; }
+      .chapter-content { max-width: 70ch; }      /* nicer measure */
+      p { text-align: justify; line-height: 1.75; margin-bottom: 1rem; }
+      hr { border: 0; border-top: 1px solid #d0d0d0; margin: 2rem 0; }
+      mark { background-color: #fff3a3; font-weight: 600; padding: 0 0.05em; border-radius: 2px; }
+      .nav-links a { text-underline-offset: 2px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header with navigation -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <div class="nav-links">
+          {# CHANGED (b.4 nav fix): build absolute URLs. Prefer canonical
+             /read/<coll>/<book_slug>/<slug> when the backend provided slugs;
+             fall back to /api/chapter_content?... for legacy rows. Previous
+             version used relative `?...` links which broke on /read/ paths. #}
+          {% set qparam = query|default('') %}
+          {% set qs = '' %}
+          {% if qparam %}{% set qs = qs + '&query=' + qparam|urlencode %}{% endif %}
+          {% if result_type %}{% set qs = qs + '&result_type=' + result_type %}{% endif %}
+
+          {% if prev_section %}
+            {% if book_slug and prev_slug %}
+              {% set prev_href = '/read/' + collection_folder + '/' + book_slug + '/' + prev_slug + (('?' + qs[1:]) if qs else '') %}
+            {% else %}
+              {% set prev_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + prev_section + qs %}
+            {% endif %}
+            <a href="{{ prev_href }}" class="btn btn-link p-0 me-3">[Previous Chapter]</a>
+          {% endif %}
+          {% if next_section %}
+            {% if book_slug and next_slug %}
+              {% set next_href = '/read/' + collection_folder + '/' + book_slug + '/' + next_slug + (('?' + qs[1:]) if qs else '') %}
+            {% else %}
+              {% set next_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + next_section + qs %}
+            {% endif %}
+            <a href="{{ next_href }}" class="btn btn-link p-0">[Next Chapter]</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content wrapper for highlighting -->
+    <div class="chapter-content container">
+      {% for blk in blocks %}
+        {% if blk.type == 'hr' %}
+          <hr/>
+        {% else %}
+          <p>
+            {% for line in blk.lines %}
+              {{ line|safe }}<br/>
+            {% endfor %}
+          </p>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- mark.js (CDN only; drop the broken local include) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" defer></script>
+
+    <script>
+      // Normalize ligatures/non-breaking spaces so client-side matching is robust.
+      function normalizeCompat(str) {
+        if (!str) return '';
+        return str
+          .replace(/\uFB01/g, 'fi')  // ﬁ
+          .replace(/\uFB02/g, 'fl')  // ﬂ
+          .replace(/\u00A0/g, ' ')   // nbsp
+          .replace(/\s+/g, ' ');
+      }
+      function ligatureRegexEscape(str) {
+        const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return esc(str)
+          .replace(/fi/gi, '(?:fi|\\uFB01)')
+          .replace(/fl/gi, '(?:fl|\\uFB02)');
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const phrase = params.get('query')?.trim() || '';
+        const resultType = params.get('result_type') || 'all';
+
+        const STOPWORDS = new Set([
+          'a','an','and','are','as','at','be','but','by','for','if','in','into','is','it','no','not','of','on','or',
+          'such','that','the','their','then','there','these','they','this','to','was','will','with'
+        ]);
+
+        const context = document.querySelector('.chapter-content');
+        if (!phrase || !context || typeof window.Mark === 'undefined') {
+          console.warn('highlight skipped', { hasPhrase: !!phrase, hasContext: !!context, hasMark: typeof window.Mark !== 'undefined' });
+          return;
+        }
+
+        // Unmark first in case of navigations within the page
+        const markInstance = new Mark(context);
+        markInstance.unmark({
+          done: () => {
+            if (resultType === 'exact') {
+              // Try mark.js first (works across element boundaries)
+              markInstance.mark(phrase, {
+                separateWordSearch: false,
+                acrossElements: true,
+                ignorePunctuation: ":;.,–—()[]'\"-_",
+                diacritics: true,
+                ignoreJoiners: true,
+                done: () => {
+                  if (!context.querySelector('mark')) {
+                    // Fallback: ligature-tolerant regex
+                    try {
+                      const normPhrase = normalizeCompat(phrase);
+                      const pattern = ligatureRegexEscape(normPhrase).replace(/\s+/g, '\\s+');
+                      const rx = new RegExp(pattern, 'i');
+
+                      const html = context.innerHTML;
+                      const normalizedHTML = normalizeCompat(html);
+                      const m = normalizedHTML.match(rx);
+                      if (m) {
+                        // Replace the first visible occurrence (pragmatic)
+                        const displayRx = new RegExp(ligatureRegexEscape(phrase), 'i');
+                        context.innerHTML = html.replace(displayRx, '<mark>$&</mark>');
+                      }
+                    } catch (e) {
+                      console.warn('exact fallback failed', e);
+                    }
+                  }
+                  const el = context.querySelector('mark');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              });
+            } else {
+              // ALL/ANY: highlight individual non-stopword terms
+              const terms = normalizeCompat(phrase)
+                .split(/\s+/).filter(Boolean)
+                .filter(w => !STOPWORDS.has(w.toLowerCase()));
+              if (!terms.length) return;
+
+              markInstance.mark(terms, {
+                separateWordSearch: true,
+                acrossElements: true,
+                ignorePunctuation: ":;.,–—()[]'\"-_",
+                diacritics: true,
+                ignoreJoiners: true,
+                done: () => {
+                  if (!context.querySelector('mark')) {
+                    // Ligature-tolerant per-term fallback
+                    try {
+                      let html = context.innerHTML;
+                      for (const t of terms) {
+                        const rx = new RegExp('\\b(' + ligatureRegexEscape(t) + ')\\b', 'gi');
+                        html = html.replace(rx, '<mark>$1</mark>');
+                      }
+                      context.innerHTML = html;
+                    } catch (e) {
+                      console.warn('term fallback failed', e);
+                    }
+                  }
+                  const first = context.querySelector('mark');
+                  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              });
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

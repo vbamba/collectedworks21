@@ -530,39 +530,39 @@ def _render_chapter_template(collection: str, book: str, section: str):
             break
 
     # DB lookups for nav + title
+    # CHANGED (b.4 nav fix): also select slug + book_slug so the template can
+    # build canonical /read/<coll>/<book_slug>/<slug> prev/next links. The old
+    # template emitted relative `?collection_folder=...` URLs which broke on
+    # the /read/<...> path (querystring replacement on a path-param URL).
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.execute(
         """
-        SELECT section_filename
+        SELECT section_filename, slug, book_slug, book_title
         FROM chapters
         WHERE collection_folder = ? AND book_folder = ?
         ORDER BY CAST(chapter AS INTEGER)
         """,
         (collection, book)
     )
-    sections = [row[0] for row in cursor.fetchall()]
-
-    cursor = conn.execute(
-        """
-        SELECT book_title
-        FROM chapters
-        WHERE collection_folder = ? AND book_folder = ?
-        LIMIT 1
-        """,
-        (collection, book)
-    )
-    row = cursor.fetchone()
-    fallback_title = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', re.sub(r'^\d+', '', book)).title()
-    book_title = row[0] if row and row[0] else fallback_title
+    rows = cursor.fetchall()
     conn.close()
+
+    sections      = [r[0] for r in rows]
+    section_slugs = [r[1] or '' for r in rows]
+    book_slug     = next((r[2] for r in rows if r[2]), '')  # first non-empty
+    fallback_title = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', re.sub(r'^\d+', '', book)).title()
+    book_title = rows[0][3] if rows and rows[0][3] else fallback_title
 
     try:
         idx = sections.index(section)
     except ValueError:
         prev_section = next_section = None
+        prev_slug    = next_slug    = ''
     else:
         prev_section = sections[idx - 1] if idx > 0 else None
         next_section = sections[idx + 1] if idx < len(sections) - 1 else None
+        prev_slug    = section_slugs[idx - 1] if idx > 0 else ''
+        next_slug    = section_slugs[idx + 1] if idx < len(sections) - 1 else ''
 
     query       = request.args.get('query', '').strip()
     result_type = request.args.get('result_type', '').strip()
@@ -576,6 +576,10 @@ def _render_chapter_template(collection: str, book: str, section: str):
         book_folder=book,
         prev_section=prev_section,
         next_section=next_section,
+        # NEW (b.4 nav fix): slug-aware nav. Template prefers these when set.
+        book_slug=book_slug,
+        prev_slug=prev_slug,
+        next_slug=next_slug,
         query=query,
         result_type=result_type,
         build_version=BUILD_VERSION,  # ensure static links get cache-busted
