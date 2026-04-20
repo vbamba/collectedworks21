@@ -57,41 +57,31 @@ ssh -i "$PEM" "$EC2" 'hostname && uptime'
 has nothing to restore from — a bad deploy becomes unrecoverable except
 by re-rsyncing from whatever local copy you still have.
 
-Pick a tag suffix — the release tag for this deploy, plus a timestamp if
-you're iterating same-day (e.g. `release-2026-04-19` or
-`release-2026-04-19-1530`).
+Tarballs the entire Flask prod folder (code + `backend/db/chapters.db` +
+`backend/data/out_chapters/` + indexes) into `/home/ec2-user/backups/`.
+One file per deploy, compressed, easy to list and prune.
 
 ```bash
-TAG=release-2026-04-19   # or whatever release you're shipping
+TAG=release-2026-04-19   # or same-day suffix: release-2026-04-19-1530
 
 ssh -i "$PEM" "$EC2" "
   set -e
-  echo '[backup] flask app dir...'
-  sudo cp -a /home/ec2-user/collectedworks21 /home/ec2-user/collectedworks21.pre-$TAG
-
-  echo '[backup] chapters.db...'
-  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db \
-          /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG
-
-  echo '[backup] nginx html root...'
-  sudo mkdir -p /var/backups
-  sudo cp -a /usr/share/nginx/html /var/backups/nginx-html-pre-$TAG
-
-  echo '[backup] done. sizes:'
-  sudo du -sh /home/ec2-user/collectedworks21.pre-$TAG \
-              /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG \
-              /var/backups/nginx-html-pre-$TAG
+  mkdir -p /home/ec2-user/backups
+  OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
+  echo '[backup] creating '\$OUT'...'
+  tar -czf \$OUT -C /home/ec2-user collectedworks21
+  echo '[backup] done.'
+  ls -lh \$OUT
+  echo '[backup] all snapshots:'
+  ls -lh /home/ec2-user/backups/
 "
 ```
 
-Housekeeping: EC2 disk fills quickly if you never prune. After a
-successful deploy with no smoke-test regressions, delete snapshots older
-than a couple of releases:
+Housekeeping — prune old tarballs after a release is confirmed healthy
+(keep the last 3–5 so you can roll back more than one step if needed):
 ```bash
 ssh -i "$PEM" "$EC2" '
-  sudo rm -rf /home/ec2-user/collectedworks21.pre-<old-tag>
-  sudo rm -f /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<old-tag>
-  sudo rm -rf /var/backups/nginx-html-pre-<old-tag>
+  ls -1t /home/ec2-user/backups/collectedworks21-pre-*.tar.gz | tail -n +6 | xargs -r rm -v
 '
 ```
 
@@ -113,12 +103,8 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude '.DS_Store' --exclude '*.zip' \
       ./ "$EC2":/home/ec2-user/collectedworks21/
 
-# EC2 — restart Flask (pick the manager you use)
-ssh -i "$PEM" "$EC2" '
-  sudo systemctl restart collectedworks
-  # pm2 restart collectedworks
-  # pkill -HUP -f gunicorn
-'
+# EC2 — restart gunicorn so the new code is loaded
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart gunicorn'
 ```
 
 The `--delete` is safe: excluded paths (`backend/db/`, `backend/indexes/`,
@@ -174,8 +160,11 @@ rsync -av --delete -e "ssh -i $PEM" \
       "$EC2":/home/ec2-user/collectedworks21/backend/data/out_chapters/
 ```
 
-Restart Flask again after a DB swap — existing connections hold the old file
-handle until the worker recycles.
+Restart gunicorn again after a DB swap — existing workers hold the old
+file handle until they recycle:
+```bash
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart gunicorn'
+```
 
 ## 4. Post-deploy smoke tests
 
@@ -203,8 +192,8 @@ ssh -i "$PEM" "$EC2" 'sudo tail -50 /var/log/nginx/access.log | grep text_search
 ## 5. Rollback
 
 Since deploys are rsync-based (§ 1) rather than git-based, `git checkout` on
-EC2 does not roll back the code — it only moves refs inside the EC2
-working copy. You roll back by rsyncing the snapshot taken in § 0.5.
+EC2 does not roll back the code. Roll back by extracting the tarball
+captured in § 0.5 over the live prod folder.
 
 If you skipped § 0.5, there's no snapshot to restore from — your only
 option is to re-deploy a known-good release from local.
@@ -214,18 +203,24 @@ TAG=release-2026-04-19   # same suffix used in § 0.5 snapshot
 
 ssh -i "$PEM" "$EC2" "
   set -e
-  sudo rsync -av --delete \
-       /home/ec2-user/collectedworks21.pre-$TAG/ \
-       /home/ec2-user/collectedworks21/
-  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG \
-          /home/ec2-user/collectedworks21/backend/db/chapters.db
-  sudo rsync -av --delete \
-       /var/backups/nginx-html-pre-$TAG/ \
-       /usr/share/nginx/html/
-  sudo systemctl restart collectedworks
-  sudo systemctl reload nginx
+  ARCHIVE=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
+  test -f \$ARCHIVE || { echo 'no snapshot at '\$ARCHIVE; exit 1; }
+
+  # Move the current (bad) dir aside instead of deleting — lets us inspect
+  # what went wrong after the fact.
+  sudo mv /home/ec2-user/collectedworks21 \
+          /home/ec2-user/collectedworks21.failed-$(date +%Y%m%d-%H%M%S)
+
+  sudo tar -xzf \$ARCHIVE -C /home/ec2-user
+  sudo chown -R ec2-user:ec2-user /home/ec2-user/collectedworks21
+
+  sudo systemctl restart gunicorn
 "
 ```
+
+Frontend rollback (if the nginx html root is also bad) — rebuild the
+prior tag locally and re-run § 2, since we don't snapshot the nginx
+root. That build is deterministic from git + `.env.production`.
 
 The old `chapters.db` schema matters: reverting past commit `048dfc2`
 (Phase b.5) must be paired with the pre-b.5 DB snapshot, because post-b.5
