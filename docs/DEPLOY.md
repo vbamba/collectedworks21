@@ -5,6 +5,12 @@ EC2 layout:
 - Flask app: `/home/ec2-user/collectedworks21` (proxied at `127.0.0.1:5000`)
 - React build: `/usr/share/nginx/html` (served by nginx; `/api/*` proxies to Flask, everything else falls back to `index.html`)
 - nginx config: `/etc/nginx/conf.d/ask.collectedworks.conf`
+- Flask process: **gunicorn**, launched by systemd unit **`collectedworks.service`**
+  (1 master + 3 workers × 2 threads, `ExecStart=.../backend/venv/bin/gunicorn
+  --workers 3 --threads 2 --bind 127.0.0.1:5000 wsgi:app`). There is no
+  `gunicorn.service` on this host — always use `systemctl <cmd> collectedworks`.
+- Python venv: `/home/ec2-user/collectedworks21/backend/venv` (server-only; not
+  in the local repo, so it must be excluded from `rsync --delete`, see § 1).
 
 > **Why rsync, not `git pull`:** historical commits in this repo contain
 > >100 MB binary artifacts (`backend/indexes/faiss_index*.bin`,
@@ -73,7 +79,11 @@ ssh -i "$PEM" "$EC2" "
 
   APP_OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
   echo '[backup] flask app → '\$APP_OUT
-  tar -czf \$APP_OUT -C /home/ec2-user collectedworks21
+  # CHANGED (2026-04-19): exclude the legacy in-tree backups/ (root-owned,
+  # see § 1 note) so snapshots don't recursively swallow earlier tarballs
+  # and grow unbounded over successive deploys.
+  tar --exclude='collectedworks21/backups' \
+      -czf \$APP_OUT -C /home/ec2-user collectedworks21
 
   WEB_OUT=/home/ec2-user/backups/nginx-html-pre-$TAG.tar.gz
   echo '[backup] nginx html → '\$WEB_OUT
@@ -109,17 +119,43 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'node_modules/' --exclude 'frontend/build/' \
       --exclude 'backend/db/' --exclude 'backend/data/' \
       --exclude 'backend/indexes/' --exclude 'backend/pdf/' \
+      --exclude 'backend/venv/' \
       --exclude '__pycache__/' --exclude '*.pyc' \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
+      --exclude 'backups/' \
       ./ "$EC2":/home/ec2-user/collectedworks21/
 
-# EC2 — restart gunicorn so the new code is loaded
-ssh -i "$PEM" "$EC2" 'sudo systemctl restart gunicorn'
+# EC2 — restart gunicorn workers (systemd unit name is `collectedworks`)
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
 ```
 
 The `--delete` is safe: excluded paths (`backend/db/`, `backend/indexes/`,
 etc.) are not walked at all, so rsync will not remove files inside them.
+
+Note on `backups/` exclude: EC2 has a legacy root-owned
+`/home/ec2-user/collectedworks21/backups/` from an Apr 2026 route-hardening
+rollback. rsync-as-ec2-user can't modify it, so `--delete` fails with
+exit 23 unless excluded. The new § 0.5 snapshots live in
+`/home/ec2-user/backups/` (outside the repo dir), so this legacy
+directory is no longer written to and can eventually be removed.
+
+Note on `backend/venv/` exclude: the Python virtualenv lives only on EC2
+(`/home/ec2-user/collectedworks21/backend/venv`) and is not in the local
+tree. Without this exclude, `--delete` wipes it and gunicorn fails to
+start with `status=203/EXEC` (no such file or directory). If this happens,
+restore just the venv from the § 0.5 app tarball:
+```bash
+ssh -i "$PEM" "$EC2" '
+  cd /tmp && tar -xzf /home/ec2-user/backups/collectedworks21-pre-<TAG>.tar.gz \
+                collectedworks21/backend/venv
+  mv /home/ec2-user/collectedworks21/backend/venv \
+     /home/ec2-user/collectedworks21/backend/venv.broken-$(date +%s) 2>/dev/null || true
+  mv /tmp/collectedworks21/backend/venv /home/ec2-user/collectedworks21/backend/venv
+  rmdir /tmp/collectedworks21/backend /tmp/collectedworks21
+  sudo systemctl reset-failed collectedworks && sudo systemctl restart collectedworks
+'
+```
 
 Verify Flask is healthy before touching nginx:
 ```bash
@@ -174,7 +210,7 @@ rsync -av --delete -e "ssh -i $PEM" \
 Restart gunicorn again after a DB swap — existing workers hold the old
 file handle until they recycle:
 ```bash
-ssh -i "$PEM" "$EC2" 'sudo systemctl restart gunicorn'
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
 ```
 
 ## 4. Post-deploy smoke tests
@@ -231,7 +267,7 @@ ssh -i "$PEM" "$EC2" "
   sudo mv /usr/share/nginx/html /usr/share/nginx/html.failed-\$STAMP
   sudo tar -xzf \$WEB_ARCHIVE -C /usr/share/nginx
 
-  sudo systemctl restart gunicorn
+  sudo systemctl restart collectedworks
   sudo nginx -t && sudo systemctl reload nginx
 "
 ```
