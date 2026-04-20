@@ -13,6 +13,25 @@ EC2 layout:
 > `git filter-repo` (see § 6), the remote is frozen at the last clean
 > state and deploys must bypass `git pull`.
 
+## Connection
+
+Every command below assumes these env vars are set in your shell.
+Defined once so the IP and key path aren't hard-coded in every example.
+
+```bash
+export EC2=ec2-user@44.245.34.75
+export PEM=/Users/vbamba/Projects/aws-ssh-keys/ewcc.pem
+
+# Convenience — keeps subsequent ssh/rsync calls readable
+alias ssh-ec2='ssh -i "$PEM" "$EC2"'
+RSYNC_SSH=(-e "ssh -i $PEM")   # expand with "${RSYNC_SSH[@]}" inside rsync
+```
+
+Sanity-check the connection before starting a deploy:
+```bash
+ssh -i "$PEM" "$EC2" 'hostname && uptime'
+```
+
 ## 0. Pre-flight (local)
 
 1. Confirm `HEAD` is the release you want to ship:
@@ -32,6 +51,50 @@ EC2 layout:
    npm run build       # output: frontend/build/
    ```
 
+## 0.5. Snapshot current EC2 state (backup before deploy)
+
+**Run this before every deploy.** Without a snapshot, the § 5 rollback
+has nothing to restore from — a bad deploy becomes unrecoverable except
+by re-rsyncing from whatever local copy you still have.
+
+Pick a tag suffix — the release tag for this deploy, plus a timestamp if
+you're iterating same-day (e.g. `release-2026-04-19` or
+`release-2026-04-19-1530`).
+
+```bash
+TAG=release-2026-04-19   # or whatever release you're shipping
+
+ssh -i "$PEM" "$EC2" "
+  set -e
+  echo '[backup] flask app dir...'
+  sudo cp -a /home/ec2-user/collectedworks21 /home/ec2-user/collectedworks21.pre-$TAG
+
+  echo '[backup] chapters.db...'
+  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db \
+          /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG
+
+  echo '[backup] nginx html root...'
+  sudo mkdir -p /var/backups
+  sudo cp -a /usr/share/nginx/html /var/backups/nginx-html-pre-$TAG
+
+  echo '[backup] done. sizes:'
+  sudo du -sh /home/ec2-user/collectedworks21.pre-$TAG \
+              /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG \
+              /var/backups/nginx-html-pre-$TAG
+"
+```
+
+Housekeeping: EC2 disk fills quickly if you never prune. After a
+successful deploy with no smoke-test regressions, delete snapshots older
+than a couple of releases:
+```bash
+ssh -i "$PEM" "$EC2" '
+  sudo rm -rf /home/ec2-user/collectedworks21.pre-<old-tag>
+  sudo rm -f /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<old-tag>
+  sudo rm -rf /var/backups/nginx-html-pre-<old-tag>
+'
+```
+
 ## 1. Backend — rsync code + restart Flask
 
 Rsync the working tree to EC2, excluding local-only paths and the data
@@ -40,7 +103,7 @@ wouldn't be tracked in git anyway, so the EC2 checkout stays clean.
 
 ```bash
 # from local — at repo root
-rsync -av --delete \
+rsync -av --delete -e "ssh -i $PEM" \
       --exclude '.git/' --exclude '.claude/' --exclude '.restore/' \
       --exclude 'node_modules/' --exclude 'frontend/build/' \
       --exclude 'backend/db/' --exclude 'backend/data/' \
@@ -48,10 +111,10 @@ rsync -av --delete \
       --exclude '__pycache__/' --exclude '*.pyc' \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
-      ./ ec2-user@<host>:/home/ec2-user/collectedworks21/
+      ./ "$EC2":/home/ec2-user/collectedworks21/
 
 # EC2 — restart Flask (pick the manager you use)
-ssh ec2-user@<host> '
+ssh -i "$PEM" "$EC2" '
   sudo systemctl restart collectedworks
   # pm2 restart collectedworks
   # pkill -HUP -f gunicorn
@@ -63,7 +126,7 @@ etc.) are not walked at all, so rsync will not remove files inside them.
 
 Verify Flask is healthy before touching nginx:
 ```bash
-ssh ec2-user@<host> 'curl -s 127.0.0.1:5000/api/chapter_meta?... | head'
+ssh -i "$PEM" "$EC2" 'curl -s 127.0.0.1:5000/api/chapter_meta?... | head'
 ```
 
 **Local tag marker for audit (optional):** since remote pushes are frozen,
@@ -77,8 +140,8 @@ git tag -a deployed-$(date +%Y-%m-%d) -m "deployed to ask.cw via rsync"
 
 ```bash
 # from local
-rsync -av --delete frontend/build/ ec2-user@<host>:/tmp/cw-build/
-ssh ec2-user@<host> '
+rsync -av --delete -e "ssh -i $PEM" frontend/build/ "$EC2":/tmp/cw-build/
+ssh -i "$PEM" "$EC2" '
   sudo rsync -av --delete /tmp/cw-build/ /usr/share/nginx/html/ &&
   sudo nginx -t &&
   sudo systemctl reload nginx
@@ -96,19 +159,19 @@ must be refreshed alongside the code; otherwise API SELECTs 500.
 
 ```bash
 # chapters.db — atomic swap so in-flight Flask requests don't see a half-copy
-rsync -av backend/db/chapters.db \
-      ec2-user@<host>:/home/ec2-user/collectedworks21/backend/db/chapters.db.tmp
-ssh ec2-user@<host> '
+rsync -av -e "ssh -i $PEM" backend/db/chapters.db \
+      "$EC2":/home/ec2-user/collectedworks21/backend/db/chapters.db.tmp
+ssh -i "$PEM" "$EC2" '
   mv /home/ec2-user/collectedworks21/backend/db/chapters.db.tmp \
      /home/ec2-user/collectedworks21/backend/db/chapters.db
 '
 
 # out_chapters/ — same excludes as sync_from_splitter.sh
-rsync -av --delete \
+rsync -av --delete -e "ssh -i $PEM" \
       --exclude "raw_section_*.txt" --exclude "diagnostic.*" \
       --exclude "toc.json" --exclude "toc.txt" \
       backend/data/out_chapters/ \
-      ec2-user@<host>:/home/ec2-user/collectedworks21/backend/data/out_chapters/
+      "$EC2":/home/ec2-user/collectedworks21/backend/data/out_chapters/
 ```
 
 Restart Flask again after a DB swap — existing connections hold the old file
@@ -134,37 +197,34 @@ curl -s 'https://ask.collectedworksofsriaurobindo.com/api/chapter?collection_fol
 #    and prose reflowed naturally (no ragged ~90-char line breaks).
 
 # d) nginx access log sanity — confirm 2xx on /api/text_search after deploy
-ssh ec2-user@<host> 'sudo tail -50 /var/log/nginx/access.log | grep text_search'
+ssh -i "$PEM" "$EC2" 'sudo tail -50 /var/log/nginx/access.log | grep text_search'
 ```
 
 ## 5. Rollback
 
 Since deploys are rsync-based (§ 1) rather than git-based, `git checkout` on
-EC2 does not roll back the code — it only moves the local refs inside the
-EC2 working copy. You roll back by rsyncing a prior snapshot.
+EC2 does not roll back the code — it only moves refs inside the EC2
+working copy. You roll back by rsyncing the snapshot taken in § 0.5.
 
-**Before every deploy,** snapshot the EC2 state so you have something to
-rsync back:
-```bash
-ssh ec2-user@<host> '
-  sudo cp -a /home/ec2-user/collectedworks21 /home/ec2-user/collectedworks21.pre-<tag>
-  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db \
-          /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<tag>
-  sudo cp -a /usr/share/nginx/html /var/backups/nginx-html-<tag>
-'
-```
+If you skipped § 0.5, there's no snapshot to restore from — your only
+option is to re-deploy a known-good release from local.
 
-**To roll back:**
 ```bash
-ssh ec2-user@<host> '
+TAG=release-2026-04-19   # same suffix used in § 0.5 snapshot
+
+ssh -i "$PEM" "$EC2" "
+  set -e
   sudo rsync -av --delete \
-       /home/ec2-user/collectedworks21.pre-<tag>/ /home/ec2-user/collectedworks21/
-  cp /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<tag> \
-     /home/ec2-user/collectedworks21/backend/db/chapters.db
-  sudo rsync -av --delete /var/backups/nginx-html-<tag>/ /usr/share/nginx/html/
+       /home/ec2-user/collectedworks21.pre-$TAG/ \
+       /home/ec2-user/collectedworks21/
+  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-$TAG \
+          /home/ec2-user/collectedworks21/backend/db/chapters.db
+  sudo rsync -av --delete \
+       /var/backups/nginx-html-pre-$TAG/ \
+       /usr/share/nginx/html/
   sudo systemctl restart collectedworks
   sudo systemctl reload nginx
-'
+"
 ```
 
 The old `chapters.db` schema matters: reverting past commit `048dfc2`
