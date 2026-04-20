@@ -57,9 +57,12 @@ ssh -i "$PEM" "$EC2" 'hostname && uptime'
 has nothing to restore from — a bad deploy becomes unrecoverable except
 by re-rsyncing from whatever local copy you still have.
 
-Tarballs the entire Flask prod folder (code + `backend/db/chapters.db` +
-`backend/data/out_chapters/` + indexes) into `/home/ec2-user/backups/`.
-One file per deploy, compressed, easy to list and prune.
+Two tarballs into `/home/ec2-user/backups/`:
+1. The Flask prod folder (code + `backend/db/chapters.db` +
+   `backend/data/out_chapters/` + indexes).
+2. The nginx html root (~7 MB, the built React bundle). Small enough
+   that there's no reason not to snapshot it — avoids needing to
+   rebuild from local during a rollback.
 
 ```bash
 TAG=release-2026-04-19   # or same-day suffix: release-2026-04-19-1530
@@ -67,21 +70,29 @@ TAG=release-2026-04-19   # or same-day suffix: release-2026-04-19-1530
 ssh -i "$PEM" "$EC2" "
   set -e
   mkdir -p /home/ec2-user/backups
-  OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
-  echo '[backup] creating '\$OUT'...'
-  tar -czf \$OUT -C /home/ec2-user collectedworks21
+
+  APP_OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
+  echo '[backup] flask app → '\$APP_OUT
+  tar -czf \$APP_OUT -C /home/ec2-user collectedworks21
+
+  WEB_OUT=/home/ec2-user/backups/nginx-html-pre-$TAG.tar.gz
+  echo '[backup] nginx html → '\$WEB_OUT
+  sudo tar -czf \$WEB_OUT -C /usr/share/nginx html
+  sudo chown ec2-user:ec2-user \$WEB_OUT
+
   echo '[backup] done.'
-  ls -lh \$OUT
+  ls -lh \$APP_OUT \$WEB_OUT
   echo '[backup] all snapshots:'
   ls -lh /home/ec2-user/backups/
 "
 ```
 
 Housekeeping — prune old tarballs after a release is confirmed healthy
-(keep the last 3–5 so you can roll back more than one step if needed):
+(keep the last 3–5 of each kind so you can roll back more than one step):
 ```bash
 ssh -i "$PEM" "$EC2" '
   ls -1t /home/ec2-user/backups/collectedworks21-pre-*.tar.gz | tail -n +6 | xargs -r rm -v
+  ls -1t /home/ec2-user/backups/nginx-html-pre-*.tar.gz     | tail -n +6 | xargs -r rm -v
 '
 ```
 
@@ -203,24 +214,31 @@ TAG=release-2026-04-19   # same suffix used in § 0.5 snapshot
 
 ssh -i "$PEM" "$EC2" "
   set -e
-  ARCHIVE=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
-  test -f \$ARCHIVE || { echo 'no snapshot at '\$ARCHIVE; exit 1; }
+  STAMP=\$(date +%Y%m%d-%H%M%S)
+  APP_ARCHIVE=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
+  WEB_ARCHIVE=/home/ec2-user/backups/nginx-html-pre-$TAG.tar.gz
+  test -f \$APP_ARCHIVE || { echo 'no app snapshot at '\$APP_ARCHIVE; exit 1; }
+  test -f \$WEB_ARCHIVE || { echo 'no web snapshot at '\$WEB_ARCHIVE; exit 1; }
 
-  # Move the current (bad) dir aside instead of deleting — lets us inspect
-  # what went wrong after the fact.
+  # Flask app — move the bad dir aside (don't delete; lets us inspect
+  # what went wrong after the fact), then extract snapshot.
   sudo mv /home/ec2-user/collectedworks21 \
-          /home/ec2-user/collectedworks21.failed-$(date +%Y%m%d-%H%M%S)
-
-  sudo tar -xzf \$ARCHIVE -C /home/ec2-user
+          /home/ec2-user/collectedworks21.failed-\$STAMP
+  sudo tar -xzf \$APP_ARCHIVE -C /home/ec2-user
   sudo chown -R ec2-user:ec2-user /home/ec2-user/collectedworks21
 
+  # nginx html — same pattern
+  sudo mv /usr/share/nginx/html /usr/share/nginx/html.failed-\$STAMP
+  sudo tar -xzf \$WEB_ARCHIVE -C /usr/share/nginx
+
   sudo systemctl restart gunicorn
+  sudo nginx -t && sudo systemctl reload nginx
 "
 ```
 
-Frontend rollback (if the nginx html root is also bad) — rebuild the
-prior tag locally and re-run § 2, since we don't snapshot the nginx
-root. That build is deterministic from git + `.env.production`.
+If you only need to roll back one side (code but not frontend, or vice
+versa), comment out the block you want to keep — both guards and both
+`mv`/`tar` pairs are independent.
 
 The old `chapters.db` schema matters: reverting past commit `048dfc2`
 (Phase b.5) must be paired with the pre-b.5 DB snapshot, because post-b.5
