@@ -6,6 +6,13 @@ EC2 layout:
 - React build: `/usr/share/nginx/html` (served by nginx; `/api/*` proxies to Flask, everything else falls back to `index.html`)
 - nginx config: `/etc/nginx/conf.d/ask.collectedworks.conf`
 
+> **Why rsync, not `git pull`:** historical commits in this repo contain
+> >100 MB binary artifacts (`backend/indexes/faiss_index*.bin`,
+> `backend/indexes/metadata.json`, `backend/scripts/extracted_texts.json`)
+> that GitHub rejects on push. Until history is rewritten with
+> `git filter-repo` (see § 6), the remote is frozen at the last clean
+> state and deploys must bypass `git pull`.
+
 ## 0. Pre-flight (local)
 
 1. Confirm `HEAD` is the release you want to ship:
@@ -25,28 +32,45 @@ EC2 layout:
    npm run build       # output: frontend/build/
    ```
 
-## 1. Backend — git pull + restart Flask
+## 1. Backend — rsync code + restart Flask
+
+Rsync the working tree to EC2, excluding local-only paths and the data
+directories that ship out-of-band (§ 3). The `--exclude` list mirrors what
+wouldn't be tracked in git anyway, so the EC2 checkout stays clean.
 
 ```bash
-# local
-git push origin main
-git push origin <tag-name>
+# from local — at repo root
+rsync -av --delete \
+      --exclude '.git/' --exclude '.claude/' --exclude '.restore/' \
+      --exclude 'node_modules/' --exclude 'frontend/build/' \
+      --exclude 'backend/db/' --exclude 'backend/data/' \
+      --exclude 'backend/indexes/' --exclude 'backend/pdf/' \
+      --exclude '__pycache__/' --exclude '*.pyc' \
+      --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
+      --exclude '.DS_Store' --exclude '*.zip' \
+      ./ ec2-user@<host>:/home/ec2-user/collectedworks21/
 
-# EC2
-ssh ec2-user@<host>
-cd /home/ec2-user/collectedworks21
-git fetch --tags
-git checkout <tag-name>          # or: git pull origin main
-
-# Pick the one that matches your Flask process manager:
-sudo systemctl restart collectedworks
-# pm2 restart collectedworks
-# pkill -HUP -f gunicorn
+# EC2 — restart Flask (pick the manager you use)
+ssh ec2-user@<host> '
+  sudo systemctl restart collectedworks
+  # pm2 restart collectedworks
+  # pkill -HUP -f gunicorn
+'
 ```
+
+The `--delete` is safe: excluded paths (`backend/db/`, `backend/indexes/`,
+etc.) are not walked at all, so rsync will not remove files inside them.
 
 Verify Flask is healthy before touching nginx:
 ```bash
-curl -s 127.0.0.1:5000/api/chapter_meta?... | head
+ssh ec2-user@<host> 'curl -s 127.0.0.1:5000/api/chapter_meta?... | head'
+```
+
+**Local tag marker for audit (optional):** since remote pushes are frozen,
+tag the HEAD locally after each successful deploy so you can correlate an
+EC2 state with a specific local commit:
+```bash
+git tag -a deployed-$(date +%Y-%m-%d) -m "deployed to ask.cw via rsync"
 ```
 
 ## 2. Frontend — rsync build to nginx root
@@ -115,21 +139,74 @@ ssh ec2-user@<host> 'sudo tail -50 /var/log/nginx/access.log | grep text_search'
 
 ## 5. Rollback
 
-```bash
-ssh ec2-user@<host>
-cd /home/ec2-user/collectedworks21
-git checkout baseline-2026-04-18
-sudo systemctl restart collectedworks
+Since deploys are rsync-based (§ 1) rather than git-based, `git checkout` on
+EC2 does not roll back the code — it only moves the local refs inside the
+EC2 working copy. You roll back by rsyncing a prior snapshot.
 
-# chapters.db — restore pre-b.5 snapshot (the old schema had no
-# parent_toc_title column, so post-b.5 code will 500 against it).
-# Keep a backup before each DB swap, e.g.:
-#   cp backend/db/chapters.db backend/db/chapters.db.pre-<tag>
+**Before every deploy,** snapshot the EC2 state so you have something to
+rsync back:
+```bash
+ssh ec2-user@<host> '
+  sudo cp -a /home/ec2-user/collectedworks21 /home/ec2-user/collectedworks21.pre-<tag>
+  sudo cp /home/ec2-user/collectedworks21/backend/db/chapters.db \
+          /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<tag>
+  sudo cp -a /usr/share/nginx/html /var/backups/nginx-html-<tag>
+'
 ```
 
-To roll back nginx assets, keep the previous `build/` tarball locally (or on
-EC2 under `/var/backups/nginx-html-<date>/`) and rsync it back into
-`/usr/share/nginx/html/`.
+**To roll back:**
+```bash
+ssh ec2-user@<host> '
+  sudo rsync -av --delete \
+       /home/ec2-user/collectedworks21.pre-<tag>/ /home/ec2-user/collectedworks21/
+  cp /home/ec2-user/collectedworks21/backend/db/chapters.db.pre-<tag> \
+     /home/ec2-user/collectedworks21/backend/db/chapters.db
+  sudo rsync -av --delete /var/backups/nginx-html-<tag>/ /usr/share/nginx/html/
+  sudo systemctl restart collectedworks
+  sudo systemctl reload nginx
+'
+```
+
+The old `chapters.db` schema matters: reverting past commit `048dfc2`
+(Phase b.5) must be paired with the pre-b.5 DB snapshot, because post-b.5
+code expects the `parent_toc_title` column and pre-b.5 code does not emit
+it — mixing the two will 500 on `/api/text_search`.
+
+## 6. Cleanup — unblock `git push` (defer; schedule when quiet)
+
+The GitHub remote will keep rejecting pushes until history is rewritten to
+drop the oversized blobs. One-time cleanup:
+
+```bash
+# safety tag in case something goes sideways
+git tag rescue-before-filter-repo
+
+# one-time install
+brew install git-filter-repo
+
+# strip the offending paths from every commit on every branch
+git filter-repo \
+  --path 'backend/indexes/faiss_index.bin' \
+  --path 'backend/indexes/faiss_index copy.bin' \
+  --path 'backend/indexes/metadata.json' \
+  --path 'backend/scripts/extracted_texts.json' \
+  --invert-paths
+
+# filter-repo removes the remote as a safety measure; re-add it
+git remote add origin https://github.com/vbamba/collectedworks21.git
+
+# force-push rewritten history + tags
+git push --force origin main
+git push --tags --force
+```
+
+**Caveats:**
+- All commit SHAs change. Existing tags (`baseline-2026-04-18`,
+  `release-2026-04-19`) keep their names but point at new commit objects.
+- Any other local clone of this repo must `git fetch && git reset --hard
+  origin/main` after the force-push.
+- Once history is clean, the rsync-based deploy in § 1 can be replaced
+  with the simpler `git fetch && git checkout <tag>` flow on EC2.
 
 ## Reference — file map
 
