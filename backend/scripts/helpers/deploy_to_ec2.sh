@@ -94,6 +94,7 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
       --exclude 'backups/' \
+      --exclude 'backend/venv.broken-*' \
       --exclude 'backend/scripts/text_search2.py' \
       --exclude 'backend/scripts/utils copy.py' \
       --exclude 'backend/scripts/ai/' \
@@ -115,13 +116,17 @@ if [[ "${SKIP_SQL:-0}" == "1" ]]; then
   step "3/5 SQL cleanup SKIPPED (SKIP_SQL=1)"
 else
   step "3/5 apply strip_oversized_sections.sql on prod chapters.db"
+  # CHANGED: was 'sqlite3 ... < sql_file', but the prod EC2 (Amazon Linux 2)
+  # ships without the sqlite3 CLI. Python3 is always present (gunicorn runs
+  # on it), and its sqlite3 module reads the same DB file format, so use
+  # executescript() instead. Avoids needing yum/dnf install at deploy time.
   "${SSH[@]}" "
     set -e
     BAK=$REMOTE_DB.bak-\$(date +%Y%m%d-%H%M%S)
     echo '[sql] backing up prod DB -> '\$BAK
     cp $REMOTE_DB \$BAK
-    echo '[sql] applying $REMOTE_SQL'
-    sqlite3 $REMOTE_DB < $REMOTE_SQL
+    echo '[sql] applying $REMOTE_SQL via python3'
+    python3 -c \"import sqlite3; c=sqlite3.connect('$REMOTE_DB'); c.executescript(open('$REMOTE_SQL').read()); c.commit(); c.close()\"
     echo '[sql] restarting gunicorn so workers reopen the DB file'
     sudo systemctl restart collectedworks
     sleep 1
