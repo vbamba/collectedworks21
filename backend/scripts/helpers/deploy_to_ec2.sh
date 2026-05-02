@@ -2,22 +2,31 @@
 #
 # deploy_to_ec2.sh — one-shot deploy of the working tree to ask.cw EC2.
 #
-# Mirrors docs/DEPLOY.md §0.5 → §1 → (§3 SQL apply) → §4 smoke. Frontend deploy
-# (§2) is intentionally not automated here — only run a frontend rebuild +
-# rsync when frontend/build/ actually changed, and that's a manual call.
+# Mirrors docs/DEPLOY.md §0.5 → §1 → §3 fixups → §2 frontend (opt-in) → §4
+# smoke. Frontend rebuild + nginx push is gated behind --frontend because most
+# deploys are backend-only and a full React build adds ~30s.
 #
 # Usage:
 #   export EC2=ec2-user@44.245.34.75
 #   export PEM=/Users/vbamba/Projects/aws-ssh-keys/ewcc.pem
-#   backend/scripts/helpers/deploy_to_ec2.sh <TAG>
+#   backend/scripts/helpers/deploy_to_ec2.sh <TAG> [--frontend]
 #
-# Example:
+# Examples:
+#   # backend-only (most common)
 #   backend/scripts/helpers/deploy_to_ec2.sh release-$(date +%Y-%m-%d)
+#
+#   # backend + frontend rebuild + nginx push
+#   backend/scripts/helpers/deploy_to_ec2.sh release-$(date +%Y-%m-%d) --frontend
+#
+# Flags (positional):
+#   --frontend     also: npm run build, rsync build/ to nginx html, reload nginx
 #
 # Flags (env vars):
 #   SKIP_SNAPSHOT=1   skip §0.5 prod tarball (NOT recommended; rollback breaks)
-#   SKIP_SQL=1        skip the strip_oversized_sections.sql apply on prod DB
+#   SKIP_SQL=1        skip the chapters.db fixups on prod DB
 #   SKIP_SMOKE=1      skip the §4 smoke tests at the end
+#   BUILD_VERSION=X   override the cache-buster baked into the React build
+#                     (used only with --frontend; default: today's date YYYYMMDD)
 #
 # Exit codes: 0 success, non-zero on first failed step. `set -euo pipefail`
 # means any single command failure aborts the whole deploy.
@@ -25,9 +34,21 @@
 set -euo pipefail
 
 # ── Args & env ────────────────────────────────────────────────────────────────
+# CHANGED: separate flag args from positional TAG so --frontend can appear in
+# any position. Anything that isn't a recognized flag is treated as positional.
+DO_FRONTEND=0
+POSITIONAL=()
+for arg in "$@"; do
+  case "$arg" in
+    --frontend|-f) DO_FRONTEND=1 ;;
+    *) POSITIONAL+=("$arg") ;;
+  esac
+done
+set -- "${POSITIONAL[@]:-}"
+
 TAG="${1:-}"
 if [[ -z "$TAG" ]]; then
-  echo "ERROR: TAG arg required. e.g. $0 release-$(date +%Y-%m-%d)" >&2
+  echo "ERROR: TAG arg required. e.g. $0 release-$(date +%Y-%m-%d) [--frontend]" >&2
   exit 64
 fi
 : "${EC2:?ERROR: \$EC2 must be set, e.g. ec2-user@44.245.34.75}"
@@ -54,14 +75,14 @@ SSH=(ssh -i "$PEM" "$EC2")
 step() { printf '\n=== [%s] %s ===\n' "$(date +%H:%M:%S)" "$*"; }
 
 # ── 0. Connection check ───────────────────────────────────────────────────────
-step "0/5 ssh sanity check ($EC2)"
+step "0/6 ssh sanity check ($EC2)"
 "${SSH[@]}" 'hostname && uptime'
 
 # ── 1. Snapshot prod (DEPLOY.md §0.5) ────────────────────────────────────────
 if [[ "${SKIP_SNAPSHOT:-0}" == "1" ]]; then
-  step "1/5 snapshot SKIPPED (SKIP_SNAPSHOT=1) — rollback will not be possible"
+  step "1/6 snapshot SKIPPED (SKIP_SNAPSHOT=1) — rollback will not be possible"
 else
-  step "1/5 snapshot prod (tag=$TAG)"
+  step "1/6 snapshot prod (tag=$TAG)"
   "${SSH[@]}" "
     set -e
     mkdir -p /home/ec2-user/backups
@@ -78,7 +99,7 @@ else
 fi
 
 # ── 2. Rsync code + restart Flask (DEPLOY.md §1) ─────────────────────────────
-step "2/5 rsync working tree -> $EC2:$REMOTE_APP"
+step "2/6 rsync working tree -> $EC2:$REMOTE_APP"
 # Excludes split into two groups so future readers see what's policy vs what's
 # scratch:
 #   - "core" excludes mirror docs/DEPLOY.md §1 (build artifacts, large data,
@@ -108,7 +129,7 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'ping.txt' \
       ./ "$EC2":"$REMOTE_APP/"
 
-step "2/5 restart gunicorn (collectedworks.service)"
+step "2/6 restart gunicorn (collectedworks.service)"
 "${SSH[@]}" 'sudo systemctl restart collectedworks && sleep 1 && sudo systemctl is-active collectedworks'
 
 # ── 3. Apply chapters.db post-rebuild fixups (all idempotent) ────────────────
@@ -121,9 +142,9 @@ step "2/5 restart gunicorn (collectedworks.service)"
 # Both safe on every deploy; they're no-ops if their target state is already
 # correct. Required after any chapters.db rebuild.
 if [[ "${SKIP_SQL:-0}" == "1" ]]; then
-  step "3/5 chapters.db fixups SKIPPED (SKIP_SQL=1)"
+  step "3/6 chapters.db fixups SKIPPED (SKIP_SQL=1)"
 else
-  step "3/5 apply chapters.db fixups (strip mega-sections + Savitri TOC backfill)"
+  step "3/6 apply chapters.db fixups (strip mega-sections + Savitri TOC backfill)"
   # CHANGED: was 'sqlite3 ... < sql_file', but the prod EC2 (Amazon Linux 2)
   # ships without the sqlite3 CLI. Python3 is always present (gunicorn runs
   # on it), and its sqlite3 module reads the same DB file format, so use
@@ -144,11 +165,43 @@ else
   "
 fi
 
-# ── 4. Smoke tests (DEPLOY.md §4 + TOC-fix specific) ─────────────────────────
-if [[ "${SKIP_SMOKE:-0}" == "1" ]]; then
-  step "4/5 smoke tests SKIPPED (SKIP_SMOKE=1)"
+# ── 4. Frontend build + nginx push (DEPLOY.md §2, opt-in via --frontend) ─────
+# CHANGED: previously this was a manual call after the script finished. Folded
+# in here so the four-line build/rsync/reload sequence travels with the rest
+# of the deploy. Skipped by default because most deploys are backend-only and
+# `npm run build` adds ~30s; pass --frontend when the React bundle changed.
+if [[ "$DO_FRONTEND" != "1" ]]; then
+  step "4/6 frontend build + nginx push SKIPPED (pass --frontend to include)"
 else
-  step "4/5 smoke test prod"
+  step "4/6 frontend build + nginx push"
+  # Bake a cache-buster into the bundle so browsers don't serve stale JS/CSS.
+  # Default = today's date (YYYYMMDD); override via BUILD_VERSION=... if you
+  # need a same-day re-deploy with a suffix (matches DEPLOY.md §0 convention).
+  FE_VERSION="${BUILD_VERSION:-$(date +%Y%m%d)}"
+  echo "[frontend] building with REACT_APP_BUILD_VERSION=$FE_VERSION"
+  pushd frontend > /dev/null
+  REACT_APP_BUILD_VERSION="$FE_VERSION" npm run build
+  popd > /dev/null
+
+  # Two-stage rsync: user-owned scratch dir first, then sudo copy into the
+  # nginx html root (which is root-owned). Keeps the privileged step minimal
+  # and matches DEPLOY.md §2 verbatim.
+  echo "[frontend] rsync build/ -> $EC2:/tmp/cw-build/"
+  rsync -av --delete -e "ssh -i $PEM" frontend/build/ "$EC2":/tmp/cw-build/
+  echo "[frontend] sudo rsync into /usr/share/nginx/html/ + reload nginx"
+  "${SSH[@]}" '
+    set -e
+    sudo rsync -av --delete /tmp/cw-build/ /usr/share/nginx/html/
+    sudo nginx -t
+    sudo systemctl reload nginx
+  '
+fi
+
+# ── 5. Smoke tests (DEPLOY.md §4 + TOC-fix specific) ─────────────────────────
+if [[ "${SKIP_SMOKE:-0}" == "1" ]]; then
+  step "5/6 smoke tests SKIPPED (SKIP_SMOKE=1)"
+else
+  step "5/6 smoke test prod"
   HOST=https://ask.collectedworksofsriaurobindo.com
 
   echo '[smoke] /api/text_search returns results and parent_toc_title field exists'
@@ -175,8 +228,8 @@ else
         print(f"  ok (first_section={first})")'
 fi
 
-# ── 5. Local audit tag ────────────────────────────────────────────────────────
-step "5/5 local audit tag"
+# ── 6. Local audit tag ────────────────────────────────────────────────────────
+step "6/6 local audit tag"
 # CHANGED: was "deployed-$(date +%Y-%m-%d)-${TAG#release-}" which double-printed
 # the date when TAG already started "release-YYYY-MM-DD". Strip the "release-"
 # prefix from TAG (no-op if absent) and use that directly.
@@ -188,9 +241,17 @@ else
   echo "[tag] created '$TAG_NAME' at $(git rev-parse --short HEAD)"
 fi
 
+# CHANGED: footer reflects whether frontend was actually built so the operator
+# knows which surfaces went out.
+if [[ "$DO_FRONTEND" == "1" ]]; then
+  FE_NOTE="frontend rebuilt + pushed (BUILD_VERSION=${BUILD_VERSION:-$(date +%Y%m%d)})"
+else
+  FE_NOTE="frontend NOT touched (re-run with --frontend if React bundle changed)"
+fi
+
 cat <<EOF
 
 ✓ Deploy complete (TAG=$TAG, HEAD=$(git rev-parse --short HEAD)).
+  $FE_NOTE.
   Rollback: see docs/DEPLOY.md §5 with the same TAG.
-  Frontend (§2) was not touched — run a build + rsync separately if needed.
 EOF
