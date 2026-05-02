@@ -109,9 +109,18 @@
         const phrase = params.get('query')?.trim() || '';
         const resultType = params.get('result_type') || 'all';
 
+        // CHANGED: align with ChapterPage.jsx STOPWORDS — chiefly to add 'i'.
+        // Without it, queries like "I happened to be the main target" highlight
+        // every standalone "I" in the chapter, and the first "I" in oversized
+        // catch-all sections (e.g. 28LettersOnYoga-I/section_74_Page_8.txt is
+        // ~1MB and starts with the book's front matter / TOC) sits in the
+        // front matter — so scrollIntoView lands the reader on the TOC instead
+        // of on the actual matching letter further down.
         const STOPWORDS = new Set([
-          'a','an','and','are','as','at','be','but','by','for','if','in','into','is','it','no','not','of','on','or',
-          'such','that','the','their','then','there','these','they','this','to','was','will','with'
+          'a','an','and','are','as','at','be','but','by','for','from','had','has','have',
+          'he','her','his','in','is','it','its','of','on','or','she','that','the','their',
+          'there','they','to','was','were','which','will','with','would','this','those',
+          'these','your','you','i','we','our','us'
         ]);
 
         const context = document.querySelector('.chapter-content');

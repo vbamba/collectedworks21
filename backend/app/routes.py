@@ -537,9 +537,13 @@ def _render_chapter_template(collection: str, book: str, section: str):
     # CHANGED (b.5): also select parent_toc_title so the chapter header can
     # render a "from <parent>" breadcrumb on Pass-3 journal sub-sections.
     conn = sqlite3.connect(str(DB_PATH))
+    # CHANGED: also pull non_content so prev/next nav can skip TOC / Publisher's
+    # Note sections (non_content=1). Without this, [Previous Chapter] from the
+    # first real chapter would land on the front-matter TOC, which has no
+    # clickable entries — a dead end for the reader.
     cursor = conn.execute(
         """
-        SELECT section_filename, slug, book_slug, book_title, parent_toc_title
+        SELECT section_filename, slug, book_slug, book_title, parent_toc_title, non_content
         FROM chapters
         WHERE collection_folder = ? AND book_folder = ?
         ORDER BY CAST(chapter AS INTEGER)
@@ -555,6 +559,16 @@ def _render_chapter_template(collection: str, book: str, section: str):
     fallback_title = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', re.sub(r'^\d+', '', book)).title()
     book_title = rows[0][3] if rows and rows[0][3] else fallback_title
 
+    # CHANGED: helper to walk past non_content sections when computing prev/next.
+    # We keep the full `sections` list (so direct URLs to a TOC page still
+    # render — bookmarks shouldn't break) but only return a content-only target
+    # for navigation. Step direction = -1 for prev, +1 for next.
+    def _step_to_content(start_idx: int, step: int):
+        i = start_idx + step
+        while 0 <= i < len(rows) and rows[i][5]:  # rows[i][5] = non_content
+            i += step
+        return i if 0 <= i < len(rows) else None
+
     try:
         idx = sections.index(section)
     except ValueError:
@@ -563,10 +577,12 @@ def _render_chapter_template(collection: str, book: str, section: str):
         # NEW (b.5): unknown section → no breadcrumb
         parent_toc_title = ''
     else:
-        prev_section = sections[idx - 1] if idx > 0 else None
-        next_section = sections[idx + 1] if idx < len(sections) - 1 else None
-        prev_slug    = section_slugs[idx - 1] if idx > 0 else ''
-        next_slug    = section_slugs[idx + 1] if idx < len(sections) - 1 else ''
+        prev_idx = _step_to_content(idx, -1)  # CHANGED: skip non_content
+        next_idx = _step_to_content(idx, +1)  # CHANGED: skip non_content
+        prev_section = sections[prev_idx] if prev_idx is not None else None
+        next_section = sections[next_idx] if next_idx is not None else None
+        prev_slug    = section_slugs[prev_idx] if prev_idx is not None else ''
+        next_slug    = section_slugs[next_idx] if next_idx is not None else ''
         # NEW (b.5): breadcrumb for the *current* section; empty for TOC-level
         # entries and legacy rows predating Pass 3.
         parent_toc_title = rows[idx][4] or ''
@@ -719,9 +735,12 @@ def get_chapter():
     # nav + title
     # CHANGED (b.5): pull parent_toc_title alongside section_filename so we can
     # surface the journal-sub-section breadcrumb in the SPA chapter header.
+    # CHANGED: also pull non_content so prev/next/first/last skip TOC and
+    # Publisher's Note sections (non_content=1). They have no clickable entries
+    # so landing on them via nav is a dead-end for the reader.
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.execute(
-        "SELECT section_filename, parent_toc_title FROM chapters "
+        "SELECT section_filename, parent_toc_title, non_content FROM chapters "
         "WHERE collection_folder=? AND book_folder=? "
         "ORDER BY CAST(chapter AS INTEGER)",
         (collection, book)
@@ -729,6 +748,7 @@ def get_chapter():
     section_rows = cur.fetchall()
     sections = [r[0] for r in section_rows]
     section_parents = [r[1] or '' for r in section_rows]
+    section_non_content = [bool(r[2]) for r in section_rows]  # CHANGED: TOC flag per section
     cur = conn.execute(
         "SELECT book_title FROM chapters "
         "WHERE collection_folder=? AND book_folder=? LIMIT 1",
@@ -743,17 +763,29 @@ def get_chapter():
     ).title()
     book_title = row[0] if row and row[0] else fallback_title
 
+    # CHANGED: indices of content-only sections, used for nav so Prev/Next/
+    # First/Last never point to a TOC or Publisher's Note. The full `sections`
+    # list is preserved for `sections.index(section)` so direct URLs to a TOC
+    # page (bookmarks) still render — we only hide them from navigation.
+    content_idxs = [i for i, nc in enumerate(section_non_content) if not nc]
+
     # CHANGED (2026-04-19): also compute first/last section_filename so the SPA
     # can render jump-to-start and jump-to-end links alongside prev/next. These
     # are None when the book has 0 sections, or equal to prev/next when the
     # current chapter is already at the boundary (client decides whether to
     # hide or just visually disable).
-    first_section = sections[0] if sections else None
-    last_section = sections[-1] if sections else None
+    # CHANGED: first/last now point at the first/last content sections, not the
+    # raw section list — otherwise [« First] in book 28 lands on the Publisher's
+    # Note (section_01), the very dead-end we're trying to hide.
+    first_section = sections[content_idxs[0]] if content_idxs else None
+    last_section = sections[content_idxs[-1]] if content_idxs else None
     try:
         idx = sections.index(section)
-        prev_section = sections[idx-1] if idx>0 else None
-        next_section = sections[idx+1] if idx < len(sections)-1 else None
+        # CHANGED: walk past non_content neighbors so prev/next skip TOC pages.
+        prev_idx = next((i for i in reversed(content_idxs) if i < idx), None)
+        next_idx = next((i for i in content_idxs if i > idx), None)
+        prev_section = sections[prev_idx] if prev_idx is not None else None
+        next_section = sections[next_idx] if next_idx is not None else None
         # NEW (b.5): current section's breadcrumb (empty for TOC-level entries)
         parent_toc_title = section_parents[idx]
     except ValueError:
