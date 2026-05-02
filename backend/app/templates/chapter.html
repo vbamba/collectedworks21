@@ -32,6 +32,12 @@
       hr { border: 0; border-top: 1px solid #d0d0d0; margin: 2rem 0; }
       mark { background-color: #fff3a3; font-weight: 600; padding: 0 0.05em; border-radius: 2px; }
       .nav-links a { text-underline-offset: 2px; }
+      /* CHANGED: parent-TOC breadcrumb subtitle (e.g. "from Book Three —
+         The Book of the Divine Mother" on a Savitri canto, or
+         "from March 14, 1952" on a Mother Agenda sub-section). Matches the
+         visual style used by ChapterPage.jsx so the legacy server-rendered
+         template behaves the same. */
+      .chapter-subtitle { text-align: center; color: #6c757d; font-style: italic; margin: -0.5rem 0 1.25rem; font-size: 1rem; }
     </style>
   </head>
   <body>
@@ -44,29 +50,42 @@
              /read/<coll>/<book_slug>/<slug> when the backend provided slugs;
              fall back to /api/chapter_content?... for legacy rows. Previous
              version used relative `?...` links which broke on /read/ paths. #}
-          {% set qparam = query|default('') %}
-          {% set qs = '' %}
-          {% if qparam %}{% set qs = qs + '&query=' + qparam|urlencode %}{% endif %}
-          {% if result_type %}{% set qs = qs + '&result_type=' + result_type %}{% endif %}
+          {# CHANGED: prev/next intentionally do NOT carry query/result_type.
+             Highlighting is only useful on the chapter the reader opened from
+             a search result. On the next chapter, mark.js would match
+             unrelated text and auto-scroll past the top, so re-open cleanly.
+             The current page still highlights because the URL the reader
+             arrived at still has ?query=...&result_type=... — we just don't
+             propagate them onto the next nav target. #}
 
           {% if prev_section %}
             {% if book_slug and prev_slug %}
-              {% set prev_href = '/read/' + collection_folder + '/' + book_slug + '/' + prev_slug + (('?' + qs[1:]) if qs else '') %}
+              {% set prev_href = '/read/' + collection_folder + '/' + book_slug + '/' + prev_slug %}
             {% else %}
-              {% set prev_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + prev_section + qs %}
+              {% set prev_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + prev_section %}
             {% endif %}
             <a href="{{ prev_href }}" class="btn btn-link p-0 me-3">[Previous Chapter]</a>
           {% endif %}
           {% if next_section %}
             {% if book_slug and next_slug %}
-              {% set next_href = '/read/' + collection_folder + '/' + book_slug + '/' + next_slug + (('?' + qs[1:]) if qs else '') %}
+              {% set next_href = '/read/' + collection_folder + '/' + book_slug + '/' + next_slug %}
             {% else %}
-              {% set next_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + next_section + qs %}
+              {% set next_href = '/api/chapter_content?collection_folder=' + collection_folder + '&book_folder=' + book_folder + '&section_filename=' + next_section %}
             {% endif %}
             <a href="{{ next_href }}" class="btn btn-link p-0">[Next Chapter]</a>
           {% endif %}
         </div>
       </div>
+
+      {# CHANGED: parent-TOC breadcrumb under the nav row, matching the SPA
+         (.chapter-subtitle in ChapterPage.jsx). Renders only when
+         parent_toc_title is non-empty so non-Savitri / non-journal books are
+         unaffected. Fixes the bug where Savitri canto pages — clicked from
+         a search result that already showed "Book X — ..." — landed on the
+         legacy template with no Book context in the header. #}
+      {% if parent_toc_title %}
+        <div class="chapter-subtitle">from {{ parent_toc_title }}</div>
+      {% endif %}
     </div>
 
     <!-- Main content wrapper for highlighting -->

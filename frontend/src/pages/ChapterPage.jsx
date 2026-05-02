@@ -304,18 +304,23 @@ const ChapterPage = () => {
           // component is mounted on the slug route AND the target neighbor has
           // a slug. Otherwise it falls back to /chapter?...&section_filename=,
           // which keeps legacy data (rows without slugs) working.
+          //
+          // CHANGED: prev/next/first/last deliberately drop `query` and
+          // `result_type` from the nav target. Highlighting is only useful on
+          // the chapter the user opened from a search result; once they
+          // navigate to a neighbor, mark.js would (a) highlight unrelated text
+          // and (b) auto-scroll past the top of the chapter. Plain nav
+          // re-opens the next chapter from the top with no marks. The current
+          // page still highlights because the URL the user *arrived at* still
+          // carries the query string.
           const buildChapterHref = (targetSection, targetSlug) => {
-            const qs = new URLSearchParams();
-            if (phrase) qs.set('query', phrase);
-            qs.set('result_type', resultType);
-            const queryString = qs.toString();
             if (slugMode && targetSlug) {
-              const path = `/read/${encodeURIComponent(collection)}` +
-                           `/${encodeURIComponent(bookSlug)}` +
-                           `/${encodeURIComponent(targetSlug)}`;
-              return queryString ? `${path}?${queryString}` : path;
+              return `/read/${encodeURIComponent(collection)}` +
+                     `/${encodeURIComponent(bookSlug)}` +
+                     `/${encodeURIComponent(targetSlug)}`;
             }
-            // Fallback: /chapter?... query form.
+            // Fallback: /chapter?... query form (no query/result_type carried).
+            const qs = new URLSearchParams();
             qs.set('collection_folder', collection);
             qs.set('book_folder', bookFolder || resolvedBookFolder);
             qs.set('section_filename', targetSection);
