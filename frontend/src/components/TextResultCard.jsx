@@ -178,11 +178,15 @@ const TextResultCard = ({
         </h5>
 
         {/* CHANGED (b.5): one-line breadcrumb recovering the parent TOC entry
-            buried by Pass-3 sub-section splitting (e.g. "from March 14, 1952").
-            Hidden when empty so non-journal books are unaffected. */}
+            buried by Pass-3 sub-section splitting (e.g. "March 14, 1952" for
+            Mother Agenda, "Book Three — The Book of the Divine Mother" for a
+            Savitri canto). Hidden when empty so non-journal/non-Savitri books
+            are unaffected. CHANGED: dropped the "from " prefix — the breadcrumb
+            already reads naturally on its own ("Book Three — ..."), and the
+            extra word added clutter without disambiguating anything. */}
         {parent_toc_title && (
           <div className="text-muted small fst-italic mb-2">
-            from {parent_toc_title}
+            {parent_toc_title}
           </div>
         )}
 

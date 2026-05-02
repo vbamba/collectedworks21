@@ -362,11 +362,15 @@ const ChapterPage = () => {
         })()}
 
         {/* CHANGED (b.5): breadcrumb under the nav row — recovers the parent
-            TOC entry (e.g. "from March 14, 1952") that Pass-3 sub-section
-            splitting would otherwise hide. Rendered only when non-empty so
-            TOC-level books (non-journal) keep their original header. */}
+            TOC entry (e.g. "March 14, 1952" for Mother Agenda, "Book Three —
+            The Book of the Divine Mother" for a Savitri canto). Rendered
+            only when non-empty so non-journal/non-Savitri books keep their
+            original header.
+            CHANGED: dropped the "from " prefix — the breadcrumb reads as a
+            standalone subtitle now, matching what the user expects to see
+            (just the parent title, no leading preposition). */}
         {parentTocTitle && (
-          <div className="chapter-subtitle">from {parentTocTitle}</div>
+          <div className="chapter-subtitle">{parentTocTitle}</div>
         )}
 
         <div
