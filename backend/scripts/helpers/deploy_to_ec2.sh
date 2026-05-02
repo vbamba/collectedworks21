@@ -46,6 +46,9 @@ cd "$REPO_ROOT"
 REMOTE_APP=/home/ec2-user/collectedworks21
 REMOTE_DB="$REMOTE_APP/backend/db/chapters.db"
 REMOTE_SQL="$REMOTE_APP/backend/scripts/helpers/strip_oversized_sections.sql"
+# CHANGED: Savitri parent_toc_title backfill ships alongside the SQL strip;
+# both are idempotent post-rebuild fixups for the chapters splitter.
+REMOTE_BACKFILL_SAVITRI="$REMOTE_APP/backend/scripts/helpers/backfill_savitri_toc.py"
 SSH=(ssh -i "$PEM" "$EC2")
 
 step() { printf '\n=== [%s] %s ===\n' "$(date +%H:%M:%S)" "$*"; }
@@ -108,14 +111,19 @@ rsync -av --delete -e "ssh -i $PEM" \
 step "2/5 restart gunicorn (collectedworks.service)"
 "${SSH[@]}" 'sudo systemctl restart collectedworks && sleep 1 && sudo systemctl is-active collectedworks'
 
-# ── 3. Apply chapters.db cleanup SQL (idempotent) ────────────────────────────
-# Safe to run on every deploy — the DELETE is a no-op once the rows are gone.
-# Required after any chapters.db rebuild that re-emits the catch-all "Page_X"
-# rows (see backend/scripts/helpers/strip_oversized_sections.sql for context).
+# ── 3. Apply chapters.db post-rebuild fixups (all idempotent) ────────────────
+# Two scripts run together so we only bounce gunicorn once:
+#   a) strip_oversized_sections.sql — drop the catch-all "Page_X" rows that the
+#      splitter emits (1MB+ each, content already duplicated in proper chapters)
+#   b) backfill_savitri_toc.py — set chapters.parent_toc_title = "Book X — ..."
+#      for every Savitri canto, so the SPA chapter header and search-result
+#      cards show the parent Book breadcrumb. Idempotent post-second-run.
+# Both safe on every deploy; they're no-ops if their target state is already
+# correct. Required after any chapters.db rebuild.
 if [[ "${SKIP_SQL:-0}" == "1" ]]; then
-  step "3/5 SQL cleanup SKIPPED (SKIP_SQL=1)"
+  step "3/5 chapters.db fixups SKIPPED (SKIP_SQL=1)"
 else
-  step "3/5 apply strip_oversized_sections.sql on prod chapters.db"
+  step "3/5 apply chapters.db fixups (strip mega-sections + Savitri TOC backfill)"
   # CHANGED: was 'sqlite3 ... < sql_file', but the prod EC2 (Amazon Linux 2)
   # ships without the sqlite3 CLI. Python3 is always present (gunicorn runs
   # on it), and its sqlite3 module reads the same DB file format, so use
@@ -123,11 +131,13 @@ else
   "${SSH[@]}" "
     set -e
     BAK=$REMOTE_DB.bak-\$(date +%Y%m%d-%H%M%S)
-    echo '[sql] backing up prod DB -> '\$BAK
+    echo '[fixup] backing up prod DB -> '\$BAK
     cp $REMOTE_DB \$BAK
-    echo '[sql] applying $REMOTE_SQL via python3'
+    echo '[fixup] applying $REMOTE_SQL via python3'
     python3 -c \"import sqlite3; c=sqlite3.connect('$REMOTE_DB'); c.executescript(open('$REMOTE_SQL').read()); c.commit(); c.close()\"
-    echo '[sql] restarting gunicorn so workers reopen the DB file'
+    echo '[fixup] running $REMOTE_BACKFILL_SAVITRI'
+    python3 $REMOTE_BACKFILL_SAVITRI --db $REMOTE_DB
+    echo '[fixup] restarting gunicorn so workers reopen the DB file'
     sudo systemctl restart collectedworks
     sleep 1
     sudo systemctl is-active collectedworks
