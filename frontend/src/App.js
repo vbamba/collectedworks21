@@ -17,7 +17,13 @@ const App = () => {
                 <Route path="/chat" element={<SemanticPage />} />                  
                 <Route path="/searchtext"     element={<TextSearchPage />} />  
                 <Route path="/ai"     element={<HomePage />} />                  
-                <Route path="/chapter"  element={<ChapterPage />} />                                       
+                <Route path="/chapter"  element={<ChapterPage />} />
+                {/* CHANGED: slug-based chapter URLs were previously served only
+                    by Flask's chapter.html template. Route them through the SPA
+                    ChapterPage too so we have a single chapter renderer, and so
+                    /read/... URLs (which nginx falls back to index.html for) no
+                    longer hit the SPA shell with no matching route. */}
+                <Route path="/read/:collection/:bookSlug/:slug" element={<ChapterPage />} />
                 <Route path="/viewer" element={<PdfViewer />} /> {/* Add the route for PdfViewer */}
             </Routes>
         </div>

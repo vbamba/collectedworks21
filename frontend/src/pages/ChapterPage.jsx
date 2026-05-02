@@ -1,6 +1,12 @@
 // frontend/src/pages/ChapterPage.jsx
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+// CHANGED: also import useParams so this component can serve both URL shapes
+//   /chapter?collection_folder=X&book_folder=Y&section_filename=Z   (legacy / query)
+//   /read/:collection/:bookSlug/:slug                               (slug, post-migration)
+// The slug shape used to be served exclusively by Flask's chapter.html
+// template. We now route it through this component so all chapter rendering
+// goes through one code path.
+import { useSearchParams, useParams, Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import Mark from 'mark.js';
 const MarkClass = Mark.default || Mark;
@@ -32,9 +38,24 @@ function ligatureRegexEscape(str) {
 
 const ChapterPage = () => {
   const [searchParams]    = useSearchParams();
-  const collection         = searchParams.get('collection_folder');
-  const bookFolder         = searchParams.get('book_folder');
-  const sectionFilename    = searchParams.get('section_filename');
+  // CHANGED: useParams returns {} when the matched route has no path params
+  // (i.e. the /chapter route), and {collection, bookSlug, slug} on the new
+  // /read/:collection/:bookSlug/:slug route. slugMode picks the data flow.
+  const routeParams        = useParams();
+  const slugMode           = !!(routeParams.collection && routeParams.bookSlug && routeParams.slug);
+
+  // Effective identifiers used by the rest of the component.
+  // - slug mode: the path tells us which collection + book_slug + slug to load,
+  //   and the backend resolves to (book_folder, section_filename) internally.
+  //   We don't have book_folder/section_filename until the API responds, so we
+  //   only carry the slug-form fields and use them to build /read/... nav URLs.
+  // - query mode: the URL already carries collection_folder/book_folder/section_filename
+  //   so behavior matches the pre-migration component exactly.
+  const collection         = slugMode ? routeParams.collection : searchParams.get('collection_folder');
+  const bookFolder         = slugMode ? null : searchParams.get('book_folder');
+  const sectionFilename    = slugMode ? null : searchParams.get('section_filename');
+  const bookSlug           = slugMode ? routeParams.bookSlug : '';
+  const slug               = slugMode ? routeParams.slug : '';
   const phrase             = (searchParams.get('query') || '').trim();
   const resultType         = (searchParams.get('result_type') || 'all').toLowerCase(); // NEW
 
@@ -46,23 +67,55 @@ const ChapterPage = () => {
   // chapter 1 or the final chapter without clicking prev/next repeatedly.
   const [firstSection, setFirstSection] = useState(null);
   const [lastSection, setLastSection]   = useState(null);
+  // CHANGED: parallel slug-form nav targets returned by /api/chapter. When
+  // slugMode is true the nav links are built as /read/.../<slug>; when a slug
+  // is missing (legacy row predating the slug column) we fall back to the
+  // section_filename + /chapter?... URL.
+  const [prevSlug, setPrevSlug] = useState('');
+  const [nextSlug, setNextSlug] = useState('');
+  const [firstSlug, setFirstSlug] = useState('');
+  const [lastSlug, setLastSlug] = useState('');
+  // CHANGED: resolved book_folder for the /chapter?... fallback URL when the
+  // current section has no slug (legacy rows). In slug mode we don't know
+  // book_folder, but slug-mode nav builds /read/... URLs that don't need it,
+  // so this stays empty there. In query mode it mirrors the URL's
+  // book_folder param.
+  const [resolvedBookFolder, setResolvedBookFolder] = useState('');
   // CHANGED (b.5): hold Pass-3 journal sub-section breadcrumb (e.g. "March 14,
   // 1952") returned by /api/chapter so the header can render "from <parent>".
   const [parentTocTitle, setParentTocTitle] = useState('');
+  // CHANGED (2026-04-20): reflow flag from /api/chapter. When false (verse, e.g.
+  // Savitri), lines must be joined with <br/> to preserve the poet's breaks;
+  // when true the block was prose-reflowed server-side and can be joined with
+  // a space so the browser handles word-wrap. Default true keeps old prose
+  // behavior if an older backend returns no flag.
+  const [reflowed, setReflowed]     = useState(true);
   const [error, setError]           = useState('');
   const contentRef                  = useRef(null);
 
   // Fetch blocks + metadata
   useEffect(() => {
-    if (!(collection && bookFolder && sectionFilename)) {
+    // CHANGED: choose endpoint based on URL shape.
+    //   slug mode → /api/chapter_by_slug?collection=...&book_slug=...&slug=...
+    //               (Flask returns a 307 redirect to /api/chapter, fetch follows
+    //                it transparently and we get the same JSON shape back)
+    //   query mode → /api/chapter?collection_folder=...&book_folder=...&section_filename=...
+    let url;
+    if (slugMode) {
+      // CHANGED: param name is `collection_folder` (matches /api/chapter); the
+      // /api/chapter_by_slug endpoint validates this exact key and 400s otherwise.
+      url = `/api/chapter_by_slug?collection_folder=${encodeURIComponent(collection)}` +
+            `&book_slug=${encodeURIComponent(bookSlug)}` +
+            `&slug=${encodeURIComponent(slug)}`;
+    } else if (collection && bookFolder && sectionFilename) {
+      url = `/api/chapter?collection_folder=${encodeURIComponent(collection)}` +
+            `&book_folder=${encodeURIComponent(bookFolder)}` +
+            `&section_filename=${encodeURIComponent(sectionFilename)}`;
+    } else {
       setError('Missing URL parameters');
       return;
     }
-    fetch(
-      `/api/chapter?collection_folder=${encodeURIComponent(collection)}` +
-      `&book_folder=${encodeURIComponent(bookFolder)}` +
-      `&section_filename=${encodeURIComponent(sectionFilename)}`
-    )
+    fetch(url)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load chapter data');
         return res.json();
@@ -76,12 +129,25 @@ const ChapterPage = () => {
         // the book has no sections, which shouldn't happen but is handled.
         setFirstSection(data.first_section);
         setLastSection(data.last_section);
+        // CHANGED: slug-form nav targets for slugMode link building. Empty
+        // strings fall through to /chapter?... fallbacks below.
+        setPrevSlug(data.prev_slug || '');
+        setNextSlug(data.next_slug || '');
+        setFirstSlug(data.first_slug || '');
+        setLastSlug(data.last_slug || '');
+        // CHANGED: only used by the /chapter?... fallback href when a slug is
+        // missing. Empty in slug mode (which builds /read/... URLs that don't
+        // need book_folder).
+        setResolvedBookFolder(slugMode ? '' : (bookFolder || ''));
         // CHANGED (b.5): pick up breadcrumb; default '' for non-journal books
         // and older chapters.db rows that predate the parent_toc_title column.
         setParentTocTitle(data.parent_toc_title || '');
+        // CHANGED (2026-04-20): pick up reflow flag (backend /api/chapter).
+        // Default true preserves prior prose behavior if the field is missing.
+        setReflowed(data.reflowed !== false);
       })
       .catch(err => setError(err.message));
-  }, [collection, bookFolder, sectionFilename]);
+  }, [slugMode, collection, bookFolder, sectionFilename, bookSlug, slug]);
 
   // Build sanitized HTML
   // CHANGED (2026-04-19): the backend pre-wraps prose (reflow width=90,
@@ -91,7 +157,13 @@ const ChapterPage = () => {
   // narrow viewports. Now we join with a space so the browser handles word
   // wrap itself, and split on standalone '*' lines — which the source text
   // uses as an asterism — into separate <p>s with a centered divider.
+  // CHANGED (2026-04-20): when `reflowed` is false the backend deliberately
+  // kept the source's hard line breaks (e.g. Savitri and other verse, which
+  // _should_reflow() rejects via REFLOW_DENY_RE or poetry heuristic). In that
+  // case join with <br/> so each verse line renders on its own line instead
+  // of collapsing into a contiguous paragraph.
   const htmlContent = useMemo(() => {
+    const lineJoin = reflowed ? ' ' : '<br/>';
     return blocks.map(blk => {
       if (blk.type === 'hr') return '<hr/>';
       const groups = [];
@@ -105,10 +177,13 @@ const ChapterPage = () => {
       return groups.map(g => {
         if (g === '*') return '<p class="asterism">*</p>';
         const sanitized = g.map(line => DOMPurify.sanitize(line));
-        return `<p>${sanitized.join(' ')}</p>`;
+        // CHANGED (2026-04-20): verse branch adds a `verse` class so CSS can
+        // left-align the text (justified verse looks awful on short lines).
+        const cls = reflowed ? '' : ' class="verse"';
+        return `<p${cls}>${sanitized.join(lineJoin)}</p>`;
       }).join('');
     }).join('');
-  }, [blocks]);
+  }, [blocks, reflowed]);
 
   // Highlight & scroll
   useLayoutEffect(() => {
@@ -211,6 +286,10 @@ const ChapterPage = () => {
         /* CHANGED (2026-04-19): in-block asterism separator (the '*' line the
            source uses between sub-sections of a paragraph group). */
         .chapter-content p.asterism { text-align: center; letter-spacing: 0.5em; color: #888; margin: 1rem 0; }
+        /* CHANGED (2026-04-20): verse blocks keep server-side line breaks
+           (<br/>-joined). Left-align and drop hyphenation — justified verse
+           with hyphens mangles the meter. */
+        .chapter-content p.verse { text-align: left; hyphens: manual; -webkit-hyphens: manual; }
       `}</style>
 
       <div className="chapter-wrapper container">
@@ -221,25 +300,45 @@ const ChapterPage = () => {
             Prev/Next. The URL-building logic is now a single helper to keep
             the four links in sync. */}
         {(() => {
-          const buildChapterHref = (target) => {
+          // CHANGED: nav-href builder now emits a /read/... URL when this
+          // component is mounted on the slug route AND the target neighbor has
+          // a slug. Otherwise it falls back to /chapter?...&section_filename=,
+          // which keeps legacy data (rows without slugs) working.
+          const buildChapterHref = (targetSection, targetSlug) => {
             const qs = new URLSearchParams();
-            qs.set('collection_folder', collection);
-            qs.set('book_folder', bookFolder);
-            qs.set('section_filename', target);
             if (phrase) qs.set('query', phrase);
             qs.set('result_type', resultType);
+            const queryString = qs.toString();
+            if (slugMode && targetSlug) {
+              const path = `/read/${encodeURIComponent(collection)}` +
+                           `/${encodeURIComponent(bookSlug)}` +
+                           `/${encodeURIComponent(targetSlug)}`;
+              return queryString ? `${path}?${queryString}` : path;
+            }
+            // Fallback: /chapter?... query form.
+            qs.set('collection_folder', collection);
+            qs.set('book_folder', bookFolder || resolvedBookFolder);
+            qs.set('section_filename', targetSection);
             return `/chapter?${qs.toString()}`;
           };
-          const showFirst = firstSection && firstSection !== sectionFilename && firstSection !== prevSection;
-          const showLast  = lastSection  && lastSection  !== sectionFilename && lastSection  !== nextSection;
+          // CHANGED: boundary detection in slug mode compares slugs (the URL
+          // identifier we actually have) — sectionFilename is null on /read/...
+          // routes, so the legacy `firstSection !== sectionFilename` check
+          // would never match and First/Last would always show.
+          const atFirst = slugMode ? (firstSlug && firstSlug === slug)
+                                   : (firstSection && firstSection === sectionFilename);
+          const atLast  = slugMode ? (lastSlug && lastSlug === slug)
+                                   : (lastSection && lastSection === sectionFilename);
+          const showFirst = firstSection && !atFirst && firstSection !== prevSection;
+          const showLast  = lastSection  && !atLast  && lastSection  !== nextSection;
           return (
             <div className="d-flex justify-content-between align-items-center mb-4">
               <div className="chapter-nav-side">
                 {showFirst && (
-                  <Link to={buildChapterHref(firstSection)} className="btn btn-link p-0 me-3">[« First]</Link>
+                  <Link to={buildChapterHref(firstSection, firstSlug)} className="btn btn-link p-0 me-3">[« First]</Link>
                 )}
                 {prevSection && (
-                  <Link to={buildChapterHref(prevSection)} className="btn btn-link p-0">[Previous]</Link>
+                  <Link to={buildChapterHref(prevSection, prevSlug)} className="btn btn-link p-0">[Previous]</Link>
                 )}
               </div>
 
@@ -247,10 +346,10 @@ const ChapterPage = () => {
 
               <div className="chapter-nav-side text-end">
                 {nextSection && (
-                  <Link to={buildChapterHref(nextSection)} className="btn btn-link p-0 me-3">[Next]</Link>
+                  <Link to={buildChapterHref(nextSection, nextSlug)} className="btn btn-link p-0 me-3">[Next]</Link>
                 )}
                 {showLast && (
-                  <Link to={buildChapterHref(lastSection)} className="btn btn-link p-0">[Last »]</Link>
+                  <Link to={buildChapterHref(lastSection, lastSlug)} className="btn btn-link p-0">[Last »]</Link>
                 )}
               </div>
             </div>

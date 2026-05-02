@@ -94,30 +94,48 @@ const TextResultCard = ({
       chapterLink = sourceUrl + sep + params.join('&');
     }
   } else {
-    // ── OPTION B: SPA route → /chapter (uses ChapterPage.jsx)
-    const base = '/chapter';
-    try {
-      const u = new URL(base, window.location.origin);
-      u.searchParams.set('collection_folder', collection_folder || result.collection_folder);
-      u.searchParams.set('book_folder',       book_folder       || result.book_folder);
-      u.searchParams.set('section_filename',  section_filename);
-      if (query)       u.searchParams.set('query', query);
-      if (result_type) u.searchParams.set('result_type', result_type);
-      if (searchType)  u.searchParams.set('search_type', searchType);
-      u.searchParams.set('v', APP_VERSION);
-      chapterLink = u.toString();
-    } catch {
-      const sep = base.includes('?') ? '&' : '?';
-      const params = [
-        `collection_folder=${encodeURIComponent(collection_folder || result.collection_folder)}`,
-        `book_folder=${encodeURIComponent(book_folder || result.book_folder)}`,
-        `section_filename=${encodeURIComponent(section_filename)}`
-      ];
-      if (query)       params.push(`query=${encodeURIComponent(query)}`);
-      if (result_type) params.push(`result_type=${encodeURIComponent(result_type)}`);
-      if (searchType)  params.push(`search_type=${encodeURIComponent(searchType)}`);
-      params.push(`v=${encodeURIComponent(APP_VERSION)}`);
-      chapterLink = base + sep + params.join('&');
+    // ── OPTION B: SPA route. Prefer /read/<coll>/<book_slug>/<slug> when both
+    //    slugs are present (cleaner URL, matches prod chapter_slug_url). Fall
+    //    back to /chapter?...&section_filename= for legacy rows missing a slug.
+    // CHANGED: post-migration, App.jsx routes /read/:collection/:bookSlug/:slug
+    //    through ChapterPage.jsx too, so this path is now safe in SPA mode.
+    const coll = collection_folder || result.collection_folder;
+    if (book_slug && slug && coll) {
+      const base = `/read/${encodeURIComponent(coll)}` +
+                   `/${encodeURIComponent(book_slug)}` +
+                   `/${encodeURIComponent(slug)}`;
+      const qs = new URLSearchParams();
+      if (query)       qs.set('query', query);
+      if (result_type) qs.set('result_type', result_type);
+      if (searchType)  qs.set('search_type', searchType);
+      qs.set('v', APP_VERSION);
+      const queryString = qs.toString();
+      chapterLink = queryString ? `${base}?${queryString}` : base;
+    } else {
+      const base = '/chapter';
+      try {
+        const u = new URL(base, window.location.origin);
+        u.searchParams.set('collection_folder', coll);
+        u.searchParams.set('book_folder',       book_folder       || result.book_folder);
+        u.searchParams.set('section_filename',  section_filename);
+        if (query)       u.searchParams.set('query', query);
+        if (result_type) u.searchParams.set('result_type', result_type);
+        if (searchType)  u.searchParams.set('search_type', searchType);
+        u.searchParams.set('v', APP_VERSION);
+        chapterLink = u.toString();
+      } catch {
+        const sep = base.includes('?') ? '&' : '?';
+        const params = [
+          `collection_folder=${encodeURIComponent(coll)}`,
+          `book_folder=${encodeURIComponent(book_folder || result.book_folder)}`,
+          `section_filename=${encodeURIComponent(section_filename)}`
+        ];
+        if (query)       params.push(`query=${encodeURIComponent(query)}`);
+        if (result_type) params.push(`result_type=${encodeURIComponent(result_type)}`);
+        if (searchType)  params.push(`search_type=${encodeURIComponent(searchType)}`);
+        params.push(`v=${encodeURIComponent(APP_VERSION)}`);
+        chapterLink = base + sep + params.join('&');
+      }
     }
   }
 

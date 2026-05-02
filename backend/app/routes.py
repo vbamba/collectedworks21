@@ -69,7 +69,11 @@ ALLOWED_TEXT_SEARCH_MODES = {'all', 'exact', 'all_words'}
 # ──────────────────────────────────────────────────────────────────────
 REFLOW_MODE = os.getenv('REFLOW_MODE', 'auto').lower()
 _allow_raw  = os.getenv('REFLOW_ALLOW_RE', '')
-_deny_raw   = os.getenv('REFLOW_DENY_RE', r'(?i)\bSavitri\b')
+# CHANGED (2026-04-20): was r'(?i)\bSavitri\b'. Word boundaries do not exist
+# between a digit and a letter, so the old default silently failed to match
+# book folder '33-34Savitri' — reflow then joined verse lines into prose
+# paragraphs. Plain (?i)Savitri catches all Savitri folders.
+_deny_raw   = os.getenv('REFLOW_DENY_RE', r'(?i)Savitri')
 
 def _compile_list(patterns_raw: str):
     pats = []
@@ -739,8 +743,12 @@ def get_chapter():
     # Publisher's Note sections (non_content=1). They have no clickable entries
     # so landing on them via nav is a dead-end for the reader.
     conn = sqlite3.connect(str(DB_PATH))
+    # CHANGED: also pull slug + book_slug so /api/chapter can return slug-based
+    # nav targets. With the SPA migration, chapter URLs are /read/<coll>/<book>/<slug>
+    # and the prev/next links must build new /read/... URLs — which requires
+    # knowing each neighbor's slug, not just its section_filename.
     cur = conn.execute(
-        "SELECT section_filename, parent_toc_title, non_content FROM chapters "
+        "SELECT section_filename, parent_toc_title, non_content, slug, book_slug FROM chapters "
         "WHERE collection_folder=? AND book_folder=? "
         "ORDER BY CAST(chapter AS INTEGER)",
         (collection, book)
@@ -749,6 +757,8 @@ def get_chapter():
     sections = [r[0] for r in section_rows]
     section_parents = [r[1] or '' for r in section_rows]
     section_non_content = [bool(r[2]) for r in section_rows]  # CHANGED: TOC flag per section
+    section_slugs = [r[3] or '' for r in section_rows]        # CHANGED: per-section slug for /read URL building
+    book_slug = next((r[4] for r in section_rows if r[4]), '')  # CHANGED: same for every row, take first non-empty
     cur = conn.execute(
         "SELECT book_title FROM chapters "
         "WHERE collection_folder=? AND book_folder=? LIMIT 1",
@@ -779,6 +789,11 @@ def get_chapter():
     # Note (section_01), the very dead-end we're trying to hide.
     first_section = sections[content_idxs[0]] if content_idxs else None
     last_section = sections[content_idxs[-1]] if content_idxs else None
+    # CHANGED: parallel slug accessors so the SPA can build /read/<coll>/<book>/<slug>
+    # nav links without a second roundtrip. Empty string when slug is missing
+    # (legacy rows that predate the slug column).
+    first_slug = section_slugs[content_idxs[0]] if content_idxs else ''
+    last_slug = section_slugs[content_idxs[-1]] if content_idxs else ''
     try:
         idx = sections.index(section)
         # CHANGED: walk past non_content neighbors so prev/next skip TOC pages.
@@ -786,10 +801,14 @@ def get_chapter():
         next_idx = next((i for i in content_idxs if i > idx), None)
         prev_section = sections[prev_idx] if prev_idx is not None else None
         next_section = sections[next_idx] if next_idx is not None else None
+        # CHANGED: matching slugs for prev/next (empty when neighbor is None).
+        prev_slug = section_slugs[prev_idx] if prev_idx is not None else ''
+        next_slug = section_slugs[next_idx] if next_idx is not None else ''
         # NEW (b.5): current section's breadcrumb (empty for TOC-level entries)
         parent_toc_title = section_parents[idx]
     except ValueError:
         prev_section = next_section = None
+        prev_slug = next_slug = ''
         parent_toc_title = ''
 
     return jsonify({
@@ -801,9 +820,22 @@ def get_chapter():
         # or end of the book without clicking prev/next N times.
         'first_section': first_section,
         'last_section': last_section,
+        # CHANGED: slug-form versions of nav targets. Empty string for boundaries
+        # or for legacy rows without slugs; the SPA falls back to /chapter?... in
+        # that case so old data still works.
+        'prev_slug': prev_slug,
+        'next_slug': next_slug,
+        'first_slug': first_slug,
+        'last_slug': last_slug,
+        'book_slug': book_slug,
         # NEW (b.5): Pass-3 sub-section breadcrumb; ChapterPage.jsx renders
         # "from <parent_toc_title>" under the book title when non-empty.
         'parent_toc_title': parent_toc_title,
+        # CHANGED (2026-04-20): expose reflow decision so the SPA can preserve
+        # verse line breaks (Savitri etc.) instead of joining lines with spaces.
+        # When reflowed=False the frontend must keep per-line breaks (<br/>);
+        # when True it can join with spaces so the browser word-wraps prose.
+        'reflowed': do_reflow,
     }), 200
 
 # ──────────────────────────────────────────────────────────────────────
