@@ -76,6 +76,14 @@ fi
 
 # ── 2. Rsync code + restart Flask (DEPLOY.md §1) ─────────────────────────────
 step "2/5 rsync working tree -> $EC2:$REMOTE_APP"
+# Excludes split into two groups so future readers see what's policy vs what's
+# scratch:
+#   - "core" excludes mirror docs/DEPLOY.md §1 (build artifacts, large data,
+#     local-only infra like venv/ and .claude/)
+#   - "scratch" excludes are unreferenced files that shouldn't reach prod:
+#     orphan scripts (text_search2.py, "utils copy.py"), unused AI scaffolding,
+#     local-only HTML mockups, debug/ping artifacts, .txt backup leftovers next
+#     to .jsx files. Add to this list when new noise accumulates.
 rsync -av --delete -e "ssh -i $PEM" \
       --exclude '.git/' --exclude '.claude/' --exclude '.restore/' \
       --exclude 'node_modules/' --exclude 'frontend/build/' \
@@ -86,6 +94,14 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
       --exclude 'backups/' \
+      --exclude 'backend/scripts/text_search2.py' \
+      --exclude 'backend/scripts/utils copy.py' \
+      --exclude 'backend/scripts/ai/' \
+      --exclude 'backend/config/' \
+      --exclude 'frontend/public/searchform.html' \
+      --exclude 'frontend/src/components/*.txt' \
+      --exclude 'frontend/src/pages/*.txt' \
+      --exclude 'ping.txt' \
       ./ "$EC2":"$REMOTE_APP/"
 
 step "2/5 restart gunicorn (collectedworks.service)"
@@ -146,7 +162,10 @@ fi
 
 # ── 5. Local audit tag ────────────────────────────────────────────────────────
 step "5/5 local audit tag"
-TAG_NAME="deployed-$(date +%Y-%m-%d)-${TAG#release-}"
+# CHANGED: was "deployed-$(date +%Y-%m-%d)-${TAG#release-}" which double-printed
+# the date when TAG already started "release-YYYY-MM-DD". Strip the "release-"
+# prefix from TAG (no-op if absent) and use that directly.
+TAG_NAME="deployed-${TAG#release-}"
 if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
   echo "[tag] '$TAG_NAME' already exists, leaving it alone"
 else
