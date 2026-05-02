@@ -8,6 +8,8 @@ import logging
 from flask import Blueprint, request, abort, jsonify, render_template, send_from_directory, url_for, redirect
 import json
 from pathlib import Path, PurePosixPath
+# CHANGED: urlencode for the /chapter?... fallback target in chapter_content_page.
+from urllib.parse import urlencode
 import os
 from dotenv import load_dotenv
 from markupsafe import escape
@@ -618,18 +620,74 @@ def _render_chapter_template(collection: str, book: str, section: str):
 @main.route('/api/chapter_content', methods=['GET'])
 def chapter_content_page():
     """
-    Legacy server-rendered chapter page (HTML). Kept for backward compatibility
-    with existing search-result links and bookmarks. Delegates to the shared
-    helper so behavior is identical to /read/<...>.
+    DEPRECATED legacy entry point. Redirects to the SPA so chapter rendering
+    lives in one place (ChapterPage.jsx). Old bookmarks keep working — they
+    get a 302 to the matching /read/<coll>/<book_slug>/<slug> when the section
+    has slugs (the common case post-b.3), or to /chapter?... for legacy rows
+    that pre-date the slug column.
+
+    Forwards query / result_type / search_type so a search-result link still
+    highlights correctly after the redirect.
     """
-    collection = request.args.get('collection_folder','').strip()
-    book       = request.args.get('book_folder','').strip()
-    section    = request.args.get('section_filename','').strip()
+    # CHANGED: was a direct `_render_chapter_template(...)` call which served
+    # the legacy chapter.html template. Switching to a redirect deletes the
+    # second chapter renderer from production traffic — chapter.html is now
+    # only reachable via the (also-legacy) Flask /read/... route, which is
+    # dead in prod (nginx serves /read/... as the SPA index.html).
+    collection = request.args.get('collection_folder', '').strip()
+    book       = request.args.get('book_folder', '').strip()
+    section    = request.args.get('section_filename', '').strip()
 
     if not (collection and book and section):
         abort(400, "collection_folder, book_folder and section_filename are required")
 
-    return _render_chapter_template(collection, book, section)
+    # Look up slug + book_slug for this section so we can redirect to a clean
+    # /read/.../<slug> URL when available. Single-row lookup keyed on the
+    # exact triple the request asked for; if the section is missing we still
+    # redirect to /chapter?... rather than 404 — it's the SPA's job to render
+    # the "not found" state, and that keeps this route's behavior consistent.
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        row = conn.execute(
+            "SELECT slug, book_slug FROM chapters "
+            "WHERE collection_folder = ? AND book_folder = ? AND section_filename = ? "
+            "LIMIT 1",
+            (collection, book, section),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    # Forward the highlight-relevant query string verbatim. Build via url_for
+    # and request.args so encoding stays consistent with how chapter.html used
+    # to embed them.
+    forwarded = {}
+    for key in ('query', 'result_type', 'search_type'):
+        value = request.args.get(key)
+        if value:
+            forwarded[key] = value
+
+    if row and row[0] and row[1]:
+        slug, book_slug = row[0], row[1]
+        target = url_for(
+            'main.chapter_by_slug_page',
+            collection=collection,
+            book_slug=book_slug,
+            slug=slug,
+            **forwarded,
+        )
+    else:
+        # Legacy fallback: section has no slug (older row). Build /chapter?...
+        # directly — there's no Flask route for /chapter (it's a pure SPA path
+        # served by nginx → index.html in prod, and by the React dev server
+        # locally), so url_for can't resolve it.
+        params = {
+            'collection_folder': collection,
+            'book_folder': book,
+            'section_filename': section,
+            **forwarded,
+        }
+        target = '/chapter?' + urlencode(params)
+    return redirect(target, code=302)
 
 
 # NEW (b.4): slug-based chapter URL. Renders chapter.html directly at the slug
