@@ -19,6 +19,13 @@ const STOPWORDS = new Set([
   'these','your','you','i','we','our','us'
 ]);
 
+// CHANGED: matches a verse line that ends a sentence — .?! optionally
+// followed by a closing quote/paren, then optional trailing whitespace.
+// Used for Savitri's render-time sentence-stanza splitting (see htmlContent
+// useMemo). Module-scoped so it's a single shared regex, not re-allocated
+// per render, and so React's exhaustive-deps lint doesn't flag it.
+const SENTENCE_END_RE = /[.?!][)"'”’]?\s*$/;
+
 // NEW: normalize ligatures/nbsp & collapse whitespace (client-side)
 function normalizeCompat(str) {
   if (!str) return '';
@@ -162,6 +169,15 @@ const ChapterPage = () => {
   // _should_reflow() rejects via REFLOW_DENY_RE or poetry heuristic). In that
   // case join with <br/> so each verse line renders on its own line instead
   // of collapsing into a contiguous paragraph.
+  // CHANGED: Savitri-only sentence-stanza splitting. When the line ends a
+  // sentence (.?! optionally followed by a closing quote/paren), we flush the
+  // current group so each sentence renders as its own <p class="verse">,
+  // visually separated by the existing 1rem paragraph margin. Other verse
+  // books (Collected Poems, Translations) keep the single-paragraph-per-stanza
+  // behavior — splitting their short poems would put a stray gap before each
+  // poem's title. Detection uses bookTitle (server-supplied, unambiguous);
+  // bookFolder/bookSlug would also work but require knowing both URL forms.
+  const splitSavitriSentences = bookTitle === 'Savitri' && !reflowed;
   const htmlContent = useMemo(() => {
     const lineJoin = reflowed ? ' ' : '<br/>';
     return blocks.map(blk => {
@@ -171,7 +187,11 @@ const ChapterPage = () => {
       const flush = () => { if (buf.length) { groups.push(buf); buf = []; } };
       for (const line of blk.lines) {
         if (line.trim() === '*') { flush(); groups.push('*'); }
-        else buf.push(line);
+        else {
+          buf.push(line);
+          // CHANGED: flush mid-stanza on sentence-ending lines for Savitri.
+          if (splitSavitriSentences && SENTENCE_END_RE.test(line)) flush();
+        }
       }
       flush();
       return groups.map(g => {
@@ -183,7 +203,7 @@ const ChapterPage = () => {
         return `<p${cls}>${sanitized.join(lineJoin)}</p>`;
       }).join('');
     }).join('');
-  }, [blocks, reflowed]);
+  }, [blocks, reflowed, splitSavitriSentences]);
 
   // Highlight & scroll
   useLayoutEffect(() => {

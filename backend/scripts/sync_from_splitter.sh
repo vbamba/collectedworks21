@@ -102,4 +102,19 @@ if [[ ${#DRY_RUN[@]} -eq 0 ]] && command -v sqlite3 >/dev/null 2>&1; then
   echo "[sync] chapters.db now has $rows rows across $books books"
 fi
 
+# CHANGED: post-rebuild cleanup — strip Savitri's PDF page-running headers
+# ("CANTO IV: The Secret Knowledge" lines) from both the freshly-synced
+# out_chapters tree and chapters.db. Idempotent and Savitri-scoped, so it
+# costs nothing on books it doesn't touch. Lives here (vs. as a separate
+# step the operator has to remember) because every sync_from_splitter.sh
+# invocation re-imports the upstream artifacts and would otherwise reintroduce
+# the headers — see backend/scripts/helpers/strip_savitri_running_headers.py.
+if [[ ${#DRY_RUN[@]} -eq 0 ]]; then
+  echo "[sync] stripping Savitri running headers..."
+  python3 "$SCRIPT_DIR/helpers/strip_savitri_running_headers.py" \
+    --db "$DST_DB" --out-chapters "$DST_CHAPTERS"
+else
+  echo "[sync] [dry-run] would run strip_savitri_running_headers.py"
+fi
+
 echo "[sync] done."

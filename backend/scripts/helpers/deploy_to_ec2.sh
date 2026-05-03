@@ -70,6 +70,14 @@ REMOTE_SQL="$REMOTE_APP/backend/scripts/helpers/strip_oversized_sections.sql"
 # CHANGED: Savitri parent_toc_title backfill ships alongside the SQL strip;
 # both are idempotent post-rebuild fixups for the chapters splitter.
 REMOTE_BACKFILL_SAVITRI="$REMOTE_APP/backend/scripts/helpers/backfill_savitri_toc.py"
+# CHANGED: Savitri running-header stripper — drops "CANTO IV: ..." page-header
+# duplicates that the splitter pulls into canto bodies. Runs in full mode
+# (disk + DB) on prod because deploy_to_ec2.sh doesn't rsync out_chapters
+# (DEPLOY.md §3 is a manual step), so prod's section .txt files would
+# otherwise still render the headers when /api/chapter reads them off disk.
+# Idempotent — no-op on second run.
+REMOTE_STRIP_SAVITRI_HDRS="$REMOTE_APP/backend/scripts/helpers/strip_savitri_running_headers.py"
+REMOTE_OUT_CHAPTERS="$REMOTE_APP/backend/data/out_chapters"
 SSH=(ssh -i "$PEM" "$EC2")
 
 step() { printf '\n=== [%s] %s ===\n' "$(date +%H:%M:%S)" "$*"; }
@@ -133,13 +141,18 @@ step "2/6 restart gunicorn (collectedworks.service)"
 "${SSH[@]}" 'sudo systemctl restart collectedworks && sleep 1 && sudo systemctl is-active collectedworks'
 
 # ── 3. Apply chapters.db post-rebuild fixups (all idempotent) ────────────────
-# Two scripts run together so we only bounce gunicorn once:
+# Three scripts run together so we only bounce gunicorn once:
 #   a) strip_oversized_sections.sql — drop the catch-all "Page_X" rows that the
 #      splitter emits (1MB+ each, content already duplicated in proper chapters)
 #   b) backfill_savitri_toc.py — set chapters.parent_toc_title = "Book X — ..."
 #      for every Savitri canto, so the SPA chapter header and search-result
 #      cards show the parent Book breadcrumb. Idempotent post-second-run.
-# Both safe on every deploy; they're no-ops if their target state is already
+#   c) strip_savitri_running_headers.py — drop the duplicated "CANTO IV:
+#      <title>" lines the splitter pulls out of PDF page headers into canto
+#      bodies. Runs disk + DB; the disk pass cleans prod's section .txt
+#      files in place so /api/chapter doesn't render them when reading off
+#      disk (deploy_to_ec2.sh doesn't rsync out_chapters).
+# All safe on every deploy; they're no-ops if their target state is already
 # correct. Required after any chapters.db rebuild.
 if [[ "${SKIP_SQL:-0}" == "1" ]]; then
   step "3/6 chapters.db fixups SKIPPED (SKIP_SQL=1)"
@@ -158,6 +171,8 @@ else
     python3 -c \"import sqlite3; c=sqlite3.connect('$REMOTE_DB'); c.executescript(open('$REMOTE_SQL').read()); c.commit(); c.close()\"
     echo '[fixup] running $REMOTE_BACKFILL_SAVITRI'
     python3 $REMOTE_BACKFILL_SAVITRI --db $REMOTE_DB
+    echo '[fixup] running $REMOTE_STRIP_SAVITRI_HDRS (disk + DB)'
+    python3 $REMOTE_STRIP_SAVITRI_HDRS --db $REMOTE_DB --out-chapters $REMOTE_OUT_CHAPTERS
     echo '[fixup] restarting gunicorn so workers reopen the DB file'
     sudo systemctl restart collectedworks
     sleep 1
