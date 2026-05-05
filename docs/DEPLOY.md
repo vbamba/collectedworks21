@@ -71,7 +71,7 @@ Two tarballs into `/home/ec2-user/backups/`:
    rebuild from local during a rollback.
 
 ```bash
-TAG=release-2026-04-19   # or same-day suffix: release-2026-04-19-1530
+TAG=release-2026-04-20   # or same-day suffix: release-2026-04-19-1530
 
 ssh -i "$PEM" "$EC2" "
   set -e
@@ -79,7 +79,7 @@ ssh -i "$PEM" "$EC2" "
 
   APP_OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
   echo '[backup] flask app → '\$APP_OUT
-  # CHANGED (2026-04-19): exclude the legacy in-tree backups/ (root-owned,
+  # CHANGED (2026-04-20): exclude the legacy in-tree backups/ (root-owned,
   # see § 1 note) so snapshots don't recursively swallow earlier tarballs
   # and grow unbounded over successive deploys.
   tar --exclude='collectedworks21/backups' \
@@ -246,7 +246,7 @@ If you skipped § 0.5, there's no snapshot to restore from — your only
 option is to re-deploy a known-good release from local.
 
 ```bash
-TAG=release-2026-04-19   # same suffix used in § 0.5 snapshot
+TAG=release-2026-04-20   # same suffix used in § 0.5 snapshot
 
 ssh -i "$PEM" "$EC2" "
   set -e
@@ -317,6 +317,59 @@ git push --tags --force
 - Once history is clean, the rsync-based deploy in § 1 can be replaced
   with the simpler `git fetch && git checkout <tag>` flow on EC2.
 
+## 7. Analytics — search query log
+
+Every request to `/api/text_search` and `/api/search` (semantic) appends one
+row to `backend/db/query_log.db` — a separate SQLite file that lives next
+to `chapters.db` but never touches it (different file, regular table, not
+FTS5). The file is created on first request, lives under `backend/db/`
+which is `.gitignore`d, and survives across deploys (it isn't rsynced).
+
+**Schema** (one row per search):
+
+| col | what |
+| --- | --- |
+| `ts` | unix timestamp (UTC) |
+| `endpoint` | `text_search` or `semantic_search` |
+| `query` | the user's raw query string |
+| `result_count` | how many rows the response actually returned |
+| `mode` | text: `exact` / `all_words` / `all`; semantic: `all` / `exact` / `semantic` |
+| `filters` | JSON of any `author` / `group` / `book_title` filters applied |
+
+**Viewing the log — CLI** (preferred):
+
+```bash
+# default: last 7 days, top 20 queries + zero-result list
+python3 backend/scripts/helpers/query_stats.py
+
+# narrow window
+python3 backend/scripts/helpers/query_stats.py --days 1 --top 50
+
+# against prod log over SSH
+ssh -i "$PEM" "$EC2" \
+  'cd /home/ec2-user/collectedworks21 && python3 backend/scripts/helpers/query_stats.py --days 30'
+
+# or copy down and inspect locally
+scp -i "$PEM" "$EC2:/home/ec2-user/collectedworks21/backend/db/query_log.db" /tmp/prod_query_log.db
+python3 backend/scripts/helpers/query_stats.py --db /tmp/prod_query_log.db --days 30
+```
+
+**Viewing the log — raw SQL** (when you need a custom slice):
+
+```bash
+sqlite3 backend/db/query_log.db \
+  "SELECT datetime(ts,'unixepoch','localtime'), endpoint, query, result_count
+     FROM query_log ORDER BY id DESC LIMIT 20;"
+```
+
+**Reset** (e.g. before testing): `rm backend/db/query_log.db` — table
+auto-recreates on the next search request.
+
+**Failure mode:** logging is best-effort; any write failure is warned to
+`app_logger` and the search response still returns 200. If you see
+`query_log write failed:` in app logs, check the file's permissions — it
+needs to be writable by the gunicorn user.
+
 ## Reference — file map
 
 | Concern | File |
@@ -325,6 +378,10 @@ git push --tags --force
 | API routes | [backend/app/routes.py](../backend/app/routes.py) |
 | FTS / text search | [backend/scripts/text_search.py](../backend/scripts/text_search.py) |
 | Splitter → serving sync | [backend/scripts/sync_from_splitter.sh](../backend/scripts/sync_from_splitter.sh) |
+| Search query logger | [backend/app/routes.py `_log_query()`](../backend/app/routes.py) |
+| Search query stats CLI | [backend/scripts/helpers/query_stats.py](../backend/scripts/helpers/query_stats.py) |
+| Books picker (SPA) | [frontend/src/components/BooksMenu.jsx](../frontend/src/components/BooksMenu.jsx) |
+| Global nav | [frontend/src/components/NavBar.jsx](../frontend/src/components/NavBar.jsx) |
 | SPA chapter page | [frontend/src/pages/ChapterPage.jsx](../frontend/src/pages/ChapterPage.jsx) |
 | Search result card | [frontend/src/components/TextResultCard.jsx](../frontend/src/components/TextResultCard.jsx) |
 | Prod build vars | [frontend/.env.production](../frontend/.env.production) |

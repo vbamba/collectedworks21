@@ -1,0 +1,75 @@
+/* NavBar.css — global sticky nav for the SPA.
+ * CHANGED: replaces the per-page <header className="page-header"> banners
+ * (formerly in TextSearchPage.jsx and SearchPage.jsx). Single source of
+ * site identity, slim enough to leave room for content on the chapter
+ * reading view, and finally gives chapter pages a way to switch books. */
+
+.collected-navbar {
+  /* CHANGED: tight vertical padding (vs. Bootstrap's default ~0.5rem each
+     side) keeps the bar around 48px tall — the per-page banner used to
+     consume ~80-100px before the search/content area began. */
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  background-color: #fff;
+}
+
+.collected-navbar .navbar-brand {
+  /* CHANGED: gap-2 + flex on the brand link keeps logo and title visually
+     together as one click target back to the home (text-search) page. */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-logo {
+  /* CHANGED: 32px tall preserves the Sri Aurobindo + Mother portrait at
+     ~60px wide given the source's 1.86:1 aspect ratio. Compare to the
+     old per-page banner's 100px wide / ~54px tall — about half the
+     vertical footprint here. */
+  height: 32px;
+  width: auto;
+  border-radius: 2px;
+}
+
+.navbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.collected-navbar .nav-link {
+  font-size: 0.95rem;
+  padding: 0.4rem 0.85rem;
+}
+
+/* CHANGED: the "Books" trigger is a <button> styled to match the <Link>
+   nav items so the nav reads as a coherent row instead of a button next
+   to two links. Strips Bootstrap btn-link defaults that would otherwise
+   add an underline on hover. */
+.collected-navbar .nav-link.nav-button {
+  background: none;
+  border: 0;
+  text-decoration: none;
+}
+.collected-navbar .nav-link.nav-button:hover,
+.collected-navbar .nav-link.nav-button:focus {
+  text-decoration: none;
+}
+
+/* CHANGED: tablet shrink (md range). The full title "Collected Works of
+   Sri Aurobindo and The Mother" is long enough to crowd the nav on
+   ~768-991px viewports, so trim font slightly. */
+@media (max-width: 991.98px) {
+  .navbar-title { font-size: 0.9rem; }
+}
+
+/* CHANGED: phone-size — hide the title text and rely on the portrait
+   logo for site identity. The full title runs ~52 characters and would
+   wrap or push the hamburger off-screen on a 375px iPhone SE viewport.
+   The logo (Sri Aurobindo + Mother) is a strong enough brand signal on
+   its own at this size. */
+@media (max-width: 575.98px) {
+  .navbar-logo { height: 28px; }
+  .navbar-title { display: none; }
+}

@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 from markupsafe import escape
 import re
 import textwrap
+import time  # CHANGED: query_log row timestamps
 from typing import List, Dict
 import unicodedata  # NFKC normalization for reflow & highlight
 from werkzeug.exceptions import NotFound
@@ -46,8 +47,69 @@ book_mapping_path  = BASE_DIR / os.getenv('BOOK_MAPPING_PATH')
 OUT_BASE           = BASE_DIR / os.getenv('OUT_CHAPTERS_DIR', 'data/out_chapters')
 BACKEND_CHAPTER_URL = os.getenv('BACKEND_CHAPTER_URL', '')
 DB_PATH = BASE_DIR / os.getenv('CHAPTERS_DB', 'db/chapters.db')
+# CHANGED: query_log.db lives next to chapters.db but is a separate SQLite
+# file so analytics writes never touch the FTS5 index. Auto-created on
+# first request; lives under backend/db/ which is .gitignored.
+QUERY_LOG_PATH = BASE_DIR / os.getenv('QUERY_LOG_DB', 'db/query_log.db')
 BUILD_VERSION = os.getenv('BUILD_VERSION', 'dev')  # cache-busting for template assets
 PDF_DIRECTORY = BASE_DIR / os.getenv('PDF_DIRECTORY', 'pdf')
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Query logging — lightweight per-request append for /query_stats CLI
+# ──────────────────────────────────────────────────────────────────────
+# CHANGED: search endpoints append one row per request to query_log.db so
+# backend/scripts/helpers/query_stats.py can produce top-queries and
+# zero-result reports without scraping nginx logs. Best-effort: any error
+# during logging is warned and swallowed so analytics never breaks search.
+
+def _ensure_query_log_schema() -> None:
+    """Create the query_log table + indexes if missing. Idempotent."""
+    conn = sqlite3.connect(str(QUERY_LOG_PATH))
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS query_log (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts           INTEGER NOT NULL,
+                endpoint     TEXT    NOT NULL,
+                query        TEXT    NOT NULL,
+                result_count INTEGER NOT NULL,
+                mode         TEXT,
+                filters      TEXT
+            )
+        """)
+        conn.execute("CREATE INDEX IF NOT EXISTS query_log_ts_idx ON query_log(ts)")
+        conn.execute("CREATE INDEX IF NOT EXISTS query_log_query_idx ON query_log(query)")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _log_query(endpoint: str, query: str, result_count: int,
+               mode: str = '', filters: dict = None) -> None:
+    """Append one row to query_log. Swallows all errors."""
+    try:
+        conn = sqlite3.connect(str(QUERY_LOG_PATH))
+        try:
+            conn.execute(
+                "INSERT INTO query_log (ts, endpoint, query, result_count, mode, filters)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                (int(time.time()), endpoint, query, result_count, mode,
+                 json.dumps(filters) if filters else ''),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        # CHANGED: never let logging failure break search. Warn so we know
+        # if the file is unwritable, but the request still returns 200.
+        app_logger.warning("query_log write failed: %s", exc)
+
+
+try:
+    _ensure_query_log_schema()
+except Exception as exc:
+    app_logger.warning("Could not init query_log schema: %s", exc)
 
 def _get_int_env(name: str, default: int, minimum: int) -> int:
     raw_value = os.getenv(name)
@@ -226,6 +288,10 @@ def search_api():
         grp = r.get('group', 'Unknown')
         group_counts[grp] = group_counts.get(grp, 0) + 1
 
+    # CHANGED: log query for /query_stats CLI. Endpoint label is
+    # 'semantic_search' to distinguish from the FTS path on /api/text_search.
+    _log_query('semantic_search', query, len(results),
+               mode=search_type, filters=filters)
     return jsonify({"results": results, "group_counts": group_counts}), 200
 
 @main.route('/api/text_search', methods=['GET'])
@@ -314,6 +380,11 @@ def text_search_api():
             grp = r.get('group', 'Unknown') or 'Unknown'
             group_counts[grp] = group_counts.get(grp, 0) + 1
 
+        # CHANGED: log query for /query_stats CLI. Logged here (after the
+        # response shape is known) so result_count reflects what the user
+        # actually saw, not the pre-dedupe candidate buckets.
+        _log_query('text_search', q, len(enriched),
+                   mode=mode, filters=filters)
         return jsonify({
             'query': q,
             'mode': mode,
@@ -1001,3 +1072,120 @@ def chapter_meta():
         'book_title': book_title,
         'parent_toc_title': parent_toc_title,  # NEW (b.5)
     })
+
+
+# ──────────────────────────────────────────────────────────────────────
+# NEW: book listing for the SPA's Books quick-picker
+# ──────────────────────────────────────────────────────────────────────
+# Returns one row per book with its display fields and the slug of the
+# first content chapter, so the SPA can build a /read/<coll>/<book>/<slug>
+# URL that opens the book at its opening section. Cached against
+# chapters.db's mtime so a sync_from_splitter.sh refresh is picked up
+# automatically without restarting gunicorn.
+_BOOKS_CACHE: Dict[str, object] = {'mtime': None, 'data': None}
+
+
+@main.route('/api/books', methods=['GET'])
+def list_books():
+    """List all books with their first content chapter slug.
+
+    Used by frontend/src/components/BooksMenu.jsx to populate the global
+    nav's "Books" picker. One JSON array, sorted by group_name then title.
+    Excludes books with no slug-bearing content chapters (legacy rows that
+    predate the slug column would otherwise produce un-navigable entries).
+    """
+    try:
+        mtime = DB_PATH.stat().st_mtime
+    except OSError:
+        return jsonify({'error': 'chapters.db not available'}), 503
+
+    # CHANGED: mtime-keyed cache so a fresh chapters.db (mv'd in by
+    # sync_from_splitter.sh / DEPLOY.md §3) invalidates automatically on
+    # the next request — no gunicorn restart required just to refresh.
+    if _BOOKS_CACHE['data'] is not None and _BOOKS_CACHE['mtime'] == mtime:
+        return jsonify(_BOOKS_CACHE['data']), 200
+
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        # CHANGED: per-book pick the lowest CAST(chapter AS INTEGER) row
+        # where non_content=0 (skip TOC / Publisher's Note pages so the
+        # picker lands on actual reading material) AND slug is populated
+        # (legacy rows without slugs can't be deep-linked via /read/...).
+        # The CTE finds the qualifying chapter number per book; the outer
+        # SELECT joins back to recover the row's display fields + slug.
+        # CHANGED: also pull pdf_file so the picker can offer a "PDF" link
+        # next to each book that opens the source PDF in a new tab.
+        rows = conn.execute("""
+            WITH first_content AS (
+              SELECT book_folder,
+                     MIN(CAST(chapter AS INTEGER)) AS first_chapter
+                FROM chapters
+               WHERE COALESCE(non_content, 0) = 0
+                 AND COALESCE(slug, '') <> ''
+                 AND COALESCE(book_slug, '') <> ''
+               GROUP BY book_folder
+            )
+            SELECT c.collection_folder,
+                   c.book_folder,
+                   c.book_title,
+                   c.book_slug,
+                   c.author,
+                   c.group_name,
+                   c.slug       AS first_slug,
+                   c.pdf_file
+              FROM chapters c
+              JOIN first_content fc
+                ON fc.book_folder = c.book_folder
+               AND CAST(c.chapter AS INTEGER) = fc.first_chapter
+             WHERE COALESCE(c.book_slug, '') <> ''
+               AND COALESCE(c.slug, '') <> ''
+             ORDER BY c.group_name COLLATE NOCASE, c.book_title COLLATE NOCASE
+        """).fetchall()
+    finally:
+        conn.close()
+
+    books = []
+    seen = set()  # CHANGED: defend against duplicates if two sections share
+                  # the same MIN(chapter) value (theoretical; not seen today).
+    for r in rows:
+        collection, book_folder, title, book_slug, author, group, first_slug, pdf_file = r
+        if not (collection and title and book_slug and first_slug):
+            # Skip the malformed Nolini-Kanta-Gupta-Seer-Poets row (empty
+            # collection + title) and any row missing identifiers we need
+            # to build the chapter URL.
+            continue
+        key = (collection, book_folder)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # CHANGED: build pdf_url via the same path convention as the
+        # search-result enrichment block (~line 282-288): Disciples books
+        # with a named author live at /api/pdfs/disciples/<author>/<file>
+        # because each disciple has their own subdir under pdf/disciples/;
+        # everything else is /api/pdfs/<collection>/<file>. None of this
+        # checks the file actually exists — caller will see a 404 from
+        # /api/pdfs/... if it doesn't, which is the same failure mode the
+        # search-result PDF link has had since launch.
+        pdf_url = ''
+        if pdf_file:
+            if collection == 'disciples' and author and author != 'Various':
+                pdf_path = f"{collection}/{author}/{pdf_file}"
+            else:
+                pdf_path = f"{collection}/{pdf_file}"
+            pdf_url = url_for('main.serve_pdf', filename=pdf_path)
+
+        books.append({
+            'collection': collection,
+            'book_folder': book_folder,
+            'title': title,
+            'book_slug': book_slug,
+            'author': author or '',
+            'group_name': group or '',
+            'first_slug': first_slug,
+            'pdf_url': pdf_url,
+        })
+
+    _BOOKS_CACHE['mtime'] = mtime
+    _BOOKS_CACHE['data'] = books
+    return jsonify(books), 200

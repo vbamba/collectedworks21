@@ -1,7 +1,7 @@
 // frontend/src/pages/SearchPage.jsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { debounce } from 'lodash';
 import SearchBar from '../components/SearchBar';
 import Filters from '../components/Filters';
@@ -15,6 +15,11 @@ const SearchPage = ({
   showSearchTypeControls = true
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  // CHANGED: pick up the focusInput stamp NavBar attaches to its
+  // Question link's `state` so SearchBar re-focuses its input on every
+  // nav click (works for re-clicks too because the stamp is a fresh
+  // Date.now() per click).
+  const location = useLocation();
 
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({
@@ -205,15 +210,9 @@ const SearchPage = ({
 
   return (
     <div className="homepage-container">
-      <header className="page-header d-flex align-items-center mb-4">
-        <img
-          src="/images/sri_ma.jpg"
-          alt="Logo"
-          className="header-image me-2"
-          style={{ width: '100px', height: 'auto' }}
-        />
-        <h3 className="mb-0">{heading}</h3>
-      </header>
+      {/* CHANGED: removed the per-page <header> with logo + heading. Site
+          identity now lives in the global NavBar (App.js → NavBar.jsx),
+          which also gives chapter pages a way to switch books. */}
 
       <SearchBar
         query={query}
@@ -224,6 +223,7 @@ const SearchPage = ({
         setSelectedFilters={setSelectedFilters}
         showSearchTypeControls={showSearchTypeControls}
         onReset={handleReset}
+        focusKey={location.state?.focusInput}
       />
 
       <Filters

@@ -7,9 +7,12 @@ The backend combines FAISS-based semantic search with text search APIs and chapt
 
 ## Operations Runbook
 
-Production operations, hardening, and recovery procedures are documented in:
-
-- [docs/OPERATIONS_HARDENING.md](docs/OPERATIONS_HARDENING.md)
+- [docs/DEPLOY.md](docs/DEPLOY.md) — full deploy walkthrough (rsync to EC2,
+  chapters.db fixups, frontend build, smoke tests, rollback) plus the
+  search-query analytics section (§ 7) covering `query_log.db` and the
+  `query_stats.py` CLI for "top queries" / "zero-result queries" reports.
+- [docs/OPERATIONS_HARDENING.md](docs/OPERATIONS_HARDENING.md) — hardening,
+  CORS, service restart policy, incident recovery.
 
 ## Repository Layout
 

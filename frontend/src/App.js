@@ -5,12 +5,19 @@ import SemanticPage from './pages/SemanticPage';
 import TextSearchPage  from './pages/TextSearchPage';  // ← your new page
 import ChapterPage    from './pages/ChapterPage';
 import PdfViewer from './components/PdfViewer'; // Import PdfViewer component
+// CHANGED: global sticky NavBar replaces the per-page <header className="page-header">
+// banners (which only appeared on Search/Question pages). Provides logo,
+// site title, and Search/Books/Question links — including on chapter pages
+// where the user previously had no way to switch books.
+import NavBar from './components/NavBar';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
     return (
-        <div className="container mt-4">
+        <>
+            <NavBar />
+            <div className="container mt-4">
             <Routes>
                 <Route path="/" element={<TextSearchPage />} />                
                 <Route path="/question" element={<SemanticPage />} />  
@@ -26,7 +33,8 @@ const App = () => {
                 <Route path="/read/:collection/:bookSlug/:slug" element={<ChapterPage />} />
                 <Route path="/viewer" element={<PdfViewer />} /> {/* Add the route for PdfViewer */}
             </Routes>
-        </div>
+            </div>
+        </>
     );
 };
 

@@ -1,7 +1,7 @@
 // frontend/src/pages/TextSearchPage.jsx
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams }              from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { debounce }                     from 'lodash';
 
 import SearchBar                        from '../components/SearchBar';
@@ -12,6 +12,9 @@ import { fetchFilters, performTextSearch } from '../services/api';
 
 const TextSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  // CHANGED: pick up the focusInput stamp NavBar attaches to its Search
+  // link's `state` so SearchBar re-focuses its input on every nav click.
+  const location = useLocation();
 
   // ── Controlled inputs & filters
   const [query, setQuery] = useState('');
@@ -155,16 +158,9 @@ const TextSearchPage = () => {
 
   return (
     <div className="homepage-container">
-      {/* Header with image (same as semantic page) */}
-      <header className="page-header d-flex align-items-center mb-4">
-        <img
-          src="/images/sri_ma.jpg"
-          alt="Logo"
-          className="header-image me-2"
-          style={{ width: '100px', height: 'auto' }}
-        />
-        <h3 className="mb-0">Search Works of Sri Aurobindo & The Mother</h3>
-      </header>
+      {/* CHANGED: removed the per-page <header> with logo + heading. Site
+          identity now lives in the global NavBar (App.js → NavBar.jsx),
+          which also gives chapter pages a way to switch books. */}
 
       {/* Search + Clear */}
       <SearchBar
@@ -177,6 +173,7 @@ const TextSearchPage = () => {
         showSearchTypeControls
         hideSemantic
         onReset={handleReset}
+        focusKey={location.state?.focusInput}
       />
 
       {/* Dropdown filters */}

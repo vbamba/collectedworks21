@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tooltip } from 'react-tooltip';
-import { Link } from 'react-router-dom'; // ← Added for hyperlink navigation
 
 /**
  * A reusable search bar that supports:
@@ -26,10 +25,26 @@ const SearchBar = ({
   setSelectedFilters,
   showSearchTypeControls = true,
   hideSemantic = false,
-  onReset
+  onReset,
+  // CHANGED: focusKey — when this prop changes, focus the search input.
+  // Pages pass `useLocation().state?.focusInput` (a Date.now() stamp the
+  // NavBar attaches to its Search/Question links), so each navbar click
+  // re-focuses the input even when the user is already on the page and
+  // the component doesn't remount.
+  focusKey,
 }) => {
   // Local state for which checkbox is active
   const [searchType, setSearchType] = useState(selectedFilters.search_type || 'all');
+
+  // CHANGED: ref to the query input + an effect that focuses it on mount
+  // and on every focusKey change. Mount-focus covers fresh navigation
+  // (different component → remount); focusKey covers re-clicks on the
+  // same nav link when the page is already open.
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [focusKey]);
 
   // Sync local searchType with props
   useEffect(() => {
@@ -63,6 +78,7 @@ const SearchBar = ({
         <div className="input-group align-items-center">
           {/* Query input */}
           <input
+            ref={inputRef}
             type="text"
             className="form-control"
             placeholder="Enter your search query..."
@@ -122,17 +138,11 @@ const SearchBar = ({
             Clear
           </button>
 
-          {/* Ask a Question link if hiding semantic */}
-          {hideSemantic && (
-            <Link
-              to="/question"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-link ms-2"
-            >
-              Ask a Question
-            </Link>
-          )}
+          {/* CHANGED: removed inline "Ask a Question" link — the global
+              NavBar's "Question" entry covers this now, and rendering it
+              here as well duplicated the same destination next to the
+              Clear button. The `hideSemantic` prop is preserved in case
+              other call sites still pass it for the checkbox branch. */}
         </div>
       </div>
 
