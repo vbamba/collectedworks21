@@ -196,11 +196,12 @@ const ChapterPage = () => {
       flush();
       return groups.map(g => {
         if (g === '*') return '<p class="asterism">*</p>';
-        const sanitized = g.map(line => DOMPurify.sanitize(line));
-        // CHANGED (2026-04-20): verse branch adds a `verse` class so CSS can
-        // left-align the text (justified verse looks awful on short lines).
+        // CHANGED: sanitize the whole joined paragraph at once so inline HTML
+        // tags spanning multiple backend-wrapped lines (e.g. <i>…</i>) are
+        // preserved. Per-line sanitize was auto-closing unclosed <i> tags and
+        // stripping the matching </i>, leaving only the first line italicized.
         const cls = reflowed ? '' : ' class="verse"';
-        return `<p${cls}>${sanitized.join(lineJoin)}</p>`;
+        return `<p${cls}>${DOMPurify.sanitize(g.join(lineJoin))}</p>`;
       }).join('');
     }).join('');
   }, [blocks, reflowed, splitSavitriSentences]);
