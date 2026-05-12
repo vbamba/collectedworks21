@@ -61,12 +61,35 @@ const TextResultCard = ({
   let sectionTitle = 'Untitled Section';
   if (section_filename) {
     const m = section_filename.match(/^[^_]+_\d+_(.+)\.txt$/);
-    if (m && m[1]) sectionTitle = m[1].replace(/_/g, ' ');
+    // CHANGED: double-underscore in the filename encodes a separator in the
+    // original title (e.g. "Canto_Three__The_House..." was "Canto Three: The
+    // House..."). Replace __ with " - " first so the rendered title reads
+    // "Canto Three - The House..." instead of having an awkward double space.
+    if (m && m[1]) sectionTitle = m[1].replace(/__/g, ' - ').replace(/_/g, ' ');
   }
 
+  // CHANGED: for Savitri cantos, prepend the "Book N" prefix from
+  // parent_toc_title (e.g. "Book Three — The Book of the Divine Mother")
+  // so the hyperlink reads "Book Three, Canto Three: …" instead of just
+  // "Canto Three: …". Triggers only when sectionTitle starts with "Canto"
+  // and parent_toc_title starts with "Book", so other journal/diary books
+  // with date-style parent_toc_titles are unaffected.
+  const savitriBookMatch = parent_toc_title && parent_toc_title.match(/^(Book\s+\S+)/);
+  const sectionTitleWithBook = savitriBookMatch && /^Canto\b/i.test(sectionTitle)
+    ? `${savitriBookMatch[1]}, ${sectionTitle}`
+    : sectionTitle;
+
   const title = singleResult && bookTitle
-    ? `${bookTitle} - ${sectionTitle}`
-    :  sectionTitle;
+    ? `${bookTitle} - ${sectionTitleWithBook}`
+    :  sectionTitleWithBook;
+
+  // CHANGED: when the "Book N" prefix has been hoisted into the title, strip
+  // it from the breadcrumb so the subtitle reads "The Book of the Divine
+  // Mother" instead of repeating "Book Three — ...". Splits on em-dash with
+  // optional surrounding spaces.
+  const breadcrumb = (savitriBookMatch && /^Canto\b/i.test(sectionTitle))
+    ? parent_toc_title.replace(/^Book\s+\S+\s*—\s*/, '')
+    : parent_toc_title;
 
   /* -------------------------  Build chapter link  -------------------- */
   let chapterLink;
@@ -184,9 +207,9 @@ const TextResultCard = ({
             are unaffected. CHANGED: dropped the "from " prefix — the breadcrumb
             already reads naturally on its own ("Book Three — ..."), and the
             extra word added clutter without disambiguating anything. */}
-        {parent_toc_title && (
+        {breadcrumb && (
           <div className="text-muted small fst-italic mb-2">
-            {parent_toc_title}
+            {breadcrumb}
           </div>
         )}
 
