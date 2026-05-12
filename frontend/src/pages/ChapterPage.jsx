@@ -182,6 +182,13 @@ const ChapterPage = () => {
     const lineJoin = reflowed ? ' ' : '<br/>';
     return blocks.map(blk => {
       if (blk.type === 'hr') return '<hr/>';
+      // CHANGED: render standalone "Month Day, Year" date lines (typical of
+      // Mother's Agenda where multiple dates fall inside one section due to
+      // page-boundary splitting) as a bold heading on its own line, with a
+      // touch of top margin to visually separate from the prior paragraph.
+      if (blk.type === 'date_heading') {
+        return `<h3 class="date-heading">${DOMPurify.sanitize(blk.text || '')}</h3>`;
+      }
       const groups = [];
       let buf = [];
       const flush = () => { if (buf.length) { groups.push(buf); buf = []; } };
@@ -307,6 +314,10 @@ const ChapterPage = () => {
         /* CHANGED (2026-04-19): in-block asterism separator (the '*' line the
            source uses between sub-sections of a paragraph group). */
         .chapter-content p.asterism { text-align: center; letter-spacing: 0.5em; color: #888; margin: 1rem 0; }
+        /* CHANGED: inline date headings (e.g. "October 5, 1963") that the
+           backend extracts from prose so the reader can see when a section
+           crosses a date boundary. Bold + spaced to feel like a sub-heading. */
+        .chapter-content h3.date-heading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
         /* CHANGED (2026-04-20): verse blocks keep server-side line breaks
            (<br/>-joined). Left-align and drop hyphenation — justified verse
            with hyphens mangles the meter. */

@@ -16,7 +16,7 @@ from markupsafe import escape
 import re
 import textwrap
 import time  # CHANGED: query_log row timestamps
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import unicodedata  # NFKC normalization for reflow & highlight
 from werkzeug.exceptions import NotFound
 
@@ -404,6 +404,40 @@ def text_search_api():
 _end_punct_rx = re.compile(r'[.!?…"”)\]]\s*$')
 _soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*$')
 
+# CHANGED: detect standalone "Month Day, Year" lines (e.g. "October 5, 1963")
+# so chapter blocks that contain a date header inline — typical of Mother's
+# Agenda where the splitter cuts at page boundaries and folds multiple dates
+# into one section — can be rendered with the date promoted to a bold heading
+# on its own line, instead of being collapsed into the following paragraph by
+# prose reflow. Anchored to ^...$ so dates appearing mid-sentence inside prose
+# are never matched.
+_inline_date_rx = re.compile(
+    r'^\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)'
+    r'\s+\d{1,2}(?:st|nd|rd|th)?,\s+\d{4}\s*$',
+    re.IGNORECASE,
+)
+
+def _split_block_on_dates(lines: List[str]) -> List[Tuple[str, List[str]]]:
+    """
+    Split a single raw block's lines on standalone date headings. Returns a
+    list of ('lines'|'date_heading', sub_lines) tuples. Date headings preserve
+    only the date text (one entry per sub-list). Empty leading/trailing chunks
+    are dropped so callers don't have to filter.
+    """
+    out: List[Tuple[str, List[str]]] = []
+    buf: List[str] = []
+    for ln in lines:
+        if _inline_date_rx.match(ln):
+            if any(x.strip() for x in buf):
+                out.append(('lines', buf))
+            buf = []
+            out.append(('date_heading', [ln.strip()]))
+        else:
+            buf.append(ln)
+    if any(x.strip() for x in buf):
+        out.append(('lines', buf))
+    return out
+
 def _matches_any(patterns: List[re.Pattern], text: str) -> bool:
     t = text or ""
     for pat in patterns:
@@ -572,32 +606,40 @@ def _render_chapter_template(collection: str, book: str, section: str):
         if not blk.strip():
             continue
 
-        lines = blk.splitlines()
-
-        if do_reflow:
-            reflowed = _reflow_lines_for_prose(lines, width=90)
-            if not reflowed:
+        # CHANGED: pre-split each raw block on standalone date headings so
+        # Agenda-style "October 5, 1963" lines get their own date_heading
+        # block instead of being merged into the following paragraph by reflow.
+        for kind, sub_lines in _split_block_on_dates(blk.splitlines()):
+            if kind == 'date_heading':
+                blocks.append({'type': 'date_heading', 'text': sub_lines[0]})
                 continue
-            if all(line.strip() == '*' for line in reflowed if line.strip()):
-                blocks.append({'type': 'hr'})
+
+            lines = sub_lines
+
+            if do_reflow:
+                reflowed = _reflow_lines_for_prose(lines, width=90)
+                if not reflowed:
+                    continue
+                if all(line.strip() == '*' for line in reflowed if line.strip()):
+                    blocks.append({'type': 'hr'})
+                else:
+                    para: List[str] = []
+                    for line in reflowed + [""]:
+                        if not line.strip():
+                            if para:
+                                blocks.append({'type': 'lines', 'lines': para})
+                                para = []
+                        else:
+                            para.append(line)
             else:
-                para: List[str] = []
-                for line in reflowed + [""]:
-                    if not line.strip():
-                        if para:
-                            blocks.append({'type': 'lines', 'lines': para})
-                            para = []
-                    else:
-                        para.append(line)
-        else:
-            if all(line.strip() == '*' for line in lines):
-                blocks.append({'type': 'hr'})
-            else:
-                wrapped = []
-                for line in lines:
-                    nline = unicodedata.normalize('NFKC', line)  # normalize for highlight robustness
-                    wrapped.extend(textwrap.wrap(nline, width=120) or [''])
-                blocks.append({'type': 'lines', 'lines': wrapped})
+                if all(line.strip() == '*' for line in lines):
+                    blocks.append({'type': 'hr'})
+                else:
+                    wrapped = []
+                    for line in lines:
+                        nline = unicodedata.normalize('NFKC', line)  # normalize for highlight robustness
+                        wrapped.extend(textwrap.wrap(nline, width=120) or [''])
+                    blocks.append({'type': 'lines', 'lines': wrapped})
 
     # Heading from first non-hr block
     chap_heading = ""
@@ -839,31 +881,39 @@ def get_chapter():
         if not blk.strip():
             continue
 
-        lines = blk.splitlines()
-        if do_reflow:
-            reflowed = _reflow_lines_for_prose(lines, width=90)
-            if not reflowed:
+        # CHANGED: pre-split each raw block on standalone date headings so
+        # Agenda-style "October 5, 1963" lines get their own date_heading
+        # block instead of being merged into the following paragraph by reflow.
+        for kind, sub_lines in _split_block_on_dates(blk.splitlines()):
+            if kind == 'date_heading':
+                blocks.append({'type': 'date_heading', 'text': sub_lines[0]})
                 continue
-            if all(line.strip() == '*' for line in reflowed if line.strip()):
-                blocks.append({'type':'hr'})
+
+            lines = sub_lines
+            if do_reflow:
+                reflowed = _reflow_lines_for_prose(lines, width=90)
+                if not reflowed:
+                    continue
+                if all(line.strip() == '*' for line in reflowed if line.strip()):
+                    blocks.append({'type':'hr'})
+                else:
+                    para: List[str] = []
+                    for line in reflowed + [""]:
+                        if not line.strip():
+                            if para:
+                                blocks.append({'type':'lines','lines':para})
+                                para=[]
+                        else:
+                            para.append(line)
             else:
-                para: List[str] = []
-                for line in reflowed + [""]:
-                    if not line.strip():
-                        if para:
-                            blocks.append({'type':'lines','lines':para})
-                            para=[]
-                    else:
-                        para.append(line)
-        else:
-            if all(line.strip() == '*' for line in lines):
-                blocks.append({'type':'hr'})
-            else:
-                wrapped = []
-                for line in lines:
-                    nline = unicodedata.normalize('NFKC', line)
-                    wrapped.extend(textwrap.wrap(nline, width=100) or [''])
-                blocks.append({'type':'lines','lines':wrapped})
+                if all(line.strip() == '*' for line in lines):
+                    blocks.append({'type':'hr'})
+                else:
+                    wrapped = []
+                    for line in lines:
+                        nline = unicodedata.normalize('NFKC', line)
+                        wrapped.extend(textwrap.wrap(nline, width=100) or [''])
+                    blocks.append({'type':'lines','lines':wrapped})
 
     # nav + title
     # CHANGED (b.5): pull parent_toc_title alongside section_filename so we can
