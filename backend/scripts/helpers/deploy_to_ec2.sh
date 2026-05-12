@@ -103,6 +103,17 @@ else
     sudo tar -czf \$WEB_OUT -C /usr/share/nginx html
     sudo chown ec2-user:ec2-user \$WEB_OUT
     ls -lh \$APP_OUT \$WEB_OUT
+
+    # CHANGED: prune to the 3 most recent backups of each kind so /home/ec2-user
+    # doesn't grow unbounded. ls -t sorts newest-first; tail -n +4 yields the
+    # 4th-and-older entries to delete. Runs after the new snapshot is written
+    # so the freshly-created tarball is always counted among the kept three.
+    echo '[backup] pruning older backups (keeping 3 most recent of each kind)'
+    for prefix in collectedworks21-pre nginx-html-pre; do
+      ls -t /home/ec2-user/backups/\${prefix}-*.tar.gz 2>/dev/null \
+        | tail -n +4 \
+        | xargs -r rm -v
+    done
   "
 fi
 
