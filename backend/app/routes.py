@@ -137,7 +137,13 @@ _allow_raw  = os.getenv('REFLOW_ALLOW_RE', '')
 # between a digit and a letter, so the old default silently failed to match
 # book folder '33-34Savitri' — reflow then joined verse lines into prose
 # paragraphs. Plain (?i)Savitri catches all Savitri folders.
-_deny_raw   = os.getenv('REFLOW_DENY_RE', r'(?i)Savitri')
+# CHANGED (2026-05-17): bare (?i)Savitri also matched 'Letters-on-Savitri',
+# which IS prose (with embedded verse quotes) and must be reflowed; without
+# reflow the file was text-wrapped at width=100 and ChapterPage joined those
+# wrapped chunks with <br/>, producing double line breaks and splitting our
+# verse-recovery <br/> markers (see scripts/helpers/recover_letters_verse_breaks.py).
+# Match only the actual Savitri verse folder by name.
+_deny_raw   = os.getenv('REFLOW_DENY_RE', r'(?i)33-34Savitri')
 
 def _compile_list(patterns_raw: str):
     pats = []
