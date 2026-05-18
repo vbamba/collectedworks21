@@ -240,10 +240,65 @@ def process_file(path: Path, savitri_fps: set, dry_run: bool) -> tuple:
     return n_blocks, n_breaks
 
 
+# CHANGED (2026-05-17): default path to chapters.db so --db can be passed
+# bare. Mirrors the convention used by other backend/scripts/helpers/*.py.
+DEFAULT_DB = ROOT / "backend" / "db" / "chapters.db"
+
+
+def sync_db(db_path: Path) -> tuple:
+    """
+    Push the on-disk .txt contents into the FTS5 `chapters.content` column so
+    snippet() returns the verse-broken text. The FTS index already keys rows
+    by (collection_folder, book_folder, section_filename); we look up each
+    target file and UPDATE its content. Without this step, search-result
+    snippets keep showing the pre-recovery prose (no <br/>, "Truth' s" still
+    split) because chapters.db was indexed before this script first ran.
+
+    Returns (rows_updated, rows_missing).
+    """
+    import sqlite3
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+    updated = missing = 0
+    for tdir in TARGET_DIRS:
+        if not tdir.exists():
+            continue
+        book_folder = tdir.name
+        # Collection folder is the parent of the book folder under OUT_BASE.
+        coll_folder = tdir.parent.name
+        for path in sorted(tdir.glob("section_*.txt")):
+            new_content = path.read_text(encoding="utf-8")
+            section = path.name
+            row = cur.execute(
+                "SELECT rowid, content FROM chapters "
+                "WHERE collection_folder=? AND book_folder=? AND section_filename=?",
+                (coll_folder, book_folder, section),
+            ).fetchone()
+            if row is None:
+                missing += 1
+                continue
+            rowid, old_content = row
+            if old_content == new_content:
+                continue
+            cur.execute(
+                "UPDATE chapters SET content=? WHERE rowid=?",
+                (new_content, rowid),
+            )
+            updated += 1
+    conn.commit()
+    conn.close()
+    return updated, missing
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true",
                     help="Report changes without writing files")
+    # CHANGED (2026-05-17): --db syncs the FTS5 content column from the
+    # recovered .txt files so /api/text_search snippets render verse breaks.
+    ap.add_argument("--db", nargs="?", const=str(DEFAULT_DB), default=None,
+                    help=f"Also update chapters.db FTS5 content from disk "
+                         f"(default path: {DEFAULT_DB})")
     args = ap.parse_args()
 
     if not SAVITRI_DIR.exists():
@@ -271,6 +326,17 @@ def main() -> int:
     verb = "would touch" if args.dry_run else "touched"
     print(f"\nDone. {verb} {total_files} files, {total_blocks} italic blocks, "
           f"inserted {total_breaks} <br/> markers.")
+
+    if args.db and not args.dry_run:
+        db_path = Path(args.db)
+        if not db_path.exists():
+            print(f"ERROR: chapters.db not found: {db_path}", file=sys.stderr)
+            return 2
+        print(f"\nSyncing FTS5 content from disk -> {db_path}")
+        upd, miss = sync_db(db_path)
+        print(f"  updated {upd} rows, {miss} not found in DB")
+    elif args.db and args.dry_run:
+        print(f"(dry-run: would also sync FTS5 content -> {args.db})")
     return 0
 
 
