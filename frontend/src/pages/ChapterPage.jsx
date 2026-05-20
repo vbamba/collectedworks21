@@ -261,6 +261,40 @@ const ChapterPage = () => {
                   return;
                 }
               } catch {}
+
+              // CHANGED (2026-05-18): stem-tolerant phrase fallback. The
+              // server-side FTS5 search uses the Porter stemmer, so a query
+              // like "make no difference" matches "makes no difference" in
+              // the chapter — but the two earlier passes (exact + ligature)
+              // both require a verbatim phrase, so they miss and the code
+              // used to fall straight through to the per-word highlighter.
+              // That highlighted "make" / "difference" wherever they first
+              // appeared, and scrolled to the wrong place. Allow each word
+              // to grow by up to 5 trailing word-chars (covers -s/-es/-ed/
+              // -ing/-ings/etc.) so a single contiguous span is highlighted
+              // at the real match position.
+              try {
+                const words = normalizeCompat(phrase)
+                  .split(/\s+/)
+                  .filter(Boolean);
+                if (words.length >= 2) {
+                  const stemPat = words
+                    .map(w => ligatureRegexEscape(w) + '\\w{0,5}')
+                    .join('\\s+');
+                  const stemRx = new RegExp('\\b' + stemPat + '\\b', 'i');
+                  const html = ctx.innerHTML;
+                  const m = html.match(stemRx);
+                  if (m) {
+                    const idx = html.search(stemRx);
+                    ctx.innerHTML = html.slice(0, idx)
+                      + '<mark>' + m[0] + '</mark>'
+                      + html.slice(idx + m[0].length);
+                    scroll();
+                    return;
+                  }
+                }
+              } catch {}
+
               // Final fallback: highlight individual non-stopwords
               const words = phrase.split(/\s+/).filter(w => w && !STOPWORDS.has(w.toLowerCase()));
               if (!words.length) return;
