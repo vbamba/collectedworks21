@@ -190,6 +190,22 @@ Both are `.gitignore`d and ship out-of-band. Any schema change to
 `chapters.db` (e.g. the b.5 `parent_toc_title` column) means the EC2 copy
 must be refreshed alongside the code; otherwise API SELECTs 500.
 
+**Post-rebuild checklist** — after any chapters.db rebuild OR re-split into
+`out_chapters/`, run these helpers in order before shipping. The pipeline
+keeps reintroducing the same artifacts, so this is the standing fixup pass:
+
+```bash
+# a) drop oversized Page_X sections (FTS5 bloat from the splitter)
+sqlite3 backend/db/chapters.db < backend/scripts/helpers/strip_oversized_sections.sql
+
+# b) recover verse line breaks inside Letters-on-Savitri italic quotes
+python3 backend/scripts/helpers/recover_letters_verse_breaks.py --db
+
+# c) strip PDF ligatures (ﬁ → fi etc.) so FTS5 queries with plain f+i match.
+#    `--txt` also rewrites out_chapters/*.txt so the rendered chapter page is clean.
+python3 backend/scripts/helpers/normalize_ligatures.py --txt
+```
+
 ```bash
 # chapters.db — atomic swap so in-flight Flask requests don't see a half-copy
 rsync -av -e "ssh -i $PEM" backend/db/chapters.db \
@@ -353,6 +369,19 @@ ssh -i "$PEM" "$EC2" \
 scp -i "$PEM" "$EC2:/home/ec2-user/collectedworks21/backend/db/query_log.db" /tmp/prod_query_log.db
 python3 backend/scripts/helpers/query_stats.py --db /tmp/prod_query_log.db --days 30
 ```
+
+**Viewing the log — browser** (quickest for a glance):
+
+```
+https://ask.collectedworksofsriaurobindo.com/api/admin/query_stats?token=<ADMIN_TOKEN>&days=7
+```
+
+Backed by `/api/admin/query_stats` in [backend/app/routes.py](../backend/app/routes.py).
+Gated by the `ADMIN_TOKEN` env var in EC2's `backend/.env` — endpoint
+returns 503 if unset, 403 on mismatch. Accepts `?token=…` (logged in
+nginx access log) or an `X-Admin-Token` header (preferred for secrets).
+Params: `days=N` (1–365), `top=N` (1–100), `format=json` for raw.
+Rotate by editing the `.env` line and `sudo systemctl restart collectedworks`.
 
 **Viewing the log — raw SQL** (when you need a custom slice):
 

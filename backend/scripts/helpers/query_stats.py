@@ -69,9 +69,20 @@ def main() -> int:
     conn = sqlite3.connect(str(db))
     try:
         # ── Header
+        # CHANGED: also show all-time running total + first-seen date so the
+        # window count has context (e.g. "300 this week / 12,450 since
+        # 2026-04-10"). One extra cheap query against the unindexed table.
         total = conn.execute(
             "SELECT COUNT(*) FROM query_log WHERE ts >= ?", (cutoff,)
         ).fetchone()[0]
+        all_time, first_ts = conn.execute(
+            "SELECT COUNT(*), MIN(ts) FROM query_log"
+        ).fetchone()
+        if first_ts:
+            from datetime import datetime, timezone
+            first_str = datetime.fromtimestamp(first_ts, tz=timezone.utc) \
+                .astimezone().strftime("%Y-%m-%d")
+            print(f"=== All-time: {all_time:,} queries (since {first_str}) ===")
         print(f"=== Last {args.days} day(s) — {total:,} queries ===\n")
         if total == 0:
             return 0

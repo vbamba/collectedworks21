@@ -248,15 +248,29 @@ const ChapterPage = () => {
               }
               // Fallback: ligature-tolerant first occurrence
               try {
+                // CHANGED (2026-05-23): allow inline HTML tags (notably <br/>
+                // in non-reflowed prose) between words. Non-reflowed books
+                // join hard-wrapped lines with <br/>, so a phrase that
+                // straddles a line break has "word1<br/>word2" in innerHTML
+                // — \s+ alone wouldn't bridge that and the highlight would
+                // fall through to the per-word fallback, landing on the
+                // wrong occurrence.
+                const WS_OR_TAG = '(?:\\s|<[^>]+>)+';
                 const normPhrase = normalizeCompat(phrase);
-                const pattern = ligatureRegexEscape(normPhrase).replace(/\s+/g, '\\s+');
+                const pattern = ligatureRegexEscape(normPhrase).replace(/\s+/g, WS_OR_TAG);
                 const rx = new RegExp(pattern, 'i');
 
                 const html = ctx.innerHTML;
-                const normalizedHTML = normalizeCompat(html);
-                if (rx.test(normalizedHTML)) {
-                  const displayRx = new RegExp(ligatureRegexEscape(phrase), 'i');
-                  ctx.innerHTML = html.replace(displayRx, '<mark>$&</mark>');
+                // Match against raw HTML (tags included) — `normalizeCompat`
+                // collapses runs of whitespace which would otherwise mask
+                // intra-tag whitespace shifts; the pattern handles tags
+                // explicitly so we can keep the raw HTML for index lookup.
+                const m = html.match(rx);
+                if (m) {
+                  const idx = html.search(rx);
+                  ctx.innerHTML = html.slice(0, idx)
+                    + '<mark>' + m[0] + '</mark>'
+                    + html.slice(idx + m[0].length);
                   scroll();
                   return;
                 }
@@ -278,9 +292,13 @@ const ChapterPage = () => {
                   .split(/\s+/)
                   .filter(Boolean);
                 if (words.length >= 2) {
+                  // CHANGED (2026-05-23): see ligature-fallback note above —
+                  // joiner must tolerate inline tags (e.g. <br/>) so a stem
+                  // phrase that crosses a line break still matches.
+                  const STEM_JOIN = '(?:\\s|<[^>]+>)+';
                   const stemPat = words
                     .map(w => ligatureRegexEscape(w) + '\\w{0,5}')
-                    .join('\\s+');
+                    .join(STEM_JOIN);
                   const stemRx = new RegExp('\\b' + stemPat + '\\b', 'i');
                   const html = ctx.innerHTML;
                   const m = html.match(stemRx);

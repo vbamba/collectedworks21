@@ -111,6 +111,134 @@ try:
 except Exception as exc:
     app_logger.warning("Could not init query_log schema: %s", exc)
 
+
+# CHANGED: browser-viewable stats endpoint backing query_log.db. Mirrors the
+# CLI in backend/scripts/helpers/query_stats.py so we don't need SSH+sqlite
+# to spot-check traffic. Gated by ADMIN_TOKEN env var because the log
+# contains user queries (not public).
+@main.route('/api/admin/query_stats', methods=['GET'])
+def query_stats_api():
+    expected = os.getenv('ADMIN_TOKEN', '').strip()
+    if not expected:
+        # Why: refuse to serve if no token is configured — fail closed, not
+        # open. Operator must set ADMIN_TOKEN in the gunicorn unit / .env.
+        abort(503, description='ADMIN_TOKEN not configured on server')
+    supplied = (request.args.get('token')
+                or request.headers.get('X-Admin-Token', '')).strip()
+    if supplied != expected:
+        abort(403)
+
+    try:
+        days = max(1, min(365, int(request.args.get('days', 7))))
+    except ValueError:
+        days = 7
+    try:
+        top = max(1, min(100, int(request.args.get('top', 20))))
+    except ValueError:
+        top = 20
+    fmt = request.args.get('format', 'html').lower()
+
+    cutoff = int(time.time()) - days * 86400
+    conn = sqlite3.connect(str(QUERY_LOG_PATH))
+    try:
+        total = conn.execute(
+            "SELECT COUNT(*) FROM query_log WHERE ts >= ?", (cutoff,)
+        ).fetchone()[0]
+        all_time, first_ts = conn.execute(
+            "SELECT COUNT(*), MIN(ts) FROM query_log"
+        ).fetchone()
+        by_endpoint = conn.execute(
+            "SELECT endpoint, COUNT(*) FROM query_log WHERE ts >= ?"
+            " GROUP BY endpoint ORDER BY 2 DESC", (cutoff,)
+        ).fetchall()
+        by_mode = conn.execute(
+            "SELECT endpoint, COALESCE(mode,''), COUNT(*) FROM query_log"
+            " WHERE ts >= ? GROUP BY endpoint, mode ORDER BY endpoint, 3 DESC",
+            (cutoff,)
+        ).fetchall()
+        top_queries = conn.execute(
+            "SELECT query, COUNT(*) AS n, ROUND(AVG(result_count),1)"
+            "  FROM query_log WHERE ts >= ? GROUP BY query"
+            "  ORDER BY n DESC LIMIT ?", (cutoff, top)
+        ).fetchall()
+        zero_queries = conn.execute(
+            "SELECT query, COUNT(*) AS n FROM query_log"
+            "  WHERE ts >= ? AND result_count = 0 GROUP BY query"
+            "  ORDER BY n DESC LIMIT ?", (cutoff, top)
+        ).fetchall()
+        recent = conn.execute(
+            "SELECT ts, endpoint, query, result_count, COALESCE(mode,'')"
+            "  FROM query_log ORDER BY id DESC LIMIT 50"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if fmt == 'json':
+        return jsonify({
+            'all_time': all_time, 'first_ts': first_ts,
+            'window_days': days, 'window_count': total,
+            'by_endpoint': by_endpoint, 'by_mode': by_mode,
+            'top_queries': top_queries, 'zero_queries': zero_queries,
+            'recent': recent,
+        })
+
+    # Minimal HTML — no template needed.
+    from datetime import datetime, timezone
+
+    def _fmt_ts(ts):
+        return datetime.fromtimestamp(ts, tz=timezone.utc) \
+            .astimezone().strftime('%Y-%m-%d %H:%M')
+
+    first_str = _fmt_ts(first_ts).split(' ')[0] if first_ts else '—'
+
+    def _row(cells):
+        return '<tr>' + ''.join(f'<td>{escape(str(c))}</td>' for c in cells) + '</tr>'
+
+    parts = [
+        '<!doctype html><meta charset="utf-8"><title>query stats</title>',
+        '<style>body{font-family:system-ui,sans-serif;max-width:900px;'
+        'margin:2em auto;padding:0 1em;color:#222}'
+        'h1{font-size:1.3em}h2{font-size:1.05em;margin-top:1.8em;'
+        'border-bottom:1px solid #ddd;padding-bottom:.3em}'
+        'table{border-collapse:collapse;width:100%;font-size:.92em}'
+        'td,th{padding:.3em .6em;border-bottom:1px solid #eee;text-align:left;'
+        'vertical-align:top}td:first-child{white-space:nowrap}'
+        '.num{text-align:right;font-variant-numeric:tabular-nums}'
+        'form{margin:1em 0;font-size:.9em}.kpi{font-size:1.6em;font-weight:600}'
+        '.muted{color:#666;font-size:.9em}</style>',
+        f'<h1>Search query stats</h1>',
+        f'<div class="kpi">{all_time:,} <span class="muted">all-time queries '
+        f'(since {first_str})</span></div>',
+        f'<div class="kpi">{total:,} <span class="muted">in last {days} day(s)'
+        f'</span></div>',
+        '<form method="get">'
+        f'<input type="hidden" name="token" value="{escape(supplied)}">'
+        f'days <input name="days" value="{days}" size="4"> '
+        f'top <input name="top" value="{top}" size="4"> '
+        '<button>refresh</button> '
+        f'<a href="?token={escape(supplied)}&days={days}&top={top}&format=json">json</a>'
+        '</form>',
+        '<h2>By endpoint</h2><table>',
+        ''.join(_row([e, f'{n:,}']) for e, n in by_endpoint),
+        '</table>',
+        '<h2>By mode</h2><table>',
+        ''.join(_row([e, m or '—', f'{n:,}']) for e, m, n in by_mode),
+        '</table>',
+        f'<h2>Top {top} queries</h2><table>',
+        ''.join(_row([n, f'avg={avg}', q]) for q, n, avg in top_queries),
+        '</table>',
+        f'<h2>Top {top} zero-result queries</h2><table>',
+        (''.join(_row([n, q]) for q, n in zero_queries)
+         or '<tr><td class="muted">none</td></tr>'),
+        '</table>',
+        '<h2>Recent 50</h2><table>',
+        ''.join(_row([_fmt_ts(ts), endpoint, mode, rc, q])
+                for ts, endpoint, q, rc, mode in recent),
+        '</table>',
+    ]
+    return ''.join(parts)
+
+
 def _get_int_env(name: str, default: int, minimum: int) -> int:
     raw_value = os.getenv(name)
     try:
@@ -498,10 +626,16 @@ def _should_reflow(collection_folder: str, book_folder: str, raw_text: str) -> b
         app_logger.debug("Reflow mode=all (poetry already filtered), allow for %s", combined)
         return True
     else:
-        if REFLOW_ALLOW_PATTERNS:
-            allow = _matches_any(REFLOW_ALLOW_PATTERNS, combined)
-            app_logger.debug("Reflow mode=auto (allowlist present) allow=%s for %s", allow, combined)
-            return allow
+        # CHANGED (2026-05-23): in auto mode, treat REFLOW_ALLOW_RE as a
+        # force-include override rather than a whitelist. Previously, once
+        # any allow pattern was set, auto degenerated into allowlist-only
+        # behavior — books not explicitly listed (e.g. Q&A 1953) fell back
+        # to no-reflow even when the heuristic would have green-lit them.
+        # Now: allow short-circuits to True; everything else runs through
+        # the heuristic.
+        if REFLOW_ALLOW_PATTERNS and _matches_any(REFLOW_ALLOW_PATTERNS, combined):
+            app_logger.debug("Reflow mode=auto allow override matched for %s", combined)
+            return True
         lines = [ln.rstrip() for ln in raw_text.splitlines()[:300] if ln.strip()]
         if not lines:
             return False
@@ -532,6 +666,20 @@ def _reflow_lines_for_prose(lines: List[str], width: int) -> List[str]:
             if buf.strip():
                 paragraphs.append(buf.strip())
                 buf = ""
+            continue
+
+        # CHANGED (2026-05-23): standalone "*" marks the boundary between
+        # letters in the Letters-on-Yoga compilations (and any other letter
+        # collection). Without this, reflow joins "*" into the next letter's
+        # first paragraph because "*" doesn't end in sentence-final punct —
+        # the renderer then misses the asterism case and the visual break
+        # collapses. Treat "*" like a paragraph boundary so it survives as
+        # its own block downstream.
+        if ln.strip() == '*':
+            if buf.strip():
+                paragraphs.append(buf.strip())
+                buf = ""
+            paragraphs.append('*')
             continue
 
         if not buf:
