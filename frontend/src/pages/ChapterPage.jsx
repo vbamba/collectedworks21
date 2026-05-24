@@ -326,6 +326,37 @@ const ChapterPage = () => {
             .filter(w => w && !STOPWORDS.has(w.toLowerCase()));
           if (!words.length) return;
 
+          // CHANGED (2026-05-24): in all/any mode, scroll to the densest
+          // cluster of <mark>s rather than the first match. A query like
+          // "mind is a mediator to divinity" strips stopwords down to
+          // ["mind","mediator","divinity"]; on a long page like a Savitri
+          // canto the first "mind" is hundreds of lines before where all
+          // three words actually appear together. Finding the smallest
+          // vertical-span window of K consecutive marks (in DOM order)
+          // lands the reader on the spot that matched the *intent* of the
+          // query, not the first incidental term hit. Also tolerates
+          // typos / extra words: if one query term doesn't appear, the
+          // remaining cluster still wins.
+          const scrollToCluster = () => {
+            const marks = Array.from(ctx.querySelectorAll('mark'));
+            if (!marks.length) return;
+            if (marks.length === 1) {
+              marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+              return;
+            }
+            // Position by vertical offset within the scrollable parent;
+            // works regardless of fonts, line-height, or reflow status.
+            const tops = marks.map(m => m.getBoundingClientRect().top);
+            const K = Math.min(words.length, marks.length);
+            let bestStart = 0;
+            let bestSpan = Infinity;
+            for (let i = 0; i + K <= tops.length; i++) {
+              const span = tops[i + K - 1] - tops[i];
+              if (span < bestSpan) { bestSpan = span; bestStart = i; }
+            }
+            marks[bestStart].scrollIntoView({ behavior: 'smooth', block: 'center' });
+          };
+
           markIns.mark(words, {
             ...markOpts,
             separateWordSearch: true,
@@ -339,7 +370,7 @@ const ChapterPage = () => {
                 }
                 ctx.innerHTML = html;
               }
-              scroll();
+              scrollToCluster();
             }
           });
         }
