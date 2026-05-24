@@ -4,7 +4,27 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ title }}</title>
+    {# CHANGED (2026-05-23): per-chapter SEO/social metadata. The full page
+       title now leads with the chapter heading (what readers searched for),
+       falls back to the book title alone if no heading was extracted. og:*
+       and twitter:* mirror this so link previews on Slack/WhatsApp/Twitter
+       show the chapter, not the generic homepage title. #}
+    {% set page_title = (chap_heading ~ ' — ' ~ title) if chap_heading else title %}
+    {% set desc = meta_description or (chap_heading and (chap_heading ~ ' — from ' ~ title)) or title %}
+    {% set canonical = canonical_url or '' %}
+    <title>{{ page_title }}</title>
+    <meta name="description" content="{{ desc }}">
+    {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+
+    <meta property="og:type"        content="article">
+    <meta property="og:title"       content="{{ page_title }}">
+    <meta property="og:description" content="{{ desc }}">
+    {% if canonical %}<meta property="og:url" content="{{ canonical }}">{% endif %}
+    <meta property="og:site_name"   content="Collected Works of Sri Aurobindo and The Mother">
+
+    <meta name="twitter:card"        content="summary">
+    <meta name="twitter:title"       content="{{ page_title }}">
+    <meta name="twitter:description" content="{{ desc }}">
 
     <!-- Static assets via Flask (FIX 404) -->
     <!-- CHANGED: use url_for + cache buster 'v' (build_version passed from routes) -->

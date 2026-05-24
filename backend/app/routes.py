@@ -863,6 +863,40 @@ def _render_chapter_template(collection: str, book: str, section: str):
     query       = request.args.get('query', '').strip()
     result_type = request.args.get('result_type', '').strip()
 
+    # CHANGED (2026-05-23): build per-page meta description + canonical URL
+    # so social-link previews and search engines see chapter-specific data
+    # instead of the same generic homepage title for every URL. The
+    # description is derived from the first prose block; stripping HTML
+    # tags and clamping to ~155 chars (Google snippet length).
+    meta_description = ''
+    _chap_norm = re.sub(r'\s+', ' ', (chap_heading or '')).strip().lower()
+    for b in blocks:
+        if b.get('type') != 'lines' or not b.get('lines'):
+            continue
+        raw = ' '.join(b['lines'])
+        raw = re.sub(r'<[^>]+>', '', raw)                # drop <i> etc.
+        raw = re.sub(r'\s+', ' ', raw).strip()
+        # CHANGED: skip the chapter-heading block (block 0 is usually the
+        # title verbatim) and any block too short to function as a snippet.
+        # Without this filter the description echoed the title, which is
+        # redundant for Google's SERP and wastes the meta-description slot.
+        if raw.lower() == _chap_norm or len(raw) < 60:
+            continue
+        meta_description = (raw[:152] + '…') if len(raw) > 155 else raw
+        break
+    # CHANGED: build canonical URL from the resolved (idx, slug) pair when
+    # the section was found in `sections`; on a 404-ish fallback leave empty
+    # so the template suppresses the <link rel="canonical"> tag rather than
+    # pointing crawlers at a self-referential bad URL.
+    try:
+        _section_slug = rows[idx][1] if 0 <= idx < len(rows) else ''
+    except (NameError, IndexError):
+        _section_slug = ''
+    canonical_url = (
+        f"https://ask.collectedworksofsriaurobindo.com"
+        f"/read/{collection}/{book_slug or book}/{_section_slug}"
+    ) if _section_slug else ''
+
     return render_template(
         'chapter.html',
         title=book_title,
@@ -881,6 +915,9 @@ def _render_chapter_template(collection: str, book: str, section: str):
         query=query,
         result_type=result_type,
         build_version=BUILD_VERSION,  # ensure static links get cache-busted
+        # NEW (2026-05-23): per-page SEO metadata for crawlers/social previews
+        meta_description=meta_description,
+        canonical_url=canonical_url,
     )
 
 
@@ -1393,3 +1430,64 @@ def list_books():
     _BOOKS_CACHE['mtime'] = mtime
     _BOOKS_CACHE['data'] = books
     return jsonify(books), 200
+
+
+# ──────────────────────────────────────────────────────────────────────
+# SEO: /sitemap.xml + /robots.txt
+# ──────────────────────────────────────────────────────────────────────
+# CHANGED (2026-05-23): expose every readable chapter URL as a sitemap
+# so Google + Bing can discover the corpus without crawling the SPA. The
+# document is built from chapters.db at request time — small enough
+# (~6k URLs) that a per-request query is cheap, and always up to date
+# without a rebuild step. robots.txt points crawlers at the sitemap.
+
+# CHANGED: canonical host for sitemap entries. Hard-coded today since the
+# alias decision (sunlitpath.in vs collectedworks) is "both work for now".
+# Switch this constant when you pick a canonical.
+SITEMAP_BASE_URL = "https://ask.collectedworksofsriaurobindo.com"
+
+
+@main.route('/sitemap.xml', methods=['GET'])
+def sitemap_xml():
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT collection_folder, book_slug, slug
+              FROM chapters
+             WHERE non_content = 0
+               AND slug IS NOT NULL AND slug != ''
+               AND book_slug IS NOT NULL AND book_slug != ''
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+
+    parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        # Homepage — search interface
+        f'<url><loc>{SITEMAP_BASE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>',
+    ]
+    for coll, book_slug, slug in rows:
+        # escape() handles the rare slugs with & or special chars; the data
+        # in chapters.db is alnum + hyphens almost universally but be safe.
+        loc = f"{SITEMAP_BASE_URL}/read/{escape(coll)}/{escape(book_slug)}/{escape(slug)}"
+        parts.append(f'<url><loc>{loc}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>')
+    parts.append('</urlset>')
+
+    return ('\n'.join(parts), 200, {'Content-Type': 'application/xml; charset=utf-8'})
+
+
+@main.route('/robots.txt', methods=['GET'])
+def robots_txt():
+    # CHANGED (2026-05-23): explicit robots.txt with sitemap pointer.
+    # Previously a static placeholder under /usr/share/nginx/html/robots.txt
+    # was served by nginx; we now overrule it with a Flask route so the
+    # Sitemap: directive always reflects the live host.
+    body = (
+        "User-agent: *\n"
+        "Disallow:\n"
+        f"Sitemap: {SITEMAP_BASE_URL}/sitemap.xml\n"
+    )
+    return (body, 200, {'Content-Type': 'text/plain; charset=utf-8'})
