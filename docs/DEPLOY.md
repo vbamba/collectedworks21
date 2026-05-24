@@ -119,12 +119,12 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'node_modules/' --exclude 'frontend/build/' \
       --exclude 'backend/db/' --exclude 'backend/data/' \
       --exclude 'backend/indexes/' --exclude 'backend/pdf/' \
-      --exclude 'backend/venv/' \
+      --exclude 'backend/venv/' --exclude 'backend/.env' \
       --exclude '__pycache__/' --exclude '*.pyc' \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
       --exclude 'backups/' \
-      ./ "$EC2":/home/ec2-user/collectedworks21/
+      /Users/vbamba/Projects/collectedworks21/ "$EC2":/home/ec2-user/collectedworks21/
 
 # EC2 — restart gunicorn workers (systemd unit name is `collectedworks`)
 ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
@@ -139,6 +139,18 @@ rollback. rsync-as-ec2-user can't modify it, so `--delete` fails with
 exit 23 unless excluded. The new § 0.5 snapshots live in
 `/home/ec2-user/backups/` (outside the repo dir), so this legacy
 directory is no longer written to and can eventually be removed.
+
+Note on the absolute source path (`/Users/vbamba/Projects/collectedworks21/`
+rather than `./`): use an absolute path. Combined with `--delete`, a
+plain `./` will silently delete the entire serving tree on EC2 if you
+happen to run the command from any subdirectory of the repo (the cwd
+becomes the rsync source). The absolute path makes the cwd irrelevant.
+
+Note on `backend/.env` exclude: the prod `.env` carries server-only
+settings (FLASK_ENV=production, ADMIN_TOKEN, etc.) that must NOT be
+clobbered by the dev `.env`. If you ever need to push env changes,
+edit `/home/ec2-user/collectedworks21/backend/.env` on EC2 directly,
+then `sudo systemctl restart collectedworks`.
 
 Note on `backend/venv/` exclude: the Python virtualenv lives only on EC2
 (`/home/ec2-user/collectedworks21/backend/venv`) and is not in the local
