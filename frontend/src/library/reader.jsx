@@ -1,12 +1,16 @@
 /* ============================================================
-   The Reader + reading settings.
-   CHANGED: window globals -> ESM imports/exports. Still renders the
-   prototype's stub sample text; Phase 3c swaps the body for real
-   chapter content from the existing ChapterPage/backend path.
+   The Library Reader — Phase 3c.
+   CHANGED: the prototype's stub-text reader is replaced with a real
+   reader. It fetches the chapter from the backend and renders it with
+   the SHARED renderer (src/lib/chapterRender) — the exact logic the
+   legacy ChapterPage uses — inside the Serene reader chrome. So reading
+   from a Library search result stays in the new design instead of
+   handing off to the old template.
    ============================================================ */
 import React, { useState, useEffect, useRef } from 'react';
-import { DATA } from './data.js';
-import { Icon, Sigil } from './components.jsx';
+import './reader-content.css';
+import { Icon } from './components.jsx';
+import { buildChapterHtml, fetchChapterData, highlightChapter } from '../lib/chapterRender';
 
 const READER_DEFAULTS = { size: 20, theme: "paper", spacing: 1.75, width: "normal", font: "spectral" };
 
@@ -16,34 +20,51 @@ function loadReaderPrefs() {
 }
 
 export function ReaderScreen({ route, go }) {
-  const v = DATA.volumeById(route.id) || DATA.volumeById("life-divine-1");
-  const blocks = DATA.sampleFor(v.sample);
-  const c = DATA.collectionById(v.collection);
+  const ch = route.chapter || {};
+  const query = route.query || "";
+  const resultType = route.resultType || "all";
+
   const [prefs, setPrefs] = useState(loadReaderPrefs);
   const [showSettings, setShowSettings] = useState(false);
   const [chrome, setChrome] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
   const scrollRef = useRef(null);
+  const contentRef = useRef(null);
 
   useEffect(() => { localStorage.setItem("sa_reader", JSON.stringify(prefs)); }, [prefs]);
 
+  // Fetch the chapter whenever the target changes.
+  useEffect(() => {
+    let alive = true;
+    setData(null); setError("");
+    fetchChapterData(ch)
+      .then((d) => { if (alive) setData(d); })
+      .catch((e) => { if (alive) setError(e.message); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ch.collection, ch.bookSlug, ch.slug, ch.bookFolder, ch.sectionFilename, ch.slugMode]);
+
+  const html = data ? buildChapterHtml(data.blocks, data.reflowed !== false, data.book_title) : "";
+
+  // Highlight the search phrase once the chapter HTML is in the DOM.
+  useEffect(() => {
+    if (html && contentRef.current) highlightChapter(contentRef.current, { phrase: query, resultType });
+  }, [html, query, resultType]);
+
+  // Reading progress bar.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const key = "sa_pos_" + v.id;
-    const saved = parseFloat(localStorage.getItem(key) || "0");
-    if (saved) el.scrollTop = saved * (el.scrollHeight - el.clientHeight);
     const onScroll = () => {
       const max = el.scrollHeight - el.clientHeight;
-      const p = max > 0 ? el.scrollTop / max : 0;
-      setProgress(p);
-      localStorage.setItem(key, String(p));
+      setProgress(max > 0 ? el.scrollTop / max : 0);
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => el.removeEventListener("scroll", onScroll);
-  }, [v.id]);
+  }, [html]);
 
   const set = (k, val) => setPrefs((p) => ({ ...p, [k]: val }));
   const widthPx = prefs.width === "narrow" ? 540 : prefs.width === "wide" ? 760 : 640;
@@ -51,54 +72,65 @@ export function ReaderScreen({ route, go }) {
     : prefs.font === "cormorant" ? "'Cormorant Garamond', Georgia, serif"
     : "'Spectral', Georgia, serif";
 
+  // Back to search, carrying the query so the results reappear.
+  const back = () => go({ name: "search", q: query });
+
+  // Prev/Next within the book (slug mode only — search results always carry
+  // book_slug/slug). Disabled when the neighbour or book slug is unavailable.
+  const canNav = !!(ch.collection && ch.bookSlug);
+  const navTo = (targetSlug) => {
+    if (!canNav || !targetSlug) return;
+    go({ name: "reader", chapter: { slugMode: true, collection: ch.collection, bookSlug: ch.bookSlug, slug: targetSlug } });
+  };
+
+  const bookTitle = data?.book_title || "";
+
   return (
     <div className={"reader theme-" + prefs.theme}>
       <div className="reader-progress"><span style={{ width: progress * 100 + "%" }} /></div>
 
       <header className={"reader-bar top" + (chrome ? "" : " hidden")}>
-        <button className="iconbtn" onClick={() => go({ name: "volume", id: v.id })} aria-label="Back"><Icon name="arrowLeft" /></button>
-        <div className="reader-bar-title"><span>{v.title}</span><em>{c.abbr}</em></div>
-        <button className="iconbtn" onClick={() => setBookmarked((b) => !b)} aria-label="Bookmark" style={{ color: bookmarked ? "var(--gold)" : "inherit" }}>
-          <Icon name="bookmark" style={{ fill: bookmarked ? "var(--gold)" : "none" }} />
-        </button>
+        <button className="iconbtn" onClick={back} aria-label="Back"><Icon name="arrowLeft" /></button>
+        <div className="reader-bar-title"><span>{bookTitle || "Reading"}</span>{data?.parent_toc_title && <em>{data.parent_toc_title}</em>}</div>
         <button className="iconbtn" onClick={() => setShowSettings(true)} aria-label="Reading settings"><Icon name="type" /></button>
       </header>
 
       <div className="reader-scroll" ref={scrollRef} onClick={() => setChrome((c) => !c)}>
         <article className="reader-article" style={{ maxWidth: widthPx, fontSize: prefs.size, lineHeight: prefs.spacing, fontFamily: fontStack }}>
-          <div className="reader-volhead">
-            <Sigil author={v.author} size={30} />
-            <div className="rv-collection">{c.title}</div>
-            <h1 className="rv-title">{v.title}</h1>
-            {v.part && <div className="rv-part">{v.part}</div>}
-          </div>
-          {blocks.map((b, i) => <Block key={i} b={b} />)}
-          <div className="reader-end">
-            <span>∗ ∗ ∗</span>
-            <a className="archive-link" href={DATA.readUrl(v, null, route.chapter)} target="_blank" rel="noopener">
-              <Icon name="share" size={15} /> Open this text on the archive
-            </a>
-            <button className="btn-ghost" onClick={() => go({ name: "volume", id: v.id })}>Back to contents</button>
-          </div>
+          {bookTitle && (
+            <div className="reader-volhead">
+              <div className="rv-title">{bookTitle}</div>
+              {data?.parent_toc_title && <div className="rv-part">{data.parent_toc_title}</div>}
+            </div>
+          )}
+
+          {!data && !error && <p style={{ textAlign: "center", color: "var(--ink-soft)", padding: "40px 0" }}>Loading…</p>}
+          {error && <p style={{ textAlign: "center", color: "var(--ink-soft)", padding: "40px 0" }}>Couldn’t load this text. {error}</p>}
+
+          <div className="chapter-body" ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+
+          {data && (
+            <div className="reader-end">
+              <span>∗ ∗ ∗</span>
+              <button className="btn-ghost" onClick={back}>Back to results</button>
+            </div>
+          )}
         </article>
       </div>
 
       <footer className={"reader-bar bottom" + (chrome ? "" : " hidden")}>
-        <button className="reader-nav" onClick={(e) => e.stopPropagation()}><Icon name="chevronLeft" size={18} /> Prev</button>
-        <span className="reader-pageno">{Math.round(progress * v.pages) || 1} / {v.pages}</span>
-        <button className="reader-nav" onClick={(e) => e.stopPropagation()}>Next <Icon name="chevronRight" size={18} /></button>
+        <button className="reader-nav" disabled={!canNav || !data?.prev_slug} onClick={(e) => { e.stopPropagation(); navTo(data?.prev_slug); }}>
+          <Icon name="chevronLeft" size={18} /> Prev
+        </button>
+        <span className="reader-pageno">{Math.round(progress * 100)}%</span>
+        <button className="reader-nav" disabled={!canNav || !data?.next_slug} onClick={(e) => { e.stopPropagation(); navTo(data?.next_slug); }}>
+          Next <Icon name="chevronRight" size={18} />
+        </button>
       </footer>
 
       {showSettings && <ReaderSettings prefs={prefs} set={set} reset={() => setPrefs({ ...READER_DEFAULTS })} onClose={() => setShowSettings(false)} />}
     </div>
   );
-}
-
-function Block({ b }) {
-  if (b.type === "h2") return <h2 className="r-h2">{b.text}</h2>;
-  if (b.type === "epigraph") return <div className="r-epigraph"><p>{b.text}</p><cite>— {b.cite}</cite></div>;
-  if (b.type === "verse") return <div className="r-verse">{b.lines.map((l, i) => <span key={i}>{l}</span>)}</div>;
-  return <p className="r-p">{b.text}</p>;
 }
 
 function ReaderSettings({ prefs, set, reset, onClose }) {

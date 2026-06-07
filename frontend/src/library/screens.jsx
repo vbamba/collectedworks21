@@ -5,10 +5,9 @@
    screens still use stub data (Browse/Volume -> Phase 3c).
    ============================================================ */
 import React, { useState, useEffect, useRef } from 'react';
-// CHANGED (Phase 3b): SearchScreen now uses the real backend instead of the
-// stub corpus. useNavigate sends result clicks to the existing chapter routes;
+// CHANGED (Phase 3b/3c): SearchScreen uses the real backend; result clicks open
+// the in-Library reader (go) instead of navigating away to the old template.
 // DOMPurify sanitises backend snippet HTML; api.js provides filters + search.
-import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { DATA } from './data.js';
 import { Icon, Sigil, SectionHead, VolumeCard } from './components.jsx';
@@ -197,22 +196,14 @@ function authorCode(name) {
   return "d";
 }
 
-// Build the SPA chapter path (prefer /read/<coll>/<book_slug>/<slug>).
-function chapterPath(r, query) {
+// Build the chapter descriptor the Library reader understands (prefer slug mode;
+// search results always carry book_slug/slug, so slug mode is the common path).
+function chapterTarget(r) {
   const coll = r.collection_folder;
   if (r.book_slug && r.slug && coll) {
-    const qs = new URLSearchParams();
-    if (query) qs.set("query", query);
-    const base = `/read/${encodeURIComponent(coll)}/${encodeURIComponent(r.book_slug)}/${encodeURIComponent(r.slug)}`;
-    return qs.toString() ? `${base}?${qs.toString()}` : base;
+    return { slugMode: true, collection: coll, bookSlug: r.book_slug, slug: r.slug };
   }
-  const p = new URLSearchParams({
-    collection_folder: coll || "",
-    book_folder: r.book_folder || "",
-    section_filename: r.section_filename || "",
-  });
-  if (query) p.set("query", query);
-  return `/chapter?${p.toString()}`;
+  return { slugMode: false, collection: coll, bookFolder: r.book_folder, sectionFilename: r.section_filename };
 }
 
 // Build the PDF viewer link if the row carries page info.
@@ -227,8 +218,7 @@ function pdfPath(r) {
   return `/viewer?file=${encodeURIComponent(raw)}&page=${r.start_page}`;
 }
 
-export function SearchScreen({ route }) {
-  const navigate = useNavigate();
+export function SearchScreen({ route, go }) {
   const [q, setQ] = useState(route.q || "");
   const [submitted, setSubmitted] = useState("");
   const [exact, setExact] = useState(false);
@@ -365,13 +355,13 @@ export function SearchScreen({ route }) {
             {shown.length === 0 && <p className="no-results">No passages found for &ldquo;{submitted}&rdquo;. Try a different word or turn off Exact match.</p>}
             {shown.map((r, i) => {
               const title = deriveTitle(r);
-              const path = chapterPath(r, submitted);
+              const openReader = () => go({ name: "reader", chapter: chapterTarget(r), query: submitted, resultType: exact ? "exact" : "all" });
               const pdf = pdfPath(r);
               const ac = authorCode(r.author);
               const snippet = DOMPurify.sanitize(r.snippet || "", { ALLOWED_TAGS: ["b", "mark", "i", "em", "br"] });
               return (
                 <article className="result-card" key={`${r.section_filename || "r"}-${i}`}>
-                  <button className="rc-title" onClick={() => navigate(path)}>
+                  <button className="rc-title" onClick={openReader}>
                     {r.book_title ? `${r.book_title} — ${title}` : title}
                   </button>
                   {/* CHANGED: clamp to 4 lines — backend snippets can be long
@@ -393,7 +383,7 @@ export function SearchScreen({ route }) {
                           <Icon name="download" size={15} /> PDF
                         </a>
                       )}
-                      <button className="rc-read" onClick={() => navigate(path)}>
+                      <button className="rc-read" onClick={openReader}>
                         Read <Icon name="arrowRight" size={15} />
                       </button>
                     </span>

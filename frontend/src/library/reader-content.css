@@ -1,0 +1,9 @@
+/* Styling for the real chapter HTML (from src/lib/chapterRender buildChapterHtml)
+   rendered inside the Library reader. Scoped under .library-root; sizes are in
+   em so they scale with the reader's font-size / line-height prefs. */
+.library-root .reader-article .chapter-body p { margin: 0 0 1em; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+.library-root .reader-article .chapter-body p.verse { text-align: left; hyphens: manual; -webkit-hyphens: manual; }
+.library-root .reader-article .chapter-body p.asterism { text-align: center; letter-spacing: 0.5em; color: var(--ink-faint); margin: 1.25em 0; }
+.library-root .reader-article .chapter-body h3 { font-family: var(--ui); font-size: 0.82em; font-weight: 700; letter-spacing: 0.04em; margin: 1.6em 0 0.6em; }
+.library-root .reader-article .chapter-body hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
+.library-root .reader-article .chapter-body mark { background: var(--gold-soft); color: inherit; padding: 0 0.05em; border-radius: 2px; }

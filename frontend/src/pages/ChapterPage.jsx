@@ -7,41 +7,10 @@ import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 're
 // template. We now route it through this component so all chapter rendering
 // goes through one code path.
 import { useSearchParams, useParams, Link } from 'react-router-dom';
-import DOMPurify from 'dompurify';
-import Mark from 'mark.js';
-const MarkClass = Mark.default || Mark;
-
-// Stop-words (same as backend)
-const STOPWORDS = new Set([
-  'a','an','and','are','as','at','be','but','by','for','from','had','has','have',
-  'he','her','his','in','is','it','its','of','on','or','she','that','the','their',
-  'there','they','to','was','were','which','will','with','would','this','those',
-  'these','your','you','i','we','our','us'
-]);
-
-// CHANGED: matches a verse line that ends a sentence — .?! optionally
-// followed by a closing quote/paren, then optional trailing whitespace.
-// Used for Savitri's render-time sentence-stanza splitting (see htmlContent
-// useMemo). Module-scoped so it's a single shared regex, not re-allocated
-// per render, and so React's exhaustive-deps lint doesn't flag it.
-const SENTENCE_END_RE = /[.?!][)"'”’]?\s*$/;
-
-// NEW: normalize ligatures/nbsp & collapse whitespace (client-side)
-function normalizeCompat(str) {
-  if (!str) return '';
-  return str
-    .replace(/\uFB01/g, 'fi')  // ﬁ
-    .replace(/\uFB02/g, 'fl')  // ﬂ
-    .replace(/\u00A0/g, ' ')   // nbsp
-    .replace(/\s+/g, ' ');
-}
-// NEW: ligature-aware escape
-function ligatureRegexEscape(str) {
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return esc(str)
-    .replace(/fi/gi, '(?:fi|\\uFB01)')
-    .replace(/fl/gi, '(?:fl|\\uFB02)');
-}
+// CHANGED (Phase 3c): chapter rendering (fetch + block→HTML + highlight) moved
+// to src/lib/chapterRender.js so the new Library reader shares the exact same
+// logic and the two can't drift. Behaviour here is unchanged.
+import { buildChapterHtml, fetchChapterData, highlightChapter } from '../lib/chapterRender';
 
 const ChapterPage = () => {
   const [searchParams]    = useSearchParams();
@@ -51,340 +20,61 @@ const ChapterPage = () => {
   const routeParams        = useParams();
   const slugMode           = !!(routeParams.collection && routeParams.bookSlug && routeParams.slug);
 
-  // Effective identifiers used by the rest of the component.
-  // - slug mode: the path tells us which collection + book_slug + slug to load,
-  //   and the backend resolves to (book_folder, section_filename) internally.
-  //   We don't have book_folder/section_filename until the API responds, so we
-  //   only carry the slug-form fields and use them to build /read/... nav URLs.
-  // - query mode: the URL already carries collection_folder/book_folder/section_filename
-  //   so behavior matches the pre-migration component exactly.
   const collection         = slugMode ? routeParams.collection : searchParams.get('collection_folder');
   const bookFolder         = slugMode ? null : searchParams.get('book_folder');
   const sectionFilename    = slugMode ? null : searchParams.get('section_filename');
   const bookSlug           = slugMode ? routeParams.bookSlug : '';
   const slug               = slugMode ? routeParams.slug : '';
   const phrase             = (searchParams.get('query') || '').trim();
-  const resultType         = (searchParams.get('result_type') || 'all').toLowerCase(); // NEW
+  const resultType         = (searchParams.get('result_type') || 'all').toLowerCase();
 
   const [blocks, setBlocks]         = useState([]);
   const [bookTitle, setBookTitle]   = useState('');
   const [prevSection, setPrevSection] = useState(null);
   const [nextSection, setNextSection] = useState(null);
-  // CHANGED (2026-04-19): First/Last boundary nav — lets the reader jump to
-  // chapter 1 or the final chapter without clicking prev/next repeatedly.
   const [firstSection, setFirstSection] = useState(null);
   const [lastSection, setLastSection]   = useState(null);
-  // CHANGED: parallel slug-form nav targets returned by /api/chapter. When
-  // slugMode is true the nav links are built as /read/.../<slug>; when a slug
-  // is missing (legacy row predating the slug column) we fall back to the
-  // section_filename + /chapter?... URL.
   const [prevSlug, setPrevSlug] = useState('');
   const [nextSlug, setNextSlug] = useState('');
   const [firstSlug, setFirstSlug] = useState('');
   const [lastSlug, setLastSlug] = useState('');
-  // CHANGED: resolved book_folder for the /chapter?... fallback URL when the
-  // current section has no slug (legacy rows). In slug mode we don't know
-  // book_folder, but slug-mode nav builds /read/... URLs that don't need it,
-  // so this stays empty there. In query mode it mirrors the URL's
-  // book_folder param.
   const [resolvedBookFolder, setResolvedBookFolder] = useState('');
-  // CHANGED (b.5): hold Pass-3 journal sub-section breadcrumb (e.g. "March 14,
-  // 1952") returned by /api/chapter so the header can render "from <parent>".
   const [parentTocTitle, setParentTocTitle] = useState('');
-  // CHANGED (2026-04-20): reflow flag from /api/chapter. When false (verse, e.g.
-  // Savitri), lines must be joined with <br/> to preserve the poet's breaks;
-  // when true the block was prose-reflowed server-side and can be joined with
-  // a space so the browser handles word-wrap. Default true keeps old prose
-  // behavior if an older backend returns no flag.
   const [reflowed, setReflowed]     = useState(true);
   const [error, setError]           = useState('');
   const contentRef                  = useRef(null);
 
-  // Fetch blocks + metadata
+  // Fetch blocks + metadata (shared fetch helper).
   useEffect(() => {
-    // CHANGED: choose endpoint based on URL shape.
-    //   slug mode → /api/chapter_by_slug?collection=...&book_slug=...&slug=...
-    //               (Flask returns a 307 redirect to /api/chapter, fetch follows
-    //                it transparently and we get the same JSON shape back)
-    //   query mode → /api/chapter?collection_folder=...&book_folder=...&section_filename=...
-    let url;
-    if (slugMode) {
-      // CHANGED: param name is `collection_folder` (matches /api/chapter); the
-      // /api/chapter_by_slug endpoint validates this exact key and 400s otherwise.
-      url = `/api/chapter_by_slug?collection_folder=${encodeURIComponent(collection)}` +
-            `&book_slug=${encodeURIComponent(bookSlug)}` +
-            `&slug=${encodeURIComponent(slug)}`;
-    } else if (collection && bookFolder && sectionFilename) {
-      url = `/api/chapter?collection_folder=${encodeURIComponent(collection)}` +
-            `&book_folder=${encodeURIComponent(bookFolder)}` +
-            `&section_filename=${encodeURIComponent(sectionFilename)}`;
-    } else {
-      setError('Missing URL parameters');
-      return;
-    }
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load chapter data');
-        return res.json();
-      })
+    fetchChapterData({ slugMode, collection, bookSlug, slug, bookFolder, sectionFilename })
       .then(data => {
         setBlocks(data.blocks);
         setBookTitle(data.book_title);
         setPrevSection(data.prev_section);
         setNextSection(data.next_section);
-        // CHANGED (2026-04-19): boundary nav state; backend returns null when
-        // the book has no sections, which shouldn't happen but is handled.
         setFirstSection(data.first_section);
         setLastSection(data.last_section);
-        // CHANGED: slug-form nav targets for slugMode link building. Empty
-        // strings fall through to /chapter?... fallbacks below.
         setPrevSlug(data.prev_slug || '');
         setNextSlug(data.next_slug || '');
         setFirstSlug(data.first_slug || '');
         setLastSlug(data.last_slug || '');
-        // CHANGED: only used by the /chapter?... fallback href when a slug is
-        // missing. Empty in slug mode (which builds /read/... URLs that don't
-        // need book_folder).
         setResolvedBookFolder(slugMode ? '' : (bookFolder || ''));
-        // CHANGED (b.5): pick up breadcrumb; default '' for non-journal books
-        // and older chapters.db rows that predate the parent_toc_title column.
         setParentTocTitle(data.parent_toc_title || '');
-        // CHANGED (2026-04-20): pick up reflow flag (backend /api/chapter).
-        // Default true preserves prior prose behavior if the field is missing.
         setReflowed(data.reflowed !== false);
       })
       .catch(err => setError(err.message));
   }, [slugMode, collection, bookFolder, sectionFilename, bookSlug, slug]);
 
-  // Build sanitized HTML
-  // CHANGED (2026-04-19): the backend pre-wraps prose (reflow width=90,
-  // non-reflow textwrap width=100) and returns the fragments as a `lines`
-  // array. Joining them with <br/> pinned the visible line breaks wherever
-  // the server wrapped, producing a ragged column that couldn't reflow on
-  // narrow viewports. Now we join with a space so the browser handles word
-  // wrap itself, and split on standalone '*' lines — which the source text
-  // uses as an asterism — into separate <p>s with a centered divider.
-  // CHANGED (2026-04-20): when `reflowed` is false the backend deliberately
-  // kept the source's hard line breaks (e.g. Savitri and other verse, which
-  // _should_reflow() rejects via REFLOW_DENY_RE or poetry heuristic). In that
-  // case join with <br/> so each verse line renders on its own line instead
-  // of collapsing into a contiguous paragraph.
-  // CHANGED: Savitri-only sentence-stanza splitting. When the line ends a
-  // sentence (.?! optionally followed by a closing quote/paren), we flush the
-  // current group so each sentence renders as its own <p class="verse">,
-  // visually separated by the existing 1rem paragraph margin. Other verse
-  // books (Collected Poems, Translations) keep the single-paragraph-per-stanza
-  // behavior — splitting their short poems would put a stray gap before each
-  // poem's title. Detection uses bookTitle (server-supplied, unambiguous);
-  // bookFolder/bookSlug would also work but require knowing both URL forms.
-  const splitSavitriSentences = bookTitle === 'Savitri' && !reflowed;
-  const htmlContent = useMemo(() => {
-    const lineJoin = reflowed ? ' ' : '<br/>';
-    return blocks.map(blk => {
-      if (blk.type === 'hr') return '<hr/>';
-      // CHANGED: render standalone "Month Day, Year" date lines (typical of
-      // Mother's Agenda where multiple dates fall inside one section due to
-      // page-boundary splitting) as a bold heading on its own line, with a
-      // touch of top margin to visually separate from the prior paragraph.
-      if (blk.type === 'date_heading') {
-        return `<h3 class="date-heading">${DOMPurify.sanitize(blk.text || '')}</h3>`;
-      }
-      // CHANGED (2026-05-25): render subsection headings (e.g. "The Teaching
-      // of the Gita" in Letters on Yoga II ch. 5) as h3. Source .txt files
-      // separate these from the following paragraph by only a single newline,
-      // so without this block type reflow merges them into the paragraph and
-      // produces "The Teaching of the GitaThis world is as the Gita describes
-      // it…". Backend splits them out in _split_block_on_subheadings.
-      if (blk.type === 'subheading') {
-        return `<h3 class="subheading">${DOMPurify.sanitize(blk.text || '')}</h3>`;
-      }
-      const groups = [];
-      let buf = [];
-      const flush = () => { if (buf.length) { groups.push(buf); buf = []; } };
-      for (const line of blk.lines) {
-        if (line.trim() === '*') { flush(); groups.push('*'); }
-        else {
-          buf.push(line);
-          // CHANGED: flush mid-stanza on sentence-ending lines for Savitri.
-          if (splitSavitriSentences && SENTENCE_END_RE.test(line)) flush();
-        }
-      }
-      flush();
-      return groups.map(g => {
-        if (g === '*') return '<p class="asterism">*</p>';
-        // CHANGED: sanitize the whole joined paragraph at once so inline HTML
-        // tags spanning multiple backend-wrapped lines (e.g. <i>…</i>) are
-        // preserved. Per-line sanitize was auto-closing unclosed <i> tags and
-        // stripping the matching </i>, leaving only the first line italicized.
-        const cls = reflowed ? '' : ' class="verse"';
-        return `<p${cls}>${DOMPurify.sanitize(g.join(lineJoin))}</p>`;
-      }).join('');
-    }).join('');
-  }, [blocks, reflowed, splitSavitriSentences]);
+  // Build sanitized HTML (shared renderer).
+  const htmlContent = useMemo(
+    () => buildChapterHtml(blocks, reflowed, bookTitle),
+    [blocks, reflowed, bookTitle]
+  );
 
-  // Highlight & scroll
+  // Highlight & scroll (shared).
   useLayoutEffect(() => {
-    const ctx = contentRef.current;
-    if (!htmlContent || !phrase || !ctx) return;
-
-    const markIns = new MarkClass(ctx);
-
-    markIns.unmark({
-      done: () => {
-        const scroll = () => {
-          const el = ctx.querySelector('mark');
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
-
-        const markOpts = {
-          acrossElements: true,
-          ignorePunctuation: ":;.,–—()[]'\"-_",
-          diacritics: true,
-          ignoreJoiners: true,
-        };
-
-        if (resultType === 'exact') {
-          // Try exact phrase first
-          markIns.mark(phrase, {
-            ...markOpts,
-            separateWordSearch: false,
-            done: count => {
-              if (count > 0) {
-                const exact = Array.from(ctx.querySelectorAll('mark'))
-                  .find(el => el.textContent.trim().toLowerCase() === phrase.toLowerCase());
-                (exact || ctx.querySelector('mark'))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-              }
-              // Fallback: ligature-tolerant first occurrence
-              try {
-                // CHANGED (2026-05-23): allow inline HTML tags (notably <br/>
-                // in non-reflowed prose) between words. Non-reflowed books
-                // join hard-wrapped lines with <br/>, so a phrase that
-                // straddles a line break has "word1<br/>word2" in innerHTML
-                // — \s+ alone wouldn't bridge that and the highlight would
-                // fall through to the per-word fallback, landing on the
-                // wrong occurrence.
-                const WS_OR_TAG = '(?:\\s|<[^>]+>)+';
-                const normPhrase = normalizeCompat(phrase);
-                const pattern = ligatureRegexEscape(normPhrase).replace(/\s+/g, WS_OR_TAG);
-                const rx = new RegExp(pattern, 'i');
-
-                const html = ctx.innerHTML;
-                // Match against raw HTML (tags included) — `normalizeCompat`
-                // collapses runs of whitespace which would otherwise mask
-                // intra-tag whitespace shifts; the pattern handles tags
-                // explicitly so we can keep the raw HTML for index lookup.
-                const m = html.match(rx);
-                if (m) {
-                  const idx = html.search(rx);
-                  ctx.innerHTML = html.slice(0, idx)
-                    + '<mark>' + m[0] + '</mark>'
-                    + html.slice(idx + m[0].length);
-                  scroll();
-                  return;
-                }
-              } catch {}
-
-              // CHANGED (2026-05-18): stem-tolerant phrase fallback. The
-              // server-side FTS5 search uses the Porter stemmer, so a query
-              // like "make no difference" matches "makes no difference" in
-              // the chapter — but the two earlier passes (exact + ligature)
-              // both require a verbatim phrase, so they miss and the code
-              // used to fall straight through to the per-word highlighter.
-              // That highlighted "make" / "difference" wherever they first
-              // appeared, and scrolled to the wrong place. Allow each word
-              // to grow by up to 5 trailing word-chars (covers -s/-es/-ed/
-              // -ing/-ings/etc.) so a single contiguous span is highlighted
-              // at the real match position.
-              try {
-                const words = normalizeCompat(phrase)
-                  .split(/\s+/)
-                  .filter(Boolean);
-                if (words.length >= 2) {
-                  // CHANGED (2026-05-23): see ligature-fallback note above —
-                  // joiner must tolerate inline tags (e.g. <br/>) so a stem
-                  // phrase that crosses a line break still matches.
-                  const STEM_JOIN = '(?:\\s|<[^>]+>)+';
-                  const stemPat = words
-                    .map(w => ligatureRegexEscape(w) + '\\w{0,5}')
-                    .join(STEM_JOIN);
-                  const stemRx = new RegExp('\\b' + stemPat + '\\b', 'i');
-                  const html = ctx.innerHTML;
-                  const m = html.match(stemRx);
-                  if (m) {
-                    const idx = html.search(stemRx);
-                    ctx.innerHTML = html.slice(0, idx)
-                      + '<mark>' + m[0] + '</mark>'
-                      + html.slice(idx + m[0].length);
-                    scroll();
-                    return;
-                  }
-                }
-              } catch {}
-
-              // Final fallback: highlight individual non-stopwords
-              const words = phrase.split(/\s+/).filter(w => w && !STOPWORDS.has(w.toLowerCase()));
-              if (!words.length) return;
-              markIns.mark(words, { ...markOpts, separateWordSearch: true, done: scroll });
-            }
-          });
-        } else {
-          // ALL/ANY: non-stopword terms
-          const words = normalizeCompat(phrase)
-            .split(/\s+/)
-            .filter(w => w && !STOPWORDS.has(w.toLowerCase()));
-          if (!words.length) return;
-
-          // CHANGED (2026-05-24): in all/any mode, scroll to the densest
-          // cluster of <mark>s rather than the first match. A query like
-          // "mind is a mediator to divinity" strips stopwords down to
-          // ["mind","mediator","divinity"]; on a long page like a Savitri
-          // canto the first "mind" is hundreds of lines before where all
-          // three words actually appear together. Finding the smallest
-          // vertical-span window of K consecutive marks (in DOM order)
-          // lands the reader on the spot that matched the *intent* of the
-          // query, not the first incidental term hit. Also tolerates
-          // typos / extra words: if one query term doesn't appear, the
-          // remaining cluster still wins.
-          const scrollToCluster = () => {
-            const marks = Array.from(ctx.querySelectorAll('mark'));
-            if (!marks.length) return;
-            if (marks.length === 1) {
-              marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-              return;
-            }
-            // Position by vertical offset within the scrollable parent;
-            // works regardless of fonts, line-height, or reflow status.
-            const tops = marks.map(m => m.getBoundingClientRect().top);
-            const K = Math.min(words.length, marks.length);
-            let bestStart = 0;
-            let bestSpan = Infinity;
-            for (let i = 0; i + K <= tops.length; i++) {
-              const span = tops[i + K - 1] - tops[i];
-              if (span < bestSpan) { bestSpan = span; bestStart = i; }
-            }
-            marks[bestStart].scrollIntoView({ behavior: 'smooth', block: 'center' });
-          };
-
-          markIns.mark(words, {
-            ...markOpts,
-            separateWordSearch: true,
-            done: () => {
-              if (!ctx.querySelector('mark')) {
-                // ligature-tolerant per-term fallback
-                let html = ctx.innerHTML;
-                for (const t of words) {
-                  const rx = new RegExp('\\b(' + ligatureRegexEscape(t) + ')\\b', 'gi');
-                  html = html.replace(rx, '<mark>$1</mark>');
-                }
-                ctx.innerHTML = html;
-              }
-              scrollToCluster();
-            }
-          });
-        }
-      }
-    });
+    if (!htmlContent) return;
+    highlightChapter(contentRef.current, { phrase, resultType });
   }, [htmlContent, phrase, resultType]);
 
   if (error) return <div className="alert alert-danger">{error}</div>;
@@ -400,65 +90,28 @@ const ChapterPage = () => {
         .chapter-content p { text-align: justify; line-height: 1.75; margin-bottom: 1rem; }
         .chapter-content hr { border: 0; border-top: 1px solid #ccc; margin: 2rem 0; }
         .chapter-content mark { background-color: #fff3a3; font-weight: 600; padding: 0 0.05em; border-radius: 2px; }
-        /* CHANGED (b.5): subdued italic subtitle for the Pass-3 breadcrumb
-           so it reads as metadata rather than part of the chapter title. */
         .chapter-subtitle { text-align: center; color: #6c757d; font-style: italic; margin: -0.5rem 0 1.25rem; font-size: 1rem; }
-        /* CHANGED (2026-04-19): in-block asterism separator (the '*' line the
-           source uses between sub-sections of a paragraph group). */
         .chapter-content p.asterism { text-align: center; letter-spacing: 0.5em; color: #888; margin: 1rem 0; }
-        /* CHANGED: inline date headings (e.g. "October 5, 1963") that the
-           backend extracts from prose so the reader can see when a section
-           crosses a date boundary. Bold + spaced to feel like a sub-heading. */
         .chapter-content h3.date-heading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
-        /* CHANGED (2026-05-25): subsection headings (e.g. "The Teaching of
-           the Gita") share the date-heading visual weight — same role on the
-           page (named divider inside a chapter), so the reader's eye treats
-           them the same way. */
         .chapter-content h3.subheading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
-        /* CHANGED (2026-04-20): verse blocks keep server-side line breaks
-           (<br/>-joined). Left-align and drop hyphenation — justified verse
-           with hyphens mangles the meter. */
         .chapter-content p.verse { text-align: left; hyphens: manual; -webkit-hyphens: manual; }
       `}</style>
 
       <div className="chapter-wrapper container">
-        {/* Navigation */}
-        {/* CHANGED (2026-04-19): expanded from [Prev | title | Next] to
-            [First · Prev | title | Next · Last]. First/Last are hidden when
-            the reader is already at that boundary, so they never duplicate
-            Prev/Next. The URL-building logic is now a single helper to keep
-            the four links in sync. */}
+        {/* Navigation: [First · Prev | title | Next · Last] */}
         {(() => {
-          // CHANGED: nav-href builder now emits a /read/... URL when this
-          // component is mounted on the slug route AND the target neighbor has
-          // a slug. Otherwise it falls back to /chapter?...&section_filename=,
-          // which keeps legacy data (rows without slugs) working.
-          //
-          // CHANGED: prev/next/first/last deliberately drop `query` and
-          // `result_type` from the nav target. Highlighting is only useful on
-          // the chapter the user opened from a search result; once they
-          // navigate to a neighbor, mark.js would (a) highlight unrelated text
-          // and (b) auto-scroll past the top of the chapter. Plain nav
-          // re-opens the next chapter from the top with no marks. The current
-          // page still highlights because the URL the user *arrived at* still
-          // carries the query string.
           const buildChapterHref = (targetSection, targetSlug) => {
             if (slugMode && targetSlug) {
               return `/read/${encodeURIComponent(collection)}` +
                      `/${encodeURIComponent(bookSlug)}` +
                      `/${encodeURIComponent(targetSlug)}`;
             }
-            // Fallback: /chapter?... query form (no query/result_type carried).
             const qs = new URLSearchParams();
             qs.set('collection_folder', collection);
             qs.set('book_folder', bookFolder || resolvedBookFolder);
             qs.set('section_filename', targetSection);
             return `/chapter?${qs.toString()}`;
           };
-          // CHANGED: boundary detection in slug mode compares slugs (the URL
-          // identifier we actually have) — sectionFilename is null on /read/...
-          // routes, so the legacy `firstSection !== sectionFilename` check
-          // would never match and First/Last would always show.
           const atFirst = slugMode ? (firstSlug && firstSlug === slug)
                                    : (firstSection && firstSection === sectionFilename);
           const atLast  = slugMode ? (lastSlug && lastSlug === slug)
@@ -490,14 +143,6 @@ const ChapterPage = () => {
           );
         })()}
 
-        {/* CHANGED (b.5): breadcrumb under the nav row — recovers the parent
-            TOC entry (e.g. "March 14, 1952" for Mother Agenda, "Book Three —
-            The Book of the Divine Mother" for a Savitri canto). Rendered
-            only when non-empty so non-journal/non-Savitri books keep their
-            original header.
-            CHANGED: dropped the "from " prefix — the breadcrumb reads as a
-            standalone subtitle now, matching what the user expects to see
-            (just the parent title, no leading preposition). */}
         {parentTocTitle && (
           <div className="chapter-subtitle">{parentTocTitle}</div>
         )}
