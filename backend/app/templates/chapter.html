@@ -58,10 +58,26 @@
          visual style used by ChapterPage.jsx so the legacy server-rendered
          template behaves the same. */
       .chapter-subtitle { text-align: center; color: #6c757d; font-style: italic; margin: -0.5rem 0 1.25rem; font-size: 1rem; }
+      /* CHANGED (2026-05-25): match ChapterPage.jsx so bot-rendered HTML and
+         the SPA render named in-chapter dividers (Agenda dates, Letters-on-
+         Yoga subsection titles) with the same visual weight. */
+      .chapter-content h3.date-heading,
+      .chapter-content h3.subheading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
     </style>
   </head>
   <body>
     <div class="container">
+      {# CHANGED (2026-05-25): crawlable back-link to the homepage. Without
+         this, the bot-rendered chapter graph was reachable only linearly
+         via prev/next, with no edge pointing up to the corpus root —
+         Search Console showed "Referring page: None detected" on every
+         chapter URL. A plain <a href="/"> gives Googlebot an inbound edge
+         from chapter → home and (after the bot-rendered home is in place)
+         lets crawl flow back out to other books. #}
+      <div class="mb-3">
+        <a href="/" class="btn btn-link p-0">← All books</a>
+      </div>
+
       <!-- Header with navigation -->
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>{{ title }}</h1>
@@ -113,6 +129,17 @@
       {% for blk in blocks %}
         {% if blk.type == 'hr' %}
           <hr/>
+        {# CHANGED (2026-05-25): render date_heading and subheading as h3.
+           date_heading existed in the backend already (Agenda dates) but the
+           Jinja template was treating it as a lines block and emitting an
+           empty <p> — bot-rendered Agenda pages lost the date marker. The new
+           subheading type (e.g. "The Teaching of the Gita" in Letters on Yoga
+           II ch. 5) needs the same treatment so crawlers see the heading
+           separated from the following paragraph instead of glued to it. #}
+        {% elif blk.type == 'date_heading' %}
+          <h3 class="date-heading">{{ blk.text|safe }}</h3>
+        {% elif blk.type == 'subheading' %}
+          <h3 class="subheading">{{ blk.text|safe }}</h3>
         {% else %}
           <p>
             {% for line in blk.lines %}

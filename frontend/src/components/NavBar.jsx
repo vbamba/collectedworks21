@@ -87,18 +87,38 @@ export default function NavBar() {
                   Books
                 </button>
               </li>
-              <li className="nav-item">
-                <Link
-                  to="/question"
-                  // CHANGED: same focusInput stamp as Search — see comment
-                  // on the Search link above.
-                  state={{ focusInput: Date.now() }}
-                  className={`nav-link${isQuestion ? ' active' : ''}`}
-                  onClick={closeNav}
-                >
-                  Question
-                </Link>
-              </li>
+              {/* CHANGED: Savitri wiki link. External href (separate
+                  subdomain), opens in a new tab. URL comes from
+                  REACT_APP_SAVITRI_WIKI_URL so dev can point at a local
+                  static server while prod points at the subdomain. */}
+              {process.env.REACT_APP_SAVITRI_WIKI_URL && (
+                <li className="nav-item">
+                  <a
+                    href={process.env.REACT_APP_SAVITRI_WIKI_URL}
+                    className="nav-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={closeNav}
+                  >
+                    Savitri Study
+                  </a>
+                </li>
+              )}
+              {/* CHANGED: Question link hidden — semantic-search UX is
+                  being rebuilt. Route /question still exists; restore this
+                  <li> when the new version is ready. */}
+              {false && (
+                <li className="nav-item">
+                  <Link
+                    to="/question"
+                    state={{ focusInput: Date.now() }}
+                    className={`nav-link${isQuestion ? ' active' : ''}`}
+                    onClick={closeNav}
+                  >
+                    Question
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

@@ -196,6 +196,78 @@ ssh -i "$PEM" "$EC2" '
 Staging through `/tmp/cw-build/` keeps the user-owned rsync separate from the
 `sudo` copy into the nginx root — avoids chown pitfalls.
 
+## 2.5. nginx — route `/` to Flask for bots (SEO)
+
+**One-time nginx change** to pair with the bot-rendered homepage added in
+`backend/app/routes.py` (`home_page` at `/`). Without this, Googlebot still
+hits the React shell at `/`, sees zero crawlable links, and falls back to
+sitemap-only discovery — which is exactly the "Discovered – currently not
+indexed" pattern we saw in Search Console.
+
+The `$is_bot` map already exists on EC2 from the May 23 chapter SSR work.
+Extend the same logic to the root location in
+`/etc/nginx/conf.d/ask.collectedworks.conf`:
+
+```nginx
+# inside server { } — alongside the existing /read/ split
+location = / {
+    if ($is_bot) {
+        proxy_pass http://127.0.0.1:5000;
+        break;
+    }
+    try_files /index.html =404;   # humans → React SPA
+}
+```
+
+Verify before reload:
+```bash
+ssh -i "$PEM" "$EC2" 'sudo nginx -t'
+```
+
+Smoke test from local (simulate Googlebot vs a browser):
+```bash
+# Should return Flask HTML with <h2>Agenda</h2>, <h2>CWSA</h2>, etc.
+curl -s -A "Googlebot" https://ask.collectedworksofsriaurobindo.com/ \
+  | grep -oE '<h2>[^<]+</h2>' | head
+
+# Should return the React shell (look for "main.<hash>.css")
+curl -s -A "Mozilla/5.0" https://ask.collectedworksofsriaurobindo.com/ \
+  | grep -oE 'main\.[a-f0-9]+\.css' | head -1
+```
+
+## 2.5b. nginx — add `Google-InspectionTool` to `$is_bot` map
+
+The `$is_bot` regex map lives in `/etc/nginx/conf.d/00-bot-ua.conf` (not the
+site server-block file). It originally keyed on `googlebot|bingbot|...` so
+the real crawlers got SSR but Search Console's **Test Live URL** feature
+(which uses UA `Google-InspectionTool/1.0`) fell through to the SPA. That
+made it impossible to verify SSR from the URL Inspection UI — every live
+test showed the React shell, even though the regular Googlebot fetch was
+getting Flask HTML correctly.
+
+Add `google-inspectiontool` to the first alternation group:
+
+```nginx
+map $http_user_agent $is_bot {
+    default 0;
+    ~*(googlebot|google-inspectiontool|bingbot|slurp|duckduckbot|...)   1;
+    ~*(facebookbot|facebookexternalhit|twitterbot|...)                  1;
+}
+```
+
+Note: must be its own alternation token (the `-` breaks word boundaries, so
+the existing `googlebot` pattern does **not** match `google-inspectiontool`).
+
+Verify:
+```bash
+curl -s -A "Mozilla/5.0 (Linux) Google-InspectionTool/1.0" \
+  https://ask.collectedworksofsriaurobindo.com/ \
+  | grep -oE '<h2>[^<]+</h2>' | head
+```
+
+Should print the four book group headings, same as the Googlebot smoke test
+in §2.5.
+
 ## 3. Data assets — `chapters.db` and `out_chapters/`
 
 Both are `.gitignore`d and ship out-of-band. Any schema change to
@@ -411,6 +483,200 @@ auto-recreates on the next search request.
 `query_log write failed:` in app logs, check the file's permissions — it
 needs to be writable by the gunicorn user.
 
+## 8. Savitri Study — separate static site on the same EC2
+
+A second, fully static site lives at [savitri-wiki/](../savitri-wiki/) (36
+hand-authored HTML files, no build step). It is deployed on the **same
+EC2 instance** as ask.collectedworks but served from its own nginx server
+block at a different hostname so the two sites stay independent.
+
+**Hostnames (decided 2026-05-25):**
+
+| Hostname | DNS | Behavior |
+| --- | --- | --- |
+| `savitri.thesunlitpath.in` | A → 44.245.34.75 | Canonical. Serves `savitri-wiki/` statically. |
+| `savitri.collectedworksofsriaurobindo.com` | A → 44.245.34.75 | 301 → `https://savitri.thesunlitpath.in$request_uri` |
+| `ask.collectedworksofsriaurobindo.com` | unchanged | Existing app. **No** "Savitri Study" link in nav (env var unset in `.env.production`). |
+
+Why redirect instead of dual-serving: one canonical URL avoids duplicate-
+content SEO penalties, and there's only one tree of HTML to keep in sync.
+TLS for the redirect host still needs its own cert (so users hitting
+`https://savitri.collectedworks...` get a clean 301 instead of a cert
+error), which is why it gets an A record rather than a bare CNAME.
+
+### 8.1. DNS (do this first, at the registrar)
+
+Both records point to the EC2 elastic IP:
+
+```
+savitri.thesunlitpath.in.                  A   44.245.34.75
+savitri.collectedworksofsriaurobindo.com.  A   44.245.34.75
+```
+
+Wait until both resolve before requesting certs:
+
+```bash
+dig +short savitri.thesunlitpath.in
+dig +short savitri.collectedworksofsriaurobindo.com
+# both should return 44.245.34.75
+```
+
+### 8.2. Push the static content
+
+```bash
+# from repo root, local machine
+rsync -avz --delete "${RSYNC_SSH[@]}" \
+  /Users/vbamba/Projects/collectedworks21/savitri-wiki/ \
+  "$EC2:/home/ec2-user/savitri-wiki/"
+
+# move into nginx-owned location
+ssh -i "$PEM" "$EC2" '
+  sudo mkdir -p /usr/share/nginx/savitri-wiki
+  sudo rsync -a --delete /home/ec2-user/savitri-wiki/ /usr/share/nginx/savitri-wiki/
+  sudo chown -R nginx:nginx /usr/share/nginx/savitri-wiki
+  sudo find /usr/share/nginx/savitri-wiki -type d -exec chmod 755 {} \;
+  sudo find /usr/share/nginx/savitri-wiki -type f -exec chmod 644 {} \;
+'
+```
+
+> Absolute source path — see [[feedback_rsync_absolute_path]]; never use
+> `./` from a subdirectory with `--delete`.
+
+### 8.3. nginx server blocks
+
+Create `/etc/nginx/conf.d/savitri.conf` on EC2:
+
+```nginx
+# Canonical: savitri.thesunlitpath.in — static site
+server {
+    listen 80;
+    listen [::]:80;
+    server_name savitri.thesunlitpath.in;
+    # certbot will rewrite this block to add 443 + redirect 80→443.
+    root /usr/share/nginx/savitri-wiki;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ $uri.html =404;
+    }
+
+    # long cache for assets; HTML stays uncached so edits propagate fast
+    location ~* \.(css|js|png|jpg|jpeg|svg|woff2?)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# Legacy hostname: 301 to canonical
+server {
+    listen 80;
+    listen [::]:80;
+    server_name savitri.collectedworksofsriaurobindo.com;
+    return 301 https://savitri.thesunlitpath.in$request_uri;
+}
+```
+
+Validate and reload:
+
+```bash
+ssh -i "$PEM" "$EC2" 'sudo nginx -t && sudo systemctl reload nginx'
+```
+
+### 8.4. TLS certs (Let's Encrypt)
+
+certbot requires every `-d` name to resolve to this EC2 instance at
+issue-time (HTTP-01 challenge). If both A records are live, one run
+covers them both:
+
+```bash
+ssh -i "$PEM" "$EC2" '
+  sudo certbot --nginx \
+    -d savitri.thesunlitpath.in \
+    -d savitri.collectedworksofsriaurobindo.com \
+    --redirect --non-interactive --agree-tos -m vishalbamba@gmail.com
+'
+```
+
+**Staged variant (used 2026-05-25):** thesunlitpath DNS was live but the
+collectedworks DNS hadn't propagated yet. We issued the canonical name
+alone:
+
+```bash
+ssh -i "$PEM" "$EC2" '
+  sudo certbot --nginx -d savitri.thesunlitpath.in \
+    --redirect --non-interactive --agree-tos -m vishalbamba@gmail.com
+'
+```
+
+Then once `dig +short savitri.collectedworksofsriaurobindo.com` returns
+`44.245.34.75`, expand the existing cert to cover the redirect host:
+
+```bash
+ssh -i "$PEM" "$EC2" '
+  sudo certbot --nginx --expand \
+    -d savitri.thesunlitpath.in \
+    -d savitri.collectedworksofsriaurobindo.com \
+    --redirect --non-interactive --agree-tos -m vishalbamba@gmail.com
+'
+```
+
+`--expand` keeps the same cert lineage (so the existing renewal hook
+keeps working) and just adds the new SAN. certbot edits `savitri.conf`
+in place to add the `listen 443 ssl` blocks and the 80→443 redirect.
+Re-run `nginx -t && systemctl reload nginx` if certbot didn't reload
+automatically.
+
+Auto-renew is already wired via the system `certbot.timer` (shared with
+the ask. cert). Verify:
+
+```bash
+ssh -i "$PEM" "$EC2" 'sudo systemctl list-timers | grep certbot'
+```
+
+### 8.5. Smoke tests
+
+```bash
+# canonical: 200 + HTML
+curl -sI https://savitri.thesunlitpath.in/ | head -1
+curl -s  https://savitri.thesunlitpath.in/ | grep -i '<title>'
+
+# redirect: 301 to canonical
+curl -sI https://savitri.collectedworksofsriaurobindo.com/the-symbol-dawn.html \
+  | grep -iE '^(HTTP|location)'
+# expect: HTTP/2 301  +  location: https://savitri.thesunlitpath.in/the-symbol-dawn.html
+
+# ask. host: confirm "Savitri Study" link is GONE
+curl -s https://ask.collectedworksofsriaurobindo.com/ | grep -i 'savitri study' || echo 'OK: no link'
+```
+
+### 8.6. Hiding the NavBar link on ask.
+
+Already done in [frontend/.env.production](../frontend/.env.production):
+`REACT_APP_SAVITRI_WIKI_URL` is commented out. The guard at
+[NavBar.jsx:94](../frontend/src/components/NavBar.jsx#L94)
+(`{process.env.REACT_APP_SAVITRI_WIKI_URL && (...)}`) drops the `<li>`
+when the var is unset. Rebuild the frontend (§ 0) and redeploy (§ 2) for
+the change to land.
+
+To re-expose the link later, uncomment that line — point it at
+`https://savitri.thesunlitpath.in/` (the canonical URL), not the
+collectedworks subdomain, to avoid making users follow the 301.
+
+### 8.7. Updating wiki content
+
+The wiki has no build step; edit HTML in [savitri-wiki/](../savitri-wiki/)
+locally, then run:
+
+```bash
+./scripts/deploy_savitri.sh
+```
+
+The script ([scripts/deploy_savitri.sh](../scripts/deploy_savitri.sh)) wraps
+§ 8.2 — rsync to EC2, sync into `/usr/share/nginx/savitri-wiki/`, fix perms,
+and curl-check the canonical URL. Nothing else to restart — nginx serves
+files directly off disk, and HTML responses aren't cached so edits show up
+on the next request.
+
 ## Reference — file map
 
 | Concern | File |
@@ -427,3 +693,5 @@ needs to be writable by the gunicorn user.
 | Search result card | [frontend/src/components/TextResultCard.jsx](../frontend/src/components/TextResultCard.jsx) |
 | Prod build vars | [frontend/.env.production](../frontend/.env.production) |
 | nginx config (on EC2) | `/etc/nginx/conf.d/ask.collectedworks.conf` |
+| Savitri Study static site | [savitri-wiki/](../savitri-wiki/) |
+| Savitri Study nginx (on EC2) | `/etc/nginx/conf.d/savitri.conf` |

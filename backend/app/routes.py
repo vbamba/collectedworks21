@@ -572,6 +572,61 @@ def _split_block_on_dates(lines: List[str]) -> List[Tuple[str, List[str]]]:
         out.append(('lines', buf))
     return out
 
+# CHANGED (2026-05-25): detect subsection headings — short title-case lines like
+# "The Teaching of the Gita" / "Apparent Contradictions in the Gita" that the
+# source .txt files emit on their own line with only a single newline before
+# the following paragraph. Without this, raw_blocks (split on blank lines)
+# keeps heading+paragraph in one block, and reflow then joins them mid-sentence
+# because the heading has no terminal punctuation. Same shape as
+# _split_block_on_dates so the renderer treats them as siblings.
+_subheading_tag_rx = re.compile(r'</?[a-z][^>]*>')
+
+def _looks_like_subheading(line: str, next_line: str) -> bool:
+    s = _subheading_tag_rx.sub('', line).strip()
+    nxt = _subheading_tag_rx.sub('', next_line).strip()
+    if not s or not nxt:
+        return False
+    if len(s) > 70:
+        return False
+    # Headings are noun phrases — no terminal sentence punctuation, and no
+    # internal `;` or `:` (those mark prose continuations). Commas are OK
+    # ("The Gita, the Divine Mother and the Purushottama").
+    if s[-1] in '.?!,:;':
+        return False
+    if ';' in s or ':' in s:
+        return False
+    if not s[0].isupper():
+        return False
+    # Next line must start a new sentence — guards against false positives on
+    # wrapped prose lines where the wrap point happens to leave a fragment.
+    if not nxt[0].isupper():
+        return False
+    words = [w for w in re.split(r'\s+', s) if w]
+    if len(words) < 2 or len(words) > 12:
+        return False
+    cap = sum(1 for w in words if w[0].isupper())
+    return cap >= max(2, len(words) // 2)
+
+def _split_block_on_subheadings(lines: List[str]) -> List[Tuple[str, List[str]]]:
+    """
+    Split a block's lines so that a subsection heading at the top of the block
+    is emitted as its own ('subheading', [text]) tuple, with the remainder as
+    ('lines', [...]). Only checks the first non-blank line per block: real
+    subheadings always appear at block boundaries in this corpus, and limiting
+    the scan avoids matching prose fragments mid-paragraph.
+    """
+    # Find first non-blank line
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i >= len(lines) - 1:
+        return [('lines', lines)]
+    if _looks_like_subheading(lines[i], lines[i + 1]):
+        heading = lines[i].strip()
+        rest = lines[i + 1:]
+        return [('subheading', [heading]), ('lines', rest)]
+    return [('lines', lines)]
+
 def _matches_any(patterns: List[re.Pattern], text: str) -> bool:
     t = text or ""
     for pat in patterns:
@@ -768,32 +823,41 @@ def _render_chapter_template(collection: str, book: str, section: str):
                 blocks.append({'type': 'date_heading', 'text': sub_lines[0]})
                 continue
 
-            lines = sub_lines
-
-            if do_reflow:
-                reflowed = _reflow_lines_for_prose(lines, width=90)
-                if not reflowed:
+            # CHANGED (2026-05-25): also split out subsection headings (see
+            # _split_block_on_subheadings). Runs after date-splitting so an
+            # Agenda block that contains both a date and a subheading still
+            # routes each to its own block type.
+            for kind2, sub_lines2 in _split_block_on_subheadings(sub_lines):
+                if kind2 == 'subheading':
+                    blocks.append({'type': 'subheading', 'text': sub_lines2[0]})
                     continue
-                if all(line.strip() == '*' for line in reflowed if line.strip()):
-                    blocks.append({'type': 'hr'})
+
+                lines = sub_lines2
+
+                if do_reflow:
+                    reflowed = _reflow_lines_for_prose(lines, width=90)
+                    if not reflowed:
+                        continue
+                    if all(line.strip() == '*' for line in reflowed if line.strip()):
+                        blocks.append({'type': 'hr'})
+                    else:
+                        para: List[str] = []
+                        for line in reflowed + [""]:
+                            if not line.strip():
+                                if para:
+                                    blocks.append({'type': 'lines', 'lines': para})
+                                    para = []
+                            else:
+                                para.append(line)
                 else:
-                    para: List[str] = []
-                    for line in reflowed + [""]:
-                        if not line.strip():
-                            if para:
-                                blocks.append({'type': 'lines', 'lines': para})
-                                para = []
-                        else:
-                            para.append(line)
-            else:
-                if all(line.strip() == '*' for line in lines):
-                    blocks.append({'type': 'hr'})
-                else:
-                    wrapped = []
-                    for line in lines:
-                        nline = unicodedata.normalize('NFKC', line)  # normalize for highlight robustness
-                        wrapped.extend(textwrap.wrap(nline, width=120) or [''])
-                    blocks.append({'type': 'lines', 'lines': wrapped})
+                    if all(line.strip() == '*' for line in lines):
+                        blocks.append({'type': 'hr'})
+                    else:
+                        wrapped = []
+                        for line in lines:
+                            nline = unicodedata.normalize('NFKC', line)  # normalize for highlight robustness
+                            wrapped.extend(textwrap.wrap(nline, width=120) or [''])
+                        blocks.append({'type': 'lines', 'lines': wrapped})
 
     # Heading from first non-hr block
     chap_heading = ""
@@ -1080,31 +1144,41 @@ def get_chapter():
                 blocks.append({'type': 'date_heading', 'text': sub_lines[0]})
                 continue
 
-            lines = sub_lines
-            if do_reflow:
-                reflowed = _reflow_lines_for_prose(lines, width=90)
-                if not reflowed:
+            # CHANGED (2026-05-25): split out subsection headings here too so
+            # the SPA's /api/chapter response carries 'subheading' blocks.
+            # Without this, ChapterPage.jsx receives the heading glued to the
+            # next paragraph and renders e.g. "The Teaching of the GitaThis
+            # world is as the Gita describes it…".
+            for kind2, sub_lines2 in _split_block_on_subheadings(sub_lines):
+                if kind2 == 'subheading':
+                    blocks.append({'type': 'subheading', 'text': sub_lines2[0]})
                     continue
-                if all(line.strip() == '*' for line in reflowed if line.strip()):
-                    blocks.append({'type':'hr'})
+
+                lines = sub_lines2
+                if do_reflow:
+                    reflowed = _reflow_lines_for_prose(lines, width=90)
+                    if not reflowed:
+                        continue
+                    if all(line.strip() == '*' for line in reflowed if line.strip()):
+                        blocks.append({'type':'hr'})
+                    else:
+                        para: List[str] = []
+                        for line in reflowed + [""]:
+                            if not line.strip():
+                                if para:
+                                    blocks.append({'type':'lines','lines':para})
+                                    para=[]
+                            else:
+                                para.append(line)
                 else:
-                    para: List[str] = []
-                    for line in reflowed + [""]:
-                        if not line.strip():
-                            if para:
-                                blocks.append({'type':'lines','lines':para})
-                                para=[]
-                        else:
-                            para.append(line)
-            else:
-                if all(line.strip() == '*' for line in lines):
-                    blocks.append({'type':'hr'})
-                else:
-                    wrapped = []
-                    for line in lines:
-                        nline = unicodedata.normalize('NFKC', line)
-                        wrapped.extend(textwrap.wrap(nline, width=100) or [''])
-                    blocks.append({'type':'lines','lines':wrapped})
+                    if all(line.strip() == '*' for line in lines):
+                        blocks.append({'type':'hr'})
+                    else:
+                        wrapped = []
+                        for line in lines:
+                            nline = unicodedata.normalize('NFKC', line)
+                            wrapped.extend(textwrap.wrap(nline, width=100) or [''])
+                        blocks.append({'type':'lines','lines':wrapped})
 
     # nav + title
     # CHANGED (b.5): pull parent_toc_title alongside section_filename so we can
@@ -1430,6 +1504,80 @@ def list_books():
     _BOOKS_CACHE['mtime'] = mtime
     _BOOKS_CACHE['data'] = books
     return jsonify(books), 200
+
+
+# ──────────────────────────────────────────────────────────────────────
+# SEO: bot-rendered homepage (/)
+# ──────────────────────────────────────────────────────────────────────
+# CHANGED (2026-05-25): Flask-rendered homepage for crawlers. nginx routes
+# / to this when $is_bot matches (see DEPLOY.md §2.5); humans still hit the
+# React SPA. Solves the "Referring page: None detected" problem in Search
+# Console — without an HTML hub, Googlebot saw the JS-only Books modal
+# as a dead-end and could only discover chapter URLs via sitemap.xml.
+# Mirrors the data-shape of /api/books (same CTE) but groups by group_name
+# for a TOC-style page rather than a flat JSON array.
+
+@main.route('/', methods=['GET'])
+def home_page():
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        rows = conn.execute("""
+            WITH first_content AS (
+              SELECT book_folder,
+                     MIN(CAST(chapter AS INTEGER)) AS first_chapter
+                FROM chapters
+               WHERE COALESCE(non_content, 0) = 0
+                 AND COALESCE(slug, '') <> ''
+                 AND COALESCE(book_slug, '') <> ''
+               GROUP BY book_folder
+            )
+            SELECT c.collection_folder,
+                   c.book_title,
+                   c.book_slug,
+                   c.author,
+                   c.group_name,
+                   c.slug AS first_slug
+              FROM chapters c
+              JOIN first_content fc
+                ON fc.book_folder = c.book_folder
+               AND CAST(c.chapter AS INTEGER) = fc.first_chapter
+             WHERE COALESCE(c.book_slug, '') <> ''
+               AND COALESCE(c.slug, '') <> ''
+             ORDER BY c.group_name COLLATE NOCASE, c.book_title COLLATE NOCASE
+        """).fetchall()
+    finally:
+        conn.close()
+
+    # CHANGED: group by group_name, dedupe by (collection, book_slug) since
+    # multiple sections in a book can tie on MIN(chapter) — same defensive
+    # check /api/books does at line ~1389.
+    groups: List[Tuple[str, List[Dict]]] = []
+    current_group = None
+    current_books: List[Dict] = []
+    seen = set()
+    for coll, title, book_slug, author, group, first_slug in rows:
+        if not (coll and title and book_slug and first_slug):
+            continue
+        key = (coll, book_slug)
+        if key in seen:
+            continue
+        seen.add(key)
+        if group != current_group:
+            if current_group is not None:
+                groups.append((current_group, current_books))
+            current_group = group
+            current_books = []
+        current_books.append({
+            'collection': coll,
+            'title': title,
+            'book_slug': book_slug,
+            'author': author or '',
+            'first_slug': first_slug,
+        })
+    if current_group is not None:
+        groups.append((current_group, current_books))
+
+    return render_template('home.html', groups=groups)
 
 
 # ──────────────────────────────────────────────────────────────────────

@@ -189,6 +189,15 @@ const ChapterPage = () => {
       if (blk.type === 'date_heading') {
         return `<h3 class="date-heading">${DOMPurify.sanitize(blk.text || '')}</h3>`;
       }
+      // CHANGED (2026-05-25): render subsection headings (e.g. "The Teaching
+      // of the Gita" in Letters on Yoga II ch. 5) as h3. Source .txt files
+      // separate these from the following paragraph by only a single newline,
+      // so without this block type reflow merges them into the paragraph and
+      // produces "The Teaching of the GitaThis world is as the Gita describes
+      // it…". Backend splits them out in _split_block_on_subheadings.
+      if (blk.type === 'subheading') {
+        return `<h3 class="subheading">${DOMPurify.sanitize(blk.text || '')}</h3>`;
+      }
       const groups = [];
       let buf = [];
       const flush = () => { if (buf.length) { groups.push(buf); buf = []; } };
@@ -401,6 +410,11 @@ const ChapterPage = () => {
            backend extracts from prose so the reader can see when a section
            crosses a date boundary. Bold + spaced to feel like a sub-heading. */
         .chapter-content h3.date-heading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
+        /* CHANGED (2026-05-25): subsection headings (e.g. "The Teaching of
+           the Gita") share the date-heading visual weight — same role on the
+           page (named divider inside a chapter), so the reader's eye treats
+           them the same way. */
+        .chapter-content h3.subheading { font-size: 1.15rem; font-weight: 700; margin: 1.75rem 0 0.75rem; }
         /* CHANGED (2026-04-20): verse blocks keep server-side line breaks
            (<br/>-joined). Left-align and drop hyphenation — justified verse
            with hyphens mangles the meter. */
