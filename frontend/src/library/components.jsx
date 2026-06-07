@@ -4,6 +4,7 @@
    ============================================================ */
 import React from 'react';
 import { DATA } from './data.js';
+import { authorCode, useBooks, deriveCollections, collectionFullName } from './useBooks.js';
 
 /* ---- Icons (simple line geometry) ------------------------- */
 export function Icon({ name, size = 22, stroke = 1.7, style }) {
@@ -135,9 +136,10 @@ export function BottomNav({ route, go }) {
 
 /* ---- Slide-in menu (full nav) ----------------------------- */
 export function MenuDrawer({ open, onClose, go }) {
-  const sa = DATA.COLLECTIONS.filter((c) => c.author === "sa");
-  const m = DATA.COLLECTIONS.filter((c) => c.author === "m");
-  const d = DATA.COLLECTIONS.filter((c) => c.author === "d");
+  const collections = deriveCollections(useBooks());
+  const sa = collections.filter((c) => c.author === "sa");
+  const m = collections.filter((c) => c.author === "m");
+  const d = collections.filter((c) => c.author === "d");
   return (
     <div className={"drawer-scrim" + (open ? " open" : "")} onClick={onClose}>
       <aside className={"drawer" + (open ? " open" : "")} onClick={(e) => e.stopPropagation()}>
@@ -150,24 +152,24 @@ export function MenuDrawer({ open, onClose, go }) {
           <div className="drawer-group">
             <div className="drawer-group-title"><Sigil author="sa" size={20} /> Sri Aurobindo</div>
             {sa.map((c) => (
-              <button key={c.id} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.id }); onClose(); }}>
-                {c.title} <em>{c.abbr}</em>
+              <button key={c.name} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.name }); onClose(); }}>
+                {collectionFullName(c.name)} <em>{c.name}</em>
               </button>
             ))}
           </div>
           <div className="drawer-group">
             <div className="drawer-group-title"><Sigil author="m" size={20} /> The Mother</div>
             {m.map((c) => (
-              <button key={c.id} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.id }); onClose(); }}>
-                {c.title} <em>{c.abbr}</em>
+              <button key={c.name} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.name }); onClose(); }}>
+                {collectionFullName(c.name)} <em>{c.name}</em>
               </button>
             ))}
           </div>
           <div className="drawer-group">
             <div className="drawer-group-title"><Sigil author="d" size={20} /> The Disciples</div>
             {d.map((c) => (
-              <button key={c.id} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.id }); onClose(); }}>
-                {c.title} <em>{c.abbr}</em>
+              <button key={c.name} className="drawer-sublink" onClick={() => { go({ name: "browse", collection: c.name }); onClose(); }}>
+                {collectionFullName(c.name)} <em>{c.name}</em>
               </button>
             ))}
           </div>
@@ -209,6 +211,37 @@ export function VolumeCard({ v, go, variant = "card" }) {
       </span>
       <span className="vc-title">{v.title}</span>
       <span className="vc-meta">{c.abbr}{v.part ? " · " + v.part : ""}</span>
+    </button>
+  );
+}
+
+/* ---- Real-book row / card (Phase 3d, from /api/books) ----- */
+// b: { collection, book_folder, title, book_slug, author, group_name, first_slug, pdf_url }
+export function BookRow({ b, go }) {
+  const ac = authorCode(b.author);
+  const showAuthor = b.author && !/various/i.test(b.author);
+  return (
+    <button className="vol-row" onClick={() => go({ name: "volume", book: b })}>
+      <span className="vr-spine" data-author={ac}><Sigil author={ac} size={18} /></span>
+      <span className="vr-body">
+        <span className="vr-title">{b.title}</span>
+        <span className="vr-meta">{b.group_name}{showAuthor ? " · " + b.author : ""}</span>
+      </span>
+      <Icon name="chevronRight" size={18} style={{ color: "var(--ink-faint)", flex: "0 0 auto" }} />
+    </button>
+  );
+}
+
+export function BookCard({ b, go }) {
+  const ac = authorCode(b.author);
+  return (
+    <button className="vol-card" onClick={() => go({ name: "volume", book: b })}>
+      <span className="vc-cover" data-author={ac}>
+        <span className="vc-cover-title">{b.title}</span>
+        <span className="vc-cover-sig"><Sigil author={ac} size={26} /></span>
+      </span>
+      <span className="vc-title">{b.title}</span>
+      <span className="vc-meta">{b.group_name}</span>
     </button>
   );
 }

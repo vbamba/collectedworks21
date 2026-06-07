@@ -5,14 +5,24 @@
    ============================================================ */
 import React from 'react';
 import { DATA } from './data.js';
-import { Sigil, Icon, SectionHead, VolumeCard } from './components.jsx';
+import { Sigil, Icon, SectionHead, BookCard } from './components.jsx';
+// CHANGED (Phase 3d): featured + collections come from the real book list.
+import { useBooks, deriveCollections, collectionFullName } from './useBooks.js';
 
 function todaysThought() {
   return DATA.THOUGHTS[new Date().getDate() % DATA.THOUGHTS.length];
 }
 
+const FEATURED_KEYWORDS = ['life divine', 'synthesis of yoga', 'savitri', 'letters on yoga', 'essays on the gita', 'prayers and meditations'];
+
 export function HomeScreen({ go }) {
   const t = todaysThought();
+  const books = useBooks();
+  const collections = deriveCollections(books);
+  let featured = FEATURED_KEYWORDS
+    .map((kw) => books.find((b) => b.title.toLowerCase().includes(kw)))
+    .filter(Boolean);
+  if (featured.length === 0) featured = books.slice(0, 6);
   return (
     <div className="screen home-screen">
       <div className="home home-serene">
@@ -35,18 +45,18 @@ export function HomeScreen({ go }) {
         <section className="block">
           <SectionHead eyebrow="Begin here" title="Featured" action="All volumes" onAction={() => go({ name: "browse" })} />
           <div className="hscroll">
-            {DATA.featured.map((v) => <VolumeCard key={v.id} v={v} go={go} />)}
+            {featured.map((b) => <BookCard key={`${b.collection}/${b.book_slug}`} b={b} go={go} />)}
           </div>
         </section>
 
         <section className="block">
           <SectionHead eyebrow="Collections" title="Browse editions" />
           <div className="coll-grid-2">
-            {DATA.COLLECTIONS.map((c) => (
-              <button key={c.id} className="coll-mini" data-author={c.author} onClick={() => go({ name: "browse", collection: c.id })}>
+            {collections.map((c) => (
+              <button key={c.name} className="coll-mini" data-author={c.author} onClick={() => go({ name: "browse", collection: c.name })}>
                 <Sigil author={c.author} size={24} />
-                <span className="cm-abbr">{c.abbr}</span>
-                <span className="cm-name">{c.title}</span>
+                <span className="cm-abbr">{c.name}</span>
+                <span className="cm-name">{collectionFullName(c.name)}</span>
                 <span className="cm-count">{c.count} volumes</span>
               </button>
             ))}

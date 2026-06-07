@@ -10,29 +10,34 @@ import React, { useState, useEffect, useRef } from 'react';
 // DOMPurify sanitises backend snippet HTML; api.js provides filters + search.
 import DOMPurify from 'dompurify';
 import { DATA } from './data.js';
-import { Icon, Sigil, SectionHead, VolumeCard } from './components.jsx';
+import { Icon, Sigil, SectionHead, BookRow } from './components.jsx';
 import { fetchFilters, performTextSearch } from '../services/api';
+// CHANGED (Phase 3d): Browse/Volume use the real book list (/api/books) and
+// per-book TOC (/api/book_toc) instead of stub data.
+import { useBooks, deriveCollections, collectionFullName, authorCode } from './useBooks.js';
 
 /* ---------- BROWSE ----------------------------------------- */
 export function BrowseScreen({ route, go }) {
+  const books = useBooks();
   const [author, setAuthor] = useState(route.author || "all");
-  const activeCollection = route.collection;
+  const activeCollection = route.collection; // a backend group_name (CWSA/CWM/…)
 
   if (route.view === "savitri") return <SavitriScreen go={go} />;
 
-  let vols = DATA.VOLUMES;
-  if (activeCollection) vols = vols.filter((v) => v.collection === activeCollection);
-  else if (author !== "all") vols = vols.filter((v) => v.author === author);
+  const collections = deriveCollections(books);
+  let vols = books;
+  if (activeCollection) vols = vols.filter((b) => b.group_name === activeCollection);
+  else if (author !== "all") vols = vols.filter((b) => authorCode(b.author) === author);
 
-  const col = activeCollection ? DATA.collectionById(activeCollection) : null;
+  const col = activeCollection ? collections.find((c) => c.name === activeCollection) : null;
 
   return (
     <div className="screen">
       <div className="page-hero">
-        <div className="eyebrow">{col ? col.abbr : "The Library"}</div>
-        <h1 className="page-title">{col ? col.title : "Complete Works"}</h1>
+        <div className="eyebrow">{col ? col.name : "The Library"}</div>
+        <h1 className="page-title">{col ? collectionFullName(col.name) : "Complete Works"}</h1>
         <p className="page-lede">
-          {col ? col.blurb : "Every volume of Sri Aurobindo and the Mother, freely readable. Browse by collection, author, or subject."}
+          {col ? `${col.count} volumes in this edition.` : "Every volume of Sri Aurobindo and the Mother, freely readable. Browse by collection, author, or subject."}
         </p>
       </div>
 
@@ -47,15 +52,14 @@ export function BrowseScreen({ route, go }) {
           <div className="block">
             <SectionHead eyebrow="Collections" title="Editions" />
             <div className="coll-list">
-              {DATA.COLLECTIONS.filter((c) => author === "all" || c.author === author).map((c) => (
-                <button key={c.id} className="coll-card" data-author={c.author} onClick={() => go({ name: "browse", collection: c.id })}>
+              {collections.map((c) => (
+                <button key={c.name} className="coll-card" data-author={c.author} onClick={() => go({ name: "browse", collection: c.name })}>
                   <div className="coll-top">
                     <Sigil author={c.author} size={30} />
                     <span className="coll-count">{c.count} vols</span>
                   </div>
-                  <div className="coll-abbr">{c.abbr}</div>
-                  <div className="coll-name">{c.title}</div>
-                  <div className="coll-blurb">{c.blurb}</div>
+                  <div className="coll-abbr">{c.name}</div>
+                  <div className="coll-name">{collectionFullName(c.name)}</div>
                 </button>
               ))}
             </div>
@@ -73,9 +77,9 @@ export function BrowseScreen({ route, go }) {
       )}
 
       <div className="block">
-        <SectionHead eyebrow={col ? "In this edition" : "All volumes"} title={col ? `${vols.length} volumes` : "Volumes"} />
+        <SectionHead eyebrow={col ? "In this edition" : "All volumes"} title={`${vols.length} volumes`} />
         <div className="vol-list">
-          {vols.map((v) => <VolumeCard key={v.id} v={v} go={go} variant="row" />)}
+          {vols.map((b) => <BookRow key={`${b.collection}/${b.book_slug}`} b={b} go={go} />)}
         </div>
       </div>
     </div>
@@ -118,59 +122,69 @@ export function SavitriScreen({ go }) {
 
 /* ---------- VOLUME DETAIL ---------------------------------- */
 export function VolumeScreen({ route, go }) {
-  const v = DATA.volumeById(route.id);
-  if (!v) return <div className="screen"><p style={{ padding: 24 }}>Not found.</p></div>;
-  const c = DATA.collectionById(v.collection);
-  const chapters = v.sample === "savitri"
-    ? ["Book One — The Book of Beginnings", "Book Two — The Book of the Traveller of the Worlds", "Book Three — The Book of the Divine Mother", "Book Four — The Book of Birth and Quest", "Book Five — The Book of Love", "Book Six — The Book of Fate"]
-    : v.sample === "prayers"
-    ? ["1912", "1913", "1914", "1916", "1917", "1920"]
-    : ["The Human Aspiration", "The Two Negations — The Materialist Denial", "The Two Negations — The Refusal of the Ascetic", "Reality Omnipresent", "The Destiny of the Individual", "Man in the Universe"];
+  const book = route.book;
+  const [toc, setToc] = useState(null);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    if (!book) return;
+    let alive = true;
+    setToc(null); setErr("");
+    fetch(`/api/book_toc?collection_folder=${encodeURIComponent(book.collection)}&book_slug=${encodeURIComponent(book.book_slug)}`)
+      .then((r) => { if (!r.ok) throw new Error("toc"); return r.json(); })
+      .then((d) => { if (alive) setToc(d); })
+      .catch(() => { if (alive) setErr("Couldn’t load the contents."); });
+    return () => { alive = false; };
+  }, [book?.collection, book?.book_slug]);
+
+  if (!book) return <div className="screen"><p style={{ padding: 24 }}>No book selected.</p></div>;
+
+  const ac = authorCode(book.author);
+  const showAuthor = book.author && !/various/i.test(book.author);
+  const openReader = (slug) => go({ name: "reader", chapter: { slugMode: true, collection: book.collection, bookSlug: book.book_slug, slug } });
+  const firstSlug = book.first_slug || toc?.chapters?.[0]?.slug;
 
   return (
     <div className="screen">
-      <button className="back-link" onClick={() => go({ name: "browse", collection: v.collection })}><Icon name="arrowLeft" size={18} /> {c.abbr}</button>
+      <button className="back-link" onClick={() => go({ name: "browse", collection: book.group_name })}><Icon name="arrowLeft" size={18} /> {book.group_name}</button>
 
       <div className="vol-detail-head">
-        <div className="vd-cover" data-author={v.author}>
-          <span className="vd-cover-num">{String(v.num).padStart(2, "0")}</span>
-          <span className="vd-cover-title">{v.title}</span>
-          <span className="vd-cover-author">{v.author === "m" ? "The Mother" : "Sri Aurobindo"}</span>
-          <span className="vd-cover-sig"><Sigil author={v.author} size={30} /></span>
+        <div className="vd-cover" data-author={ac}>
+          <span className="vd-cover-title">{book.title}</span>
+          {showAuthor && <span className="vd-cover-author">{book.author}</span>}
+          <span className="vd-cover-sig"><Sigil author={ac} size={30} /></span>
         </div>
         <div className="vd-info">
-          <div className="eyebrow">{c.title}</div>
-          <h1 className="vd-title">{v.title}</h1>
-          {v.part && <div className="vd-part">{v.part}</div>}
+          <div className="eyebrow">{collectionFullName(book.group_name)}</div>
+          <h1 className="vd-title">{book.title}</h1>
           <div className="vd-stats">
-            <span><Icon name="book" size={15} /> {v.pages} pages</span>
-            <span><Icon name="clock" size={15} /> {v.year}</span>
-            <span>Vol. {v.num}</span>
+            <span><Icon name="book" size={15} /> {toc ? `${toc.chapters.length} chapters` : "…"}</span>
           </div>
         </div>
       </div>
 
       <div className="hero-actions sticky-actions">
-        <button className="btn-primary" onClick={() => go({ name: "reader", id: v.id })}><Icon name="book" size={18} /> Start Reading</button>
-        <button className="iconbtn-lg" aria-label="Bookmark"><Icon name="bookmark" size={20} /></button>
-        <a className="iconbtn-lg" href={DATA.readUrl(v)} target="_blank" rel="noopener" aria-label="Open on archive"><Icon name="download" size={20} /></a>
-      </div>
-
-      <div className="block">
-        <p className="vd-desc">{v.desc}</p>
+        <button className="btn-primary" disabled={!firstSlug} onClick={() => firstSlug && openReader(firstSlug)}><Icon name="book" size={18} /> Start Reading</button>
+        {book.pdf_url && (
+          <a className="iconbtn-lg" href={`/viewer?file=${encodeURIComponent(book.pdf_url)}&page=1`} target="_blank" rel="noopener" aria-label="Open PDF"><Icon name="download" size={20} /></a>
+        )}
       </div>
 
       <div className="block">
         <SectionHead eyebrow="Contents" title="Table of contents" />
-        <div className="toc-list">
-          {chapters.map((ch, i) => (
-            <button key={i} className="toc-row" onClick={() => go({ name: "reader", id: v.id, chapter: i })}>
-              <span className="toc-num">{String(i + 1).padStart(2, "0")}</span>
-              <span className="toc-title">{ch}</span>
-              <Icon name="chevronRight" size={16} style={{ color: "var(--ink-faint)" }} />
-            </button>
-          ))}
-        </div>
+        {err && <p className="no-results">{err}</p>}
+        {!toc && !err && <p className="search-note" style={{ padding: "12px 0" }}>Loading…</p>}
+        {toc && (
+          <div className="toc-list">
+            {toc.chapters.map((ch, i) => (
+              <button key={`${ch.slug}-${i}`} className="toc-row" onClick={() => openReader(ch.slug)}>
+                <span className="toc-num">{String(i + 1).padStart(2, "0")}</span>
+                <span className="toc-title">{deriveTitle(ch)}</span>
+                <Icon name="chevronRight" size={16} style={{ color: "var(--ink-faint)" }} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -188,13 +202,7 @@ function deriveTitle(r) {
   return t;
 }
 
-// Map an author name to the sigil/colour code the design uses.
-function authorCode(name) {
-  if (!name) return "sa";
-  if (/mother/i.test(name)) return "m";
-  if (/aurobindo/i.test(name)) return "sa";
-  return "d";
-}
+// (authorCode now imported from ./useBooks.js — shared with Browse/Volume.)
 
 // Build the chapter descriptor the Library reader understands (prefer slug mode;
 // search results always carry book_slug/slug, so slug mode is the common path).

@@ -1507,6 +1507,57 @@ def list_books():
 
 
 # ──────────────────────────────────────────────────────────────────────
+# NEW: per-book table of contents for the redesigned Library's volume page.
+# ──────────────────────────────────────────────────────────────────────
+# Returns the ordered content chapters of one book (collection + book_slug),
+# each with its slug so the SPA can deep-link /read/<coll>/<book_slug>/<slug>.
+# Chapter display titles are derived client-side from section_filename (same
+# logic the search-result cards use), so this stays a thin query. Read-only
+# and additive — does not touch any existing endpoint.
+@main.route('/api/book_toc', methods=['GET'])
+def book_toc():
+    collection = request.args.get('collection_folder', '').strip()
+    book_slug  = request.args.get('book_slug', '').strip()
+    if not (collection and book_slug):
+        abort(400, "collection_folder and book_slug are required")
+
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        rows = conn.execute(
+            """
+            SELECT slug, section_filename, COALESCE(parent_toc_title, ''), start_page,
+                   book_title, author, group_name
+              FROM chapters
+             WHERE collection_folder = ?
+               AND book_slug = ?
+               AND COALESCE(non_content, 0) = 0
+               AND COALESCE(slug, '') <> ''
+             ORDER BY CAST(chapter AS INTEGER)
+            """,
+            (collection, book_slug)
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        return jsonify({'error': 'book not found'}), 404
+
+    chapters = [{
+        'slug': r[0],
+        'section_filename': r[1],
+        'parent_toc_title': r[2],
+        'start_page': r[3],
+    } for r in rows]
+
+    return jsonify({
+        'book_title': rows[0][4] or '',
+        'author': rows[0][5] or '',
+        'group_name': rows[0][6] or '',
+        'chapters': chapters,
+    }), 200
+
+
+# ──────────────────────────────────────────────────────────────────────
 # SEO: bot-rendered homepage (/)
 # ──────────────────────────────────────────────────────────────────────
 # CHANGED (2026-05-25): Flask-rendered homepage for crawlers. nginx routes
