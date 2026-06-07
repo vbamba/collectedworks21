@@ -89,12 +89,12 @@ export default function NavBar() {
               </li>
               {/* CHANGED: Savitri wiki link. External href (separate
                   subdomain), opens in a new tab. URL comes from
-                  REACT_APP_SAVITRI_WIKI_URL so dev can point at a local
+                  VITE_SAVITRI_WIKI_URL so dev can point at a local
                   static server while prod points at the subdomain. */}
-              {process.env.REACT_APP_SAVITRI_WIKI_URL && (
+              {import.meta.env.VITE_SAVITRI_WIKI_URL && (
                 <li className="nav-item">
                   <a
-                    href={process.env.REACT_APP_SAVITRI_WIKI_URL}
+                    href={import.meta.env.VITE_SAVITRI_WIKI_URL}
                     className="nav-link"
                     target="_blank"
                     rel="noopener noreferrer"

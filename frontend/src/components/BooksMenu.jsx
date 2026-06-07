@@ -31,7 +31,7 @@ const COLLECTION_ORDER = ['sriaurobindo', 'mother', 'disciples'];
 // does (~line 148) so the PDF opens through the in-app PdfViewer chrome
 // instead of the browser dumping the raw PDF stream. We omit `page` so
 // PdfViewer defaults to page 1 — the picker has no per-section context.
-const APP_VERSION = process.env.REACT_APP_BUILD_VERSION || String(Date.now());
+const APP_VERSION = import.meta.env.VITE_BUILD_VERSION || String(Date.now());
 
 function buildViewerUrl(pdfUrl) {
   if (!pdfUrl) return '';

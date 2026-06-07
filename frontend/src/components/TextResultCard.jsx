@@ -7,14 +7,14 @@ import DOMPurify from 'dompurify';
    NEW: Build version for cache-busting
 ──────────────────────────────────────────────────────────────────────────── */
 const APP_VERSION =
-  process.env.REACT_APP_BUILD_VERSION || String(Date.now());
+  import.meta.env.VITE_BUILD_VERSION || String(Date.now());
 
 /* ────────────────────────────────────────────────────────────────────────────
    NEW: Feature flag to choose chapter destination
    '1' → use server-rendered chapter.html (chapter_url from backend)
    anything else / unset → use SPA route /chapter (ChapterPage.jsx)
 ──────────────────────────────────────────────────────────────────────────── */
-const USE_SERVER_CHAPTER = process.env.REACT_APP_USE_SERVER_CHAPTER === '1';
+const USE_SERVER_CHAPTER = import.meta.env.VITE_USE_SERVER_CHAPTER === '1';
 
 /* ────────────────────────────────────────────────────────────────────────────
    Helper to append ?v=<version>
@@ -173,7 +173,7 @@ const TextResultCard = ({
     } else if (pdf_file) {
       // Legacy fallback
       const BACKEND =
-        process.env.REACT_APP_BACKEND_PDF_URL || window.location.origin;
+        import.meta.env.VITE_BACKEND_PDF_URL || window.location.origin;
       const rawPdfUrl = `${BACKEND}/api/pdfs/${pdf_file}`.replace(/([^:]\/)\/+/g, '$1');
       viewerLink = withVersion(
         `/viewer?file=${encodeURIComponent(rawPdfUrl)}&page=${start_page}`

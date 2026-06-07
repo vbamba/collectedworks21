@@ -4,10 +4,10 @@
 import axios from 'axios';
 
 // CHANGED: Prefer same-origin '/api' unless explicitly overridden (e.g., for local dev)
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
 
 // CHANGED: Build/version for cache-busting; stable across a deploy
-const APP_VERSION = process.env.REACT_APP_BUILD_VERSION || String(Date.now());
+const APP_VERSION = import.meta.env.VITE_BUILD_VERSION || String(Date.now());
 
 // CHANGED: Small helper to append ?v=… (used by fetch-based calls)
 function withVersion(url) {

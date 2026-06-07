@@ -6,12 +6,12 @@ import DOMPurify from 'dompurify';
 import { Link } from 'react-router-dom';
 
 /* ────────────────────────────────────────────────────────────────────────────
-   NEW: Build version used for cache‑busting. Set REACT_APP_BUILD_VERSION at
+   NEW: Build version used for cache‑busting. Set VITE_BUILD_VERSION at
    build/deploy time (e.g., a git SHA or date). Fallback ensures development
    gets a per‑reload value, but in production you should set it explicitly.
 ──────────────────────────────────────────────────────────────────────────── */
 const APP_VERSION =
-  process.env.REACT_APP_BUILD_VERSION || String(Date.now());
+  import.meta.env.VITE_BUILD_VERSION || String(Date.now());
 
 /* ────────────────────────────────────────────────────────────────────────────
    NEW: Helper to append ?v=<version> (or &v=...) to any URL safely.
@@ -37,7 +37,7 @@ const ResultCard = ({ result, searchTerm, searchType, maxLines = 15 }) => {
 
   // Dynamically determine the backend base URL
   const BACKEND_BASE_URL =
-    process.env.REACT_APP_BACKEND_PDF_URL || window.location.origin;
+    import.meta.env.VITE_BACKEND_PDF_URL || window.location.origin;
 
   // Generate the full PDF URL including the page number
   const pdfUrlWithPage = `${BACKEND_BASE_URL}${encodeURI(

@@ -4,10 +4,21 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import SearchBar from '../SearchBar';
 
 test('renders search bar and handles input', () => {
-    const handleSearch = jest.fn();
-    const setQuery = jest.fn();
+    const handleSearch = vi.fn();
+    const setQuery = vi.fn();
 
-    render(<SearchBar query="" setQuery={setQuery} handleSearch={handleSearch} />);
+    // CHANGED: supply the selectedFilters/setSelectedFilters props the
+    // component now requires (it reads selectedFilters.search_type). The
+    // original test predates that prop and crashed on undefined.
+    render(
+        <SearchBar
+            query=""
+            setQuery={setQuery}
+            handleSearch={handleSearch}
+            selectedFilters={{ search_type: 'all' }}
+            setSelectedFilters={vi.fn()}
+        />
+    );
 
     const inputElement = screen.getByPlaceholderText(/enter your search query/i);
     expect(inputElement).toBeInTheDocument();
