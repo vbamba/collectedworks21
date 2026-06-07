@@ -77,7 +77,7 @@
         ],
         "extra_header_phrases": [
             "Letters of Historical Interest"
-          ],           
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
@@ -96,7 +96,7 @@
         ],
         "extra_header_phrases": [
             "War and Self-Determination"
-          ],          
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
@@ -115,7 +115,7 @@
         ],
         "format": "PDF",
         "is_sanskrit": true,
-        "sanskrit_format": "interspersed",        
+        "sanskrit_format": "interspersed",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
     },
@@ -149,7 +149,7 @@
         ],
         "extra_header_phrases": [
             "Commentaries and Annotated Translations"
-          ],           
+        ],
         "is_sanskrit": true,
         "sanskrit_format": "verse_translation",
         "format": "PDF",
@@ -250,7 +250,10 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+        "extra_header_phrases": [
+            "Letters on the Mother"
+        ]
     },
     "27LettersOnPoetryAndArt.pdf": {
         "book_title": "Letters On Poetry And Art",
@@ -266,7 +269,7 @@
         ],
         "extra_header_phrases": [
             "On His Own and Others’ Poetry"
-          ],          
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
@@ -379,7 +382,7 @@
             "Philosophy",
             "Spirituality"
         ],
-        "break_after_long_paragraph": false,     
+        "break_after_long_paragraph": false,
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
@@ -513,7 +516,7 @@
             "The Yoga of Self-Perfection",
             "The Yoga of Integral Knowledge",
             "The Yoga of Divine Works"
-          ],         
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
@@ -630,7 +633,23 @@
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },        
+    },
+    "Supramental-Manifestation.pdf": {
+        "book_title": "The Supramental Manifestation",
+        "author": "Sri Aurobindo",
+        "group": "CWSA",
+        "priority": 99,
+        "language": "English",
+        "isbn": "",
+        "tags": [
+            "Yoga",
+            "Philosophy",
+            "Spirituality"
+        ],
+        "format": "PDF",
+        "availability": "Public",
+        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    },
     "The-Mother-MCW-Vol7-Questions-And-Answers-1955.pdf": {
         "book_title": "Questions And Answers 1955",
         "author": "The Mother",
@@ -645,7 +664,7 @@
         ],
         "extra_header_phrases": [
             "Questions and Answers"
-          ],          
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -663,8 +682,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Series Nine–To a Young Teacher"
-        ],           
+            "Series Nine–To a Young Teacher"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -698,8 +717,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Words of the Mother-III"
-        ],               
+            "Words of the Mother-III"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -717,8 +736,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Words of the Mother-I"
-        ],              
+            "Words of the Mother-I"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -736,8 +755,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Words of the Mother-II"
-        ],              
+            "Words of the Mother-II"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -757,8 +776,9 @@
         "format": "PDF",
         "availability": "Public",
         "extra_header_phrases": [
-            "Questions and Answers"
-          ],        
+            "Questions and Answers",
+            "On the Dhammapada"
+        ],
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
     },
     "The-Mother-MCW-Vol6-Questions-And-Answers-1954.pdf": {
@@ -775,9 +795,9 @@
         ],
         "extra_header_phrases": [
             "Questions and Answers"
-          ],      
+        ],
         "format": "PDF",
-        "availability": "Public",          
+        "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
     },
     "New-Correspondences-of-the-Mother-1.pdf": {
@@ -795,7 +815,7 @@
         "extra_header_phrases": [
             "New Correspondences of the Mother - I",
             "New Correspondences of the Mother"
-          ],            
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -817,7 +837,7 @@
             "Jnana",
             "Karma",
             "Bhakti"
-          ],             
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -825,7 +845,7 @@
     "The Mother - Agenda Vol1.pdf": {
         "book_title": "Agenda Vol 1",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -836,12 +856,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol2.pdf": {
         "book_title": "Agenda Vol 2",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -852,12 +873,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol3.pdf": {
         "book_title": "Agenda Vol 3",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -868,12 +890,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol4.pdf": {
         "book_title": "Agenda Vol 4",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -884,12 +907,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol5.pdf": {
         "book_title": "Agenda Vol 5",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -900,12 +924,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol6.pdf": {
         "book_title": "Agenda Vol 6",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -916,12 +941,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol7.pdf": {
         "book_title": "Agenda Vol 7",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -932,12 +958,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol8.pdf": {
         "book_title": "Agenda Vol 8",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -948,12 +975,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },  
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
+    },
     "The Mother - Agenda Vol9.pdf": {
         "book_title": "Agenda Vol 9",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -964,12 +992,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol10.pdf": {
         "book_title": "Agenda Vol 10",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -980,12 +1009,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol11.pdf": {
         "book_title": "Agenda Vol 11",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -996,12 +1026,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol12.pdf": {
         "book_title": "Agenda Vol 12",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -1012,12 +1043,13 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
     },
     "The Mother - Agenda Vol13.pdf": {
         "book_title": "Agenda Vol 13",
         "author": "The Mother",
-       "group": "Agenda",
+        "group": "Agenda",
         "priority": 99,
         "language": "English",
         "isbn": "",
@@ -1028,8 +1060,9 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },                                              
+        "description": "An extensive account of spiritual experiences and teachings of The Mother",
+        "split_on_dates": true
+    },
     "New-Correspondences-of-the-Mother-2.pdf": {
         "book_title": "New Correspondences Of The Mother II",
         "author": "The Mother",
@@ -1044,7 +1077,7 @@
         ],
         "extra_header_phrases": [
             "New Correspondences of the Mother - II"
-          ],            
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1062,8 +1095,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Centre of Education"
-        ],         
+            "Centre of Education"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1083,9 +1116,9 @@
         "use_chapters": true,
         "chapter_marker_regex": "^Chapter\\s+\\d+\\b",
         "skip_toc_entries": [
-          "^Table of Contents$",
-          "^Publisher’s Note$"
-        ],        
+            "^Table of Contents$",
+            "^Publisher’s Note$"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1103,8 +1136,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Questions and Answers"
-        ],       
+            "Questions and Answers"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1122,8 +1155,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Questions and Answers"
-        ],               
+            "Questions and Answers"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1141,8 +1174,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Questions and Answers"
-        ],               
+            "Questions and Answers"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1192,8 +1225,8 @@
             "Spirituality"
         ],
         "extra_header_phrases": [
-        "Questions and Answers"
-        ],               
+            "Questions and Answers"
+        ],
         "format": "PDF",
         "availability": "Public",
         "description": "An extensive account of spiritual experiences and teachings of The Mother"
@@ -1420,7 +1453,8 @@
         ],
         "format": "PDF",
         "availability": "Public",
-        "description": ""
+        "description": "",
+        "split_on_dates": true
     },
     "Sahana-Devi-At-the-Feet-of-the-Mother-and-Sri-Aurobindo.pdf": {
         "book_title": "Sahana - At The Feet Of The Mother And Sri Aurobindo",
@@ -1581,5 +1615,5 @@
         "format": "PDF",
         "availability": "Public",
         "description": ""
-    }                                  
+    }
 }
