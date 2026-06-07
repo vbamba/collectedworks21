@@ -112,6 +112,14 @@ poetry.lock
 .mypy_cache/
 
 
+# macOS / editor cruft
+.DS_Store
+
+# Stray local files / ad-hoc backups (cleaned 2026-06-07)
+ping.txt
+/chapters.db
+**/backup/
+
 # Others
 /backend/indexes/faiss_index.bin
 /backend/indexes/metadata.json
