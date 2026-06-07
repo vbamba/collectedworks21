@@ -133,6 +133,7 @@ rsync -av --delete -e "ssh -i $PEM" \
       --exclude 'backend/db/' --exclude 'backend/data/' \
       --exclude 'backend/indexes/' --exclude 'backend/pdf/' \
       --exclude 'backend/venv/' \
+      --exclude 'backend/.env' \
       --exclude '__pycache__/' --exclude '*.pyc' \
       --exclude 'backend/backup/' --exclude 'frontend/src/backup/' \
       --exclude '.DS_Store' --exclude '*.zip' \
