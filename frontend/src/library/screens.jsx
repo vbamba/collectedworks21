@@ -1,11 +1,18 @@
 /* ============================================================
    Screens: Browse, Volume, Search, Media, Daily.
-   CHANGED: window globals -> ESM imports/exports. Behaviour unchanged
-   from the prototype (still stub data — real /api wiring in Phase 3b).
+   CHANGED: window globals -> ESM imports/exports.
+   SearchScreen is wired to the real backend (Phase 3b); the other
+   screens still use stub data (Browse/Volume -> Phase 3c).
    ============================================================ */
 import React, { useState, useEffect, useRef } from 'react';
+// CHANGED (Phase 3b): SearchScreen now uses the real backend instead of the
+// stub corpus. useNavigate sends result clicks to the existing chapter routes;
+// DOMPurify sanitises backend snippet HTML; api.js provides filters + search.
+import { useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import { DATA } from './data.js';
 import { Icon, Sigil, SectionHead, VolumeCard } from './components.jsx';
+import { fetchFilters, performTextSearch } from '../services/api';
 
 /* ---------- BROWSE ----------------------------------------- */
 export function BrowseScreen({ route, go }) {
@@ -170,39 +177,118 @@ export function VolumeScreen({ route, go }) {
   );
 }
 
-/* ---------- SEARCH ----------------------------------------- */
-export function SearchScreen({ route, go }) {
-  const [q, setQ] = useState(route.q || "");
-  const [submitted, setSubmitted] = useState(route.q || "");
-  const [exact, setExact] = useState(false);
-  const [collection, setCollection] = useState("all");
-  const [book, setBook] = useState("all");
-  const [activePill, setActivePill] = useState("all");
-  const inputRef = useRef(null);
-  useEffect(() => { inputRef.current && inputRef.current.focus(); }, []);
+/* ---------- SEARCH (wired to the real /api backend) -------- */
+// Derive a readable section title from the backend filename, mirroring
+// TextResultCard's logic (double-underscore -> " - ", Savitri "Book N" prefix).
+function deriveTitle(r) {
+  const fn = r.section_filename || "";
+  const m = fn.match(/^[^_]+_\d+_(.+)\.txt$/);
+  let t = m && m[1] ? m[1].replace(/__/g, " - ").replace(/_/g, " ") : (r.book_title || "Untitled");
+  const bookMatch = r.parent_toc_title && r.parent_toc_title.match(/^(Book\s+\S+)/);
+  if (bookMatch && /^Canto\b/i.test(t)) t = `${bookMatch[1]}, ${t}`;
+  return t;
+}
 
-  const run = () => { setSubmitted(q.trim()); setActivePill("all"); };
-  const clear = () => { setQ(""); setSubmitted(""); setCollection("all"); setBook("all"); setActivePill("all"); inputRef.current && inputRef.current.focus(); };
+// Map an author name to the sigil/colour code the design uses.
+function authorCode(name) {
+  if (!name) return "sa";
+  if (/mother/i.test(name)) return "m";
+  if (/aurobindo/i.test(name)) return "sa";
+  return "d";
+}
+
+// Build the SPA chapter path (prefer /read/<coll>/<book_slug>/<slug>).
+function chapterPath(r, query) {
+  const coll = r.collection_folder;
+  if (r.book_slug && r.slug && coll) {
+    const qs = new URLSearchParams();
+    if (query) qs.set("query", query);
+    const base = `/read/${encodeURIComponent(coll)}/${encodeURIComponent(r.book_slug)}/${encodeURIComponent(r.slug)}`;
+    return qs.toString() ? `${base}?${qs.toString()}` : base;
+  }
+  const p = new URLSearchParams({
+    collection_folder: coll || "",
+    book_folder: r.book_folder || "",
+    section_filename: r.section_filename || "",
+  });
+  if (query) p.set("query", query);
+  return `/chapter?${p.toString()}`;
+}
+
+// Build the PDF viewer link if the row carries page info.
+function pdfPath(r) {
+  if (r.start_page === undefined || r.start_page === null) return null;
+  let raw;
+  if (r.pdf_url) raw = r.pdf_url;
+  else if (r.pdf_file) {
+    const BE = import.meta.env.VITE_BACKEND_PDF_URL || window.location.origin;
+    raw = `${BE}/api/pdfs/${r.pdf_file}`.replace(/([^:]\/)\/+/g, "$1");
+  } else return null;
+  return `/viewer?file=${encodeURIComponent(raw)}&page=${r.start_page}`;
+}
+
+export function SearchScreen({ route }) {
+  const navigate = useNavigate();
+  const [q, setQ] = useState(route.q || "");
+  const [submitted, setSubmitted] = useState("");
+  const [exact, setExact] = useState(false);
+  const [group, setGroup] = useState("all");   // backend "group" == collection
+  const [book, setBook] = useState("all");      // backend book_title
+  const [activePill, setActivePill] = useState("all");
+  const [filters, setFilters] = useState({ groups: [], book_titles: [], book_titles_by_group: {} });
+  const [results, setResults] = useState([]);
+  const [groupCounts, setGroupCounts] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current && inputRef.current.focus(); }, []);
+  useEffect(() => { fetchFilters().then(setFilters).catch(() => {}); }, []);
+
+  const runWith = async (opts = {}) => {
+    const term = (opts.query ?? q).trim();
+    const g = opts.group ?? group;
+    const b = opts.book ?? book;
+    const ex = opts.exact ?? exact;
+    setSubmitted(term);
+    setActivePill("all");
+    if (!term) { setResults([]); setGroupCounts({}); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const data = await performTextSearch(term, {
+        author: "",
+        group: g === "all" ? "" : g,
+        book_title: b === "all" ? "" : b,
+        search_type: ex ? "exact" : "all",
+      });
+      setResults(data.results || []);
+      setGroupCounts(data.group_counts || {});
+    } catch {
+      setError("Search failed. Try again.");
+      setResults([]);
+      setGroupCounts({});
+    }
+    setLoading(false);
+  };
+
+  const run = () => runWith();
+  const clear = () => {
+    setQ(""); setSubmitted(""); setResults([]); setGroupCounts({});
+    setGroup("all"); setBook("all"); setActivePill("all");
+    inputRef.current && inputRef.current.focus();
+  };
   const onKey = (e) => { if (e.key === "Enter") run(); };
 
-  const ql = submitted.toLowerCase();
-  let results = ql ? buildResults(ql, exact) : [];
-  results = results.filter((r) => {
-    const v = DATA.volumeById(r.vid);
-    if (collection !== "all" && v.collection !== collection) return false;
-    if (book !== "all" && r.vid !== book) return false;
-    if (activePill !== "all" && v.collection !== activePill) return false;
-    return true;
-  });
+  // Run search if we arrived with a query (e.g. a subject chip from Browse).
+  useEffect(() => { if (route.q) runWith({ query: route.q }); /* eslint-disable-next-line */ }, []);
 
-  const pillBase = ql ? buildResults(ql, exact).filter((r) => {
-    const v = DATA.volumeById(r.vid);
-    if (collection !== "all" && v.collection !== collection) return false;
-    if (book !== "all" && r.vid !== book) return false;
-    return true;
-  }) : [];
-  const counts = {};
-  pillBase.forEach((r) => { const c = DATA.volumeById(r.vid).collection; counts[c] = (counts[c] || 0) + 1; });
+  const ql = submitted.toLowerCase();
+  const shown = results.filter((r) => activePill === "all" || r.group === activePill);
+  const allCount = results.length;
+  const bookOptions = group === "all"
+    ? (filters.book_titles || [])
+    : (filters.book_titles_by_group?.[group] || filters.book_titles || []);
 
   return (
     <div className="screen search-screen">
@@ -220,24 +306,22 @@ export function SearchScreen({ route, go }) {
 
         <div className="search-controls">
           <label className="check">
-            <input type="checkbox" checked={exact} onChange={(e) => setExact(e.target.checked)} />
+            <input type="checkbox" checked={exact} onChange={(e) => { setExact(e.target.checked); if (submitted) runWith({ exact: e.target.checked }); }} />
             <span className="check-box"><Icon name="close" size={13} style={{ opacity: exact ? 1 : 0 }} /></span>
             Exact match
           </label>
           <div className="selects">
             <div className="select">
-              <select value={collection} onChange={(e) => { setCollection(e.target.value); setBook("all"); }}>
+              <select value={group} onChange={(e) => { const g = e.target.value; setGroup(g); setBook("all"); if (submitted) runWith({ group: g, book: "all" }); }}>
                 <option value="all">All Collections</option>
-                {DATA.COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.abbr}</option>)}
+                {(filters.groups || []).map((g) => <option key={g} value={g}>{g}</option>)}
               </select>
               <Icon name="chevronDown" size={16} />
             </div>
             <div className="select">
-              <select value={book} onChange={(e) => setBook(e.target.value)}>
+              <select value={book} onChange={(e) => { const b = e.target.value; setBook(b); if (submitted) runWith({ book: b }); }}>
                 <option value="all">All Book Titles</option>
-                {DATA.VOLUMES.filter((v) => collection === "all" || v.collection === collection).map((v) => (
-                  <option key={v.id} value={v.id}>{v.title}{v.part ? " — " + v.part : ""}</option>
-                ))}
+                {bookOptions.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
               <Icon name="chevronDown" size={16} />
             </div>
@@ -245,55 +329,64 @@ export function SearchScreen({ route, go }) {
         </div>
       </div>
 
-      {!ql && (
+      {error && <p className="no-results">{error}</p>}
+
+      {!ql && !loading && (
         <div className="block">
           <SectionHead eyebrow="Try" title="Popular searches" />
           <div className="chip-wrap">
             {["psychic surrender", "the Divine", "silence", "evolution", "love", "supermind", "consciousness", "aspiration"].map((s) => (
-              <button key={s} className="chip" onClick={() => { setQ(s); setSubmitted(s); setActivePill("all"); }}>{s}</button>
+              <button key={s} className="chip" onClick={() => { setQ(s); runWith({ query: s }); }}>{s}</button>
             ))}
           </div>
           <p className="search-note">
-            Full-text search across the Complete Works, the Mother's Agenda and the disciples' writings —
-            powered by the archive at ask.collectedworksofsriaurobindo.com.
+            Full-text search across the Complete Works, the Mother's Agenda and the disciples' writings.
           </p>
         </div>
       )}
 
-      {ql && (
+      {loading && <p className="search-note" style={{ textAlign: "center", padding: "32px 0" }}>Searching…</p>}
+
+      {ql && !loading && (
         <>
           <div className="pills-row">
             <span className="pills-label">Collections found</span>
             <button className={"cpill" + (activePill === "all" ? " active" : "")} onClick={() => setActivePill("all")}>
-              All Collections <em>{pillBase.length}</em>
+              All Collections <em>{allCount}</em>
             </button>
-            {DATA.COLLECTIONS.filter((c) => counts[c.id]).map((c) => (
-              <button key={c.id} className={"cpill" + (activePill === c.id ? " active" : "")} data-author={c.author} onClick={() => setActivePill(c.id)}>
-                {c.abbr} <em>{counts[c.id]}</em>
+            {Object.entries(groupCounts).map(([g, cnt]) => (
+              <button key={g} className={"cpill" + (activePill === g ? " active" : "")} onClick={() => setActivePill(g)}>
+                {g} <em>{cnt}</em>
               </button>
             ))}
           </div>
 
           <div className="results">
-            {results.length === 0 && <p className="no-results">No passages found for &ldquo;{submitted}&rdquo;. Try a different word or turn off Exact match.</p>}
-            {results.map((r, i) => {
-              const v = DATA.volumeById(r.vid);
+            {shown.length === 0 && <p className="no-results">No passages found for &ldquo;{submitted}&rdquo;. Try a different word or turn off Exact match.</p>}
+            {shown.map((r, i) => {
+              const title = deriveTitle(r);
+              const path = chapterPath(r, submitted);
+              const pdf = pdfPath(r);
+              const ac = authorCode(r.author);
+              const snippet = DOMPurify.sanitize(r.snippet || "", { ALLOWED_TAGS: ["b", "mark", "i", "em", "br"] });
               return (
-                <article className="result-card" key={i}>
-                  <button className="rc-title" onClick={() => go({ name: "reader", id: r.vid, chapter: r.chapterIndex })}>
-                    {v.title} — {r.chapterTitle}
+                <article className="result-card" key={`${r.section_filename || "r"}-${i}`}>
+                  <button className="rc-title" onClick={() => navigate(path)}>
+                    {r.book_title ? `${r.book_title} — ${title}` : title}
                   </button>
-                  <p className="rc-snippet" dangerouslySetInnerHTML={{ __html: r.html }} />
+                  <p className="rc-snippet" dangerouslySetInnerHTML={{ __html: snippet }} />
                   <div className="rc-foot">
                     <span className="rc-tags">
-                      <span className="rc-coll" data-author={v.author}>{DATA.collectionById(v.collection).abbr}</span>
-                      {r.exact && <span className="rc-exact">exact</span>}
+                      {r.group && <span className="rc-coll" data-author={ac}>{r.group}</span>}
+                      {exact && <span className="rc-exact">exact</span>}
                     </span>
                     <span className="rc-actions">
-                      <a className="rc-pdf" href={DATA.readUrl(v, r.chapterTitle, r.chapterIndex)} target="_blank" rel="noopener">
-                        <Icon name="download" size={15} /> PDF
-                      </a>
-                      <button className="rc-read" onClick={() => go({ name: "reader", id: r.vid, chapter: r.chapterIndex })}>
+                      {pdf && (
+                        <a className="rc-pdf" href={pdf} target="_blank" rel="noopener">
+                          <Icon name="download" size={15} /> PDF
+                        </a>
+                      )}
+                      <button className="rc-read" onClick={() => navigate(path)}>
                         Read <Icon name="arrowRight" size={15} />
                       </button>
                     </span>
@@ -306,38 +399,6 @@ export function SearchScreen({ route, go }) {
       )}
     </div>
   );
-}
-
-// Stub corpus — production results come from /api in Phase 3b.
-const SEARCH_CORPUS = [
-  { vid: "letters-yoga-1", chapterIndex: 6, chapterTitle: "Surrender", exact: true,
-    text: "It is the @ in the physical that you have begun to experience. All the parts are essentially offered, but the surrender has to be made complete by the growth of the psychic self-offering in all of them." },
-  { vid: "life-divine-1", chapterIndex: 0, chapterTitle: "The Human Aspiration", exact: false,
-    text: "The earliest preoccupation of man in his awakened thoughts—the divination of Godhead, the impulse towards perfection, the search after pure Truth—returns to the question of @ after every banishment." },
-  { vid: "synthesis-yoga", chapterIndex: 0, chapterTitle: "The Conditions of the Synthesis", exact: false,
-    text: "All life is Yoga. By @ the seeker widens the narrow movements of the ego into the large and luminous workings of a greater Consciousness." },
-  { vid: "savitri", chapterIndex: 0, chapterTitle: "The Symbol Dawn", exact: false,
-    text: "Across the path of the divine Event the soul learns @, and a light that was not yet on earth begins its slow descent into the hours." },
-  { vid: "prayers", chapterIndex: 0, chapterTitle: "November 1912", exact: true,
-    text: "O Lord, in the silence of @ my adoration is beyond all words, my reverence is silent, and my heart overflows with gratitude." },
-  { vid: "agenda-1", chapterIndex: 0, chapterTitle: "1958", exact: false,
-    text: "The work of @ goes on in the cells of the body, slow and sure, until the old habit of death is undone and a new functioning is born." },
-  { vid: "evening-talks", chapterIndex: 0, chapterTitle: "1923", exact: true,
-    text: "When asked about @, Sri Aurobindo replied that the true movement is not effort but a quiet opening of the whole being to the Mother's force." },
-];
-
-function buildResults(ql, exact) {
-  const safe = ql.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp("(" + safe + ")", "ig");
-  const out = [];
-  SEARCH_CORPUS.forEach((c) => {
-    const literal = c.text.replace("@", ql);
-    const hasLiteral = literal.toLowerCase().includes(ql);
-    if (exact && !c.exact && !hasLiteral) return;
-    const filled = c.text.includes("@") ? c.text.replace("@", ql) : c.text;
-    out.push({ ...c, html: filled.replace(re, "<mark>$1</mark>") });
-  });
-  return out;
 }
 
 /* ---------- MULTIMEDIA ------------------------------------- */
