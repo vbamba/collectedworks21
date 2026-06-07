@@ -112,6 +112,11 @@ poetry.lock
 .mypy_cache/
 
 
+# The Python "lib/" rule above also matches frontend/src/lib (the shared
+# frontend module dir). Re-include it.
+!frontend/src/lib/
+!frontend/src/lib/**
+
 # macOS / editor cruft
 .DS_Store
 
