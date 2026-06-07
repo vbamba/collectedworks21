@@ -1,0 +1,12 @@
+/* ============================================================
+   Sri Aurobindo — shared web fonts
+   ------------------------------------------------------------
+   Convenience loader for the static Savitri site, which can just
+   <link> this file. The React app should instead put the <link>
+   tags (with preconnect) directly in index.html — see README —
+   because @import blocks rendering and is slower.
+
+   Families: Cormorant Garamond (display), Spectral (serif body),
+   Lora (alt serif), Hanken Grotesk (UI). Matches docs/prototype.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');

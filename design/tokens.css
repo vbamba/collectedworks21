@@ -1,0 +1,74 @@
+/* ============================================================
+   Sri Aurobindo — shared design tokens
+   ------------------------------------------------------------
+   Single source of truth for the visual identity shared across:
+     1. the Collected Works React app (Library + search + reading)
+     2. the Savitri Study static site (savitri-wiki/)
+   Consume this file directly; do NOT redefine these values locally.
+   See design/README.md for how each surface loads it.
+
+   Extracted from the Library prototype (docs/prototype/extracted/
+   app/styles.css). The :root block below is value-for-value the
+   prototype's, so the prototype CSS keeps working unchanged when we
+   bring it into the app. Tokens marked "addition" did not exist as
+   named vars in the prototype (it used raw px); they codify the
+   scales the prototype used by hand so future CSS can reference them.
+   ============================================================ */
+:root {
+  /* ---- Paper / surfaces (warm off-white stack) ---- */
+  --paper:      #FAF6EE;
+  --paper-2:    #F4EDE0;
+  --paper-3:    #EFE6D4;
+
+  /* ---- Ink / text ---- */
+  --ink:        #2A2620;
+  --ink-soft:   #6E665A;
+  --ink-faint:  #A89F8F;
+  --ink-dark:   #1b1a14;
+
+  /* ---- Hairlines / dividers ---- */
+  --line:       #E4D9C6;
+  --line-soft:  #EDE4D5;
+
+  /* ---- Accents (gold = Sri Aurobindo, rose = the Mother) ---- */
+  --gold:       oklch(0.66 0.094 78);
+  --gold-soft:  oklch(0.92 0.045 82);
+  --rose:       oklch(0.62 0.085 18);
+  --rose-soft:  oklch(0.92 0.04 20);
+
+  /* ---- Type families ---- */
+  --ui:      'Hanken Grotesk', system-ui, sans-serif;  /* labels, nav, UI chrome */
+  --serif:   'Spectral', Georgia, serif;               /* reading / body copy   */
+  --display: 'Cormorant Garamond', Georgia, serif;     /* titles / headings     */
+
+  /* ---- Elevation ---- */
+  --shadow-sm: 0 1px 2px rgba(42,38,32,0.05), 0 2px 8px rgba(42,38,32,0.04);
+  --shadow-md: 0 4px 14px rgba(42,38,32,0.08), 0 1px 3px rgba(42,38,32,0.05);
+  --shadow-lg: 0 18px 50px rgba(42,38,32,0.16);
+
+  /* ---- Layout ---- */
+  --maxw: 940px;
+
+  /* ---- Radius scale (addition — codifies prototype's hand-picked px) ---- */
+  --radius-sm:   8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  22px;
+  --radius-pill: 999px;
+
+  /* ---- Spacing scale (addition — 4px base) ---- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* ---- Motion (addition — the prototype's common timings) ---- */
+  --ease:        cubic-bezier(.4, 0, .1, 1);
+  --dur-fast:   .15s;
+  --dur:        .18s;
+  --dur-slow:   .3s;
+}

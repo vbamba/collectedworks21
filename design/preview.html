@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design tokens — specimen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./fonts.css" />
+  <link rel="stylesheet" href="./tokens.css" />
+  <style>
+    /* Specimen-only styling — consumes the shared tokens, defines no new identity. */
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif);
+           line-height: 1.6; padding: var(--space-7) var(--space-5); }
+    .wrap { max-width: var(--maxw); margin: 0 auto; }
+    h1 { font-family: var(--display); font-weight: 600; font-size: clamp(34px, 9vw, 50px);
+         letter-spacing: -0.01em; line-height: 1.02; margin: 0 0 var(--space-2); }
+    .eyebrow { font-family: var(--ui); font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+               text-transform: uppercase; color: var(--ink-faint); }
+    h2 { font-family: var(--ui); font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+         text-transform: uppercase; color: var(--ink-soft); margin: var(--space-7) 0 var(--space-3);
+         border-top: 1px solid var(--line); padding-top: var(--space-4); }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3); }
+    .sw { border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); background: #fff; }
+    .sw .chip { height: 64px; }
+    .sw .lbl { font-family: var(--ui); font-size: 11px; padding: var(--space-2) var(--space-3); color: var(--ink-soft); }
+    .sw .lbl b { display: block; color: var(--ink); font-weight: 600; }
+    .type-row { margin: var(--space-3) 0; }
+    .type-row small { font-family: var(--ui); font-size: 10.5px; color: var(--ink-faint); letter-spacing: 0.04em; }
+    .display-xl { font-family: var(--display); font-size: 44px; font-weight: 600; line-height: 1.05; }
+    .serif-body { font-family: var(--serif); font-size: 18px; }
+    .ui-text { font-family: var(--ui); font-size: 15px; }
+    .cards { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg);
+            padding: var(--space-5); flex: 1 1 240px; }
+    .card.sm { box-shadow: var(--shadow-sm); } .card.md { box-shadow: var(--shadow-md); } .card.lg { box-shadow: var(--shadow-lg); }
+    .pill { display: inline-block; font-family: var(--ui); font-size: 11px; font-weight: 600;
+            background: var(--gold-soft); color: var(--ink-dark); padding: var(--space-1) var(--space-3);
+            border-radius: var(--radius-pill); }
+    .pill.rose { background: var(--rose-soft); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="eyebrow">Shared design tokens</p>
+    <h1>The Collected Works</h1>
+    <p class="serif-body">of Sri Aurobindo &amp; the Mother — if the fonts below look like elegant serifs
+    and the gold/rose accents read warm, the token layer is loading correctly.</p>
+
+    <h2>Colour</h2>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:var(--paper)"></div><div class="lbl"><b>--paper</b>#FAF6EE</div></div>
+      <div class="sw"><div class="chip" style="background:var(--paper-2)"></div><div class="lbl"><b>--paper-2</b>#F4EDE0</div></div>
+      <div class="sw"><div class="chip" style="background:var(--paper-3)"></div><div class="lbl"><b>--paper-3</b>#EFE6D4</div></div>
+      <div class="sw"><div class="chip" style="background:var(--ink)"></div><div class="lbl"><b>--ink</b>#2A2620</div></div>
+      <div class="sw"><div class="chip" style="background:var(--ink-soft)"></div><div class="lbl"><b>--ink-soft</b>#6E665A</div></div>
+      <div class="sw"><div class="chip" style="background:var(--gold)"></div><div class="lbl"><b>--gold</b>oklch gold</div></div>
+      <div class="sw"><div class="chip" style="background:var(--gold-soft)"></div><div class="lbl"><b>--gold-soft</b></div></div>
+      <div class="sw"><div class="chip" style="background:var(--rose)"></div><div class="lbl"><b>--rose</b>oklch rose</div></div>
+      <div class="sw"><div class="chip" style="background:var(--rose-soft)"></div><div class="lbl"><b>--rose-soft</b></div></div>
+      <div class="sw"><div class="chip" style="background:var(--line)"></div><div class="lbl"><b>--line</b>#E4D9C6</div></div>
+    </div>
+
+    <h2>Type</h2>
+    <div class="type-row"><small>--display · Cormorant Garamond</small><div class="display-xl">Invocation &amp; the inner light</div></div>
+    <div class="type-row"><small>--serif · Spectral</small><div class="serif-body">All life is Yoga. The soul that climbs from form to form, a pilgrim of the eternal.</div></div>
+    <div class="type-row"><small>--ui · Hanken Grotesk</small><div class="ui-text">Browse · Search · Volumes · Audio &amp; Video · Daily Reading</div></div>
+
+    <h2>Elevation &amp; radius</h2>
+    <div class="cards">
+      <div class="card sm">shadow-sm · radius-lg <span class="pill">gold</span></div>
+      <div class="card md">shadow-md · radius-lg <span class="pill rose">rose</span></div>
+      <div class="card lg">shadow-lg · radius-lg</div>
+    </div>
+  </div>
+</body>
+</html>
