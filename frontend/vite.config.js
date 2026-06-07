@@ -8,6 +8,9 @@ export default defineConfig({
 
   server: {
     port: 3000, // CHANGED: keep CRA's dev port so existing bookmarks/docs hold
+    // CHANGED: allow importing the shared design/ layer, which lives one
+    // level above the Vite root (frontend/). Used by src/library/.
+    fs: { allow: ['..'] },
     // CHANGED: replaces CRA's package.json "proxy" field. Same-origin
     // fetch('/api/...') calls in services/api.js (text_search, ai_search)
     // are proxied to the Flask backend during dev. Axios calls that use an

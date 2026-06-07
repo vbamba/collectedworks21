@@ -1,5 +1,10 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+// CHANGED: the redesigned "Library" experience. Rendered bare (no NavBar /
+// Bootstrap container) at /library while it's built out, so the live search
+// site at every other route is untouched. Its CSS is scoped under
+// .library-root, so the two UIs don't bleed into each other.
+import LibraryApp from './library/LibraryApp';
 import HomePage from './pages/HomePage';
 import SemanticPage from './pages/SemanticPage';
 import TextSearchPage  from './pages/TextSearchPage';  // ← your new page
@@ -14,6 +19,13 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App = () => {
+    // CHANGED: /library is a full takeover — no NavBar, no container. Every
+    // other path renders the existing layout below, unchanged.
+    const { pathname } = useLocation();
+    if (pathname === '/library' || pathname.startsWith('/library/')) {
+        return <LibraryApp />;
+    }
+
     return (
         <>
             <NavBar />
