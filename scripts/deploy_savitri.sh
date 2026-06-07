@@ -7,14 +7,23 @@ EC2="${EC2:-ec2-user@44.245.34.75}"
 PEM="${PEM:-/Users/vbamba/Projects/aws-ssh-keys/ewcc.pem}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$REPO_ROOT/savitri-wiki/"
+BUILD="$REPO_ROOT/savitri-wiki-build/"
 
 [ -d "$SRC" ] || { echo "ERROR: $SRC not found" >&2; exit 1; }
 [ -f "$PEM" ] || { echo "ERROR: PEM key $PEM not found" >&2; exit 1; }
 
-echo "[1/3] rsync $SRC -> $EC2:/home/ec2-user/savitri-wiki/"
-rsync -av --delete -e "ssh -i $PEM" "$SRC" "$EC2":/home/ec2-user/savitri-wiki/
+# CHANGED (2026-06-06): expand <code>raw/<book>/<section>.txt</code> source
+# refs into linked chapter URLs on ask.collectedworksofsriaurobindo.com
+# before rsync. Wiki sources keep the raw-path shorthand (lightweight,
+# matches splitter filenames); deploy expands them to clickable links.
+# See docs/DEPLOY.md §8.7.
+echo "[1/4] expand <code>raw/...</code> source refs -> $BUILD"
+python3 "$REPO_ROOT/scripts/convert_savitri_sources.py"
 
-echo "[2/3] sync to nginx root + fix perms"
+echo "[2/4] rsync $BUILD -> $EC2:/home/ec2-user/savitri-wiki/"
+rsync -av --delete -e "ssh -i $PEM" "$BUILD" "$EC2":/home/ec2-user/savitri-wiki/
+
+echo "[3/4] sync to nginx root + fix perms"
 ssh -i "$PEM" "$EC2" '
   set -e
   sudo rsync -a --delete /home/ec2-user/savitri-wiki/ /usr/share/nginx/savitri-wiki/
@@ -23,7 +32,7 @@ ssh -i "$PEM" "$EC2" '
   sudo find /usr/share/nginx/savitri-wiki -type f -exec chmod 644 {} \;
 '
 
-echo "[3/3] smoke test"
+echo "[4/4] smoke test"
 curl -fsS -o /dev/null -w "  https://savitri.thesunlitpath.in/  -> %{http_code}\n" \
   https://savitri.thesunlitpath.in/
 

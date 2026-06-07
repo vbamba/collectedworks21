@@ -119,4 +119,9 @@ poetry.lock
 /backend/db
 /backend/pdf
 
+# Savitri Study build output (scripts/convert_savitri_sources.py expands
+# <code>raw/...</code> shorthand into linked chapter URLs). Build output
+# only — regenerated on every deploy_savitri.sh run.
+/savitri-wiki-build
+
 .aider*

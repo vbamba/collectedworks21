@@ -664,18 +664,56 @@ collectedworks subdomain, to avoid making users follow the 301.
 
 ### 8.7. Updating wiki content
 
-The wiki has no build step; edit HTML in [savitri-wiki/](../savitri-wiki/)
-locally, then run:
+Edit HTML in [savitri-wiki/](../savitri-wiki/) locally, then run:
 
 ```bash
 ./scripts/deploy_savitri.sh
 ```
 
-The script ([scripts/deploy_savitri.sh](../scripts/deploy_savitri.sh)) wraps
-§ 8.2 — rsync to EC2, sync into `/usr/share/nginx/savitri-wiki/`, fix perms,
-and curl-check the canonical URL. Nothing else to restart — nginx serves
-files directly off disk, and HTML responses aren't cached so edits show up
-on the next request.
+The script ([scripts/deploy_savitri.sh](../scripts/deploy_savitri.sh)) handles
+the whole flow: build → rsync to EC2 → sync into `/usr/share/nginx/savitri-wiki/`
+→ fix perms → curl-check the canonical URL. Nothing else to restart — nginx
+serves files directly off disk, and HTML responses aren't cached so edits show
+up on the next request.
+
+#### Source-citation shorthand (the build step)
+
+Each wiki page has a `<h2>Sources</h2>` section listing the books and
+chapters the page draws on. Authors write these in a shorthand that points
+at splitter filenames:
+
+```html
+<li><code>raw/33-34Savitri/section_05_Canto_One__The_Symbol_Dawn.txt</code></li>
+<li><code>raw/Letters-on-Savitri/section_05_Part_II.txt</code> — the rapid-transitions technique</li>
+```
+
+The shorthand is convenient for drafting (book folder + section filename
+both match what the splitter writes) but isn't useful to a reader. On
+deploy, [scripts/convert_savitri_sources.py](../scripts/convert_savitri_sources.py)
+expands each `<li><code>raw/<book>/<section>.txt</code>(…)</li>` into a
+clickable link to the rendered chapter on ask.collectedworksofsriaurobindo.com:
+
+```html
+<li><a href="https://ask.collectedworksofsriaurobindo.com/read/sriaurobindo/savitri/canto-one-the-symbol-dawn" target="_blank" rel="noopener">Savitri — Canto One: The Symbol Dawn</a></li>
+<li><a href="https://ask.collectedworksofsriaurobindo.com/read/sriaurobindo/letters-on-savitri/part-ii" target="_blank" rel="noopener">Letters on Savitri — Part II</a> — the rapid-transitions technique</li>
+```
+
+The converter is a pure source→build transform — it reads `savitri-wiki/`,
+writes `savitri-wiki-build/` (gitignored), and never modifies the source
+tree. `deploy_savitri.sh` runs it as step [1/4] before rsync. To preview
+locally with the links resolved, run the converter manually and serve the
+build dir:
+
+```bash
+python3 scripts/convert_savitri_sources.py
+python3 -m http.server 8000 -d savitri-wiki-build
+```
+
+Section title + slug come from `backend/data/out_chapters/sriaurobindo/<book>/metadata.json`
+(authoritative — same source the production chapter URLs are generated from).
+If you add a new source book to the wiki, extend the `BOOKS` dict at the top
+of `convert_savitri_sources.py`. Unrecognized refs are left as `<code>raw/...</code>`
+and logged as warnings, so a missing entry shows up immediately at deploy.
 
 ## Reference — file map
 
