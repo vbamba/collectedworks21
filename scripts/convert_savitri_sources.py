@@ -40,12 +40,13 @@ BOOKS = {
 
 BASE_URL = 'https://ask.collectedworksofsriaurobindo.com/read/sriaurobindo'
 
-# Match: <li><code>raw/<book>/section_NN_<title>.txt</code><optional trailing
-# text or commentary like "— the rapid-transitions technique"></li>.
-LI_RX = re.compile(
-    r'<li><code>raw/([^/]+)/(section_\d+_[^<]+\.txt)</code>(.*?)</li>',
-    re.DOTALL,
-)
+# Match each <li>...</li> block so we can resolve range patterns like
+#   <code>raw/Book/sec_X.txt</code> through <code>sec_Y.txt</code>
+# where the second <code> omits the `raw/Book/` prefix (the author uses
+# the first ref to establish a "context book" for the rest of the line).
+LI_BLOCK_RX  = re.compile(r'<li>(.*?)</li>', re.DOTALL)
+RAW_REF_RX   = re.compile(r'<code>raw/([^/]+)/(section_\d+_[^<]+\.txt)</code>')
+BARE_REF_RX  = re.compile(r'<code>(section_\d+_[^<]+\.txt)</code>')
 
 
 def build_lookup(out_chapters_root: Path) -> dict:
@@ -63,21 +64,66 @@ def build_lookup(out_chapters_root: Path) -> dict:
     return lookup
 
 
+def _link_for(book_folder: str, section_filename: str,
+              lookup: dict, unknowns: list) -> str | None:
+    """Build the <a> element for a (book, section) pair. None if unmappable."""
+    key = (book_folder, section_filename)
+    if book_folder not in BOOKS or key not in lookup:
+        unknowns.append(key)
+        return None
+    display, book_slug = BOOKS[book_folder]
+    section_title, slug = lookup[key]
+    url = f'{BASE_URL}/{book_slug}/{slug}'
+    return (
+        f'<a href="{url}" target="_blank" rel="noopener">'
+        f'{display} — {section_title}</a>'
+    )
+
+
+def _process_li(li_content: str, lookup: dict, unknowns: list) -> tuple[str, int]:
+    """Two-pass: first resolve raw/Book/ refs, then resolve any remaining bare
+    <code>section_*.txt</code> refs using the first raw/'s book as context.
+    Returns (new_content, num_links_made)."""
+    raw_matches = list(RAW_REF_RX.finditer(li_content))
+    if not raw_matches:
+        return li_content, 0
+    context_book = raw_matches[0].group(1)
+    n = 0
+
+    def replace_raw(m: re.Match) -> str:
+        nonlocal n
+        link = _link_for(m.group(1), m.group(2), lookup, unknowns)
+        if link is None:
+            return m.group(0)
+        n += 1
+        return link
+
+    new_content = RAW_REF_RX.sub(replace_raw, li_content)
+
+    # Bare-ref pass uses the context book inferred from the first raw/ ref —
+    # only fires inside a li that already had a raw/ ref, so we never make up
+    # links from thin air. Pattern only matches surviving <code>section_*</code>
+    # blocks because the raw/ pass above rewrote those into <a>.
+    def replace_bare(m: re.Match) -> str:
+        nonlocal n
+        link = _link_for(context_book, m.group(1), lookup, unknowns)
+        if link is None:
+            return m.group(0)
+        n += 1
+        return link
+
+    return BARE_REF_RX.sub(replace_bare, new_content), n
+
+
 def convert(text: str, lookup: dict, unknowns: list) -> tuple[str, int]:
-    def replace(m: re.Match) -> str:
-        book_folder, section_filename, rest = m.group(1), m.group(2), m.group(3)
-        key = (book_folder, section_filename)
-        if book_folder not in BOOKS or key not in lookup:
-            unknowns.append(key)
-            return m.group(0)  # leave untouched
-        display, book_slug = BOOKS[book_folder]
-        section_title, slug = lookup[key]
-        url = f'{BASE_URL}/{book_slug}/{slug}'
-        return (
-            f'<li><a href="{url}" target="_blank" rel="noopener">'
-            f'{display} — {section_title}</a>{rest}</li>'
-        )
-    return LI_RX.subn(replace, text)
+    total = 0
+    def replace_li(m: re.Match) -> str:
+        nonlocal total
+        new_content, n = _process_li(m.group(1), lookup, unknowns)
+        total += n
+        return f'<li>{new_content}</li>'
+    new_text = LI_BLOCK_RX.sub(replace_li, text)
+    return new_text, total
 
 
 def main() -> int:
