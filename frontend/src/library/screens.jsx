@@ -374,7 +374,14 @@ export function SearchScreen({ route }) {
                   <button className="rc-title" onClick={() => navigate(path)}>
                     {r.book_title ? `${r.book_title} — ${title}` : title}
                   </button>
-                  <p className="rc-snippet" dangerouslySetInnerHTML={{ __html: snippet }} />
+                  {/* CHANGED: clamp to 4 lines — backend snippets can be long
+                      (the old TextResultCard capped at 10 <br>-lines), which made
+                      each card tall and showed only a few results per screen. */}
+                  <p
+                    className="rc-snippet"
+                    style={{ display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                    dangerouslySetInnerHTML={{ __html: snippet }}
+                  />
                   <div className="rc-foot">
                     <span className="rc-tags">
                       {r.group && <span className="rc-coll" data-author={ac}>{r.group}</span>}
