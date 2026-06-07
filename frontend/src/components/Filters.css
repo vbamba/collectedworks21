@@ -1,0 +1,12 @@
+/* frontend/src/components/Filters.css */
+select {
+  background: #1e1e1e;     /* dark dropdown background */
+  color: #eee;             /* book titles */
+}
+
+/* Try to style optgroup labels */
+select optgroup {
+  color: #fff !important;           /* pure white text */
+  background-color: #333 !important;/* even darker bar behind it */
+  font-weight: 600;
+}
