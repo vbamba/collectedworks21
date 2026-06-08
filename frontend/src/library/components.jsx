@@ -103,7 +103,7 @@ export function TopBar({ onMenu, onSearch, onHome, title, scrolled }) {
     <header className={"topbar" + (scrolled ? " is-scrolled" : "")}>
       <button className="iconbtn" onClick={onMenu} aria-label="Menu"><Icon name="menu" /></button>
       <button className="topbar-title" onClick={onHome}>
-        {title || (<><span className="tb-mark"><Sigil author="sa" size={22} /></span><span>The Library</span></>)}
+        {title || (<><span className="tb-mark"><Sigil author="sa" size={22} /></span><span>The Sunlit Path</span></>)}
       </button>
       <button className="iconbtn" onClick={onSearch} aria-label="Search"><Icon name="search" /></button>
     </header>

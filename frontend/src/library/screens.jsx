@@ -34,7 +34,7 @@ export function BrowseScreen({ route, go }) {
   return (
     <div className="screen">
       <div className="page-hero">
-        <div className="eyebrow">{col ? col.name : "The Library"}</div>
+        <div className="eyebrow">{col ? col.name : "The Sunlit Path"}</div>
         <h1 className="page-title">{col ? collectionFullName(col.name) : "Complete Works"}</h1>
         <p className="page-lede">
           {col ? `${col.count} volumes in this edition.` : "Every volume of Sri Aurobindo and the Mother, freely readable. Browse by collection, author, or subject."}
