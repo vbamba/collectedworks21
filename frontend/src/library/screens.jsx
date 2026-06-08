@@ -370,20 +370,20 @@ export function SearchScreen({ route, go }) {
               const openReader = () => go({ name: "reader", chapter: chapterTarget(r), query: submitted, resultType: exact ? "exact" : "all" });
               const pdf = pdfPath(r);
               const ac = authorCode(r.author);
-              const snippet = DOMPurify.sanitize(r.snippet || "", { ALLOWED_TAGS: ["b", "mark", "i", "em", "br"] });
+              // CHANGED: preserve verse line breaks. Backend snippets use \n
+              // newlines (which HTML collapses to spaces); split on \n/<br> and
+              // rejoin with <br/> like the old TextResultCard, capped to a few
+              // lines so prose cards stay compact and verse keeps its lineation.
+              const sanitized = DOMPurify.sanitize(r.snippet || "", { ALLOWED_TAGS: ["b", "mark", "i", "em", "br"] });
+              const snipLines = sanitized.split(/<br\s*\/?>|\n/);
+              const SNIP_MAX = 6;
+              const snippet = snipLines.slice(0, SNIP_MAX).join("<br/>") + (snipLines.length > SNIP_MAX ? "<br/>…" : "");
               return (
                 <article className="result-card" key={`${r.section_filename || "r"}-${i}`}>
                   <button className="rc-title" onClick={openReader}>
                     {r.book_title ? `${r.book_title} — ${title}` : title}
                   </button>
-                  {/* CHANGED: clamp to 4 lines — backend snippets can be long
-                      (the old TextResultCard capped at 10 <br>-lines), which made
-                      each card tall and showed only a few results per screen. */}
-                  <p
-                    className="rc-snippet"
-                    style={{ display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-                    dangerouslySetInnerHTML={{ __html: snippet }}
-                  />
+                  <p className="rc-snippet" dangerouslySetInnerHTML={{ __html: snippet }} />
                   <div className="rc-foot">
                     <span className="rc-tags">
                       {r.group && <span className="rc-coll" data-author={ac}>{r.group}</span>}
