@@ -1,0 +1,42 @@
+/* Home hero quick-search — a real text input styled like the Serene pill,
+   so visitors can search straight from the home page. Scoped under
+   .library-root; consumes the shared tokens. */
+.library-root .serene-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 24px auto 0;
+  padding: 11px 12px 11px 20px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  max-width: 440px;
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+}
+.library-root .serene-search:focus-within { border-color: var(--gold); box-shadow: var(--shadow-md); }
+.library-root .serene-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--ui);
+  font-size: 15px;
+  color: var(--ink);
+}
+.library-root .serene-search input::placeholder { color: var(--ink-faint); }
+.library-root .serene-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--paper);
+  cursor: pointer;
+}
+.library-root .serene-search button:hover { filter: brightness(1.05); }

@@ -3,7 +3,8 @@
    CHANGED: per the redesign decision, the prototype's A/B/C dir-switch
    and the Editorial/Portal variants are dropped; Serene is THE home.
    ============================================================ */
-import React from 'react';
+import React, { useState } from 'react';
+import './home.css';
 import { DATA } from './data.js';
 import { Sigil, Icon, SectionHead, BookCard } from './components.jsx';
 // CHANGED (Phase 3d): featured + collections come from the real book list.
@@ -14,9 +15,18 @@ import { useDaily, todayIndex } from './useDaily.js';
 const FEATURED_KEYWORDS = ['life divine', 'synthesis of yoga', 'savitri', 'letters on yoga', 'essays on the gita', 'prayers and meditations'];
 
 export function HomeScreen({ go }) {
+  const [q, setQ] = useState("");
   const messages = useDaily();
   const t = messages.length ? messages[todayIndex(messages.length)] : null;
   const books = useBooks();
+
+  // Quick search straight from the hero — submits with default options
+  // (all collections, not exact); SearchScreen runs it from the URL query.
+  const submitSearch = (e) => {
+    e.preventDefault();
+    const term = q.trim();
+    if (term) go({ name: "search", q: term });
+  };
   const collections = deriveCollections(books);
   let featured = FEATURED_KEYWORDS
     .map((kw) => books.find((b) => b.title.toLowerCase().includes(kw)))
@@ -29,9 +39,16 @@ export function HomeScreen({ go }) {
           <div className="serene-sig"><Sigil author="sa" size={46} /></div>
           <h1 className="serene-h1">The Collected Works</h1>
           <p className="serene-sub">of Sri Aurobindo &amp; the Mother</p>
-          <button className="search-pill" onClick={() => go({ name: "search" })}>
-            <Icon name="search" size={18} /> Search the works…
-          </button>
+          <form className="serene-search" onSubmit={submitSearch}>
+            <Icon name="search" size={18} style={{ color: "var(--ink-soft)", flexShrink: 0 }} />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search the works…"
+              aria-label="Search the works"
+            />
+            <button type="submit" aria-label="Search"><Icon name="arrowRight" size={18} /></button>
+          </form>
         </section>
 
         {t && (
