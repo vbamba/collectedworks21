@@ -8,15 +8,14 @@ import { DATA } from './data.js';
 import { Sigil, Icon, SectionHead, BookCard } from './components.jsx';
 // CHANGED (Phase 3d): featured + collections come from the real book list.
 import { useBooks, deriveCollections, collectionFullName } from './useBooks.js';
-
-function todaysThought() {
-  return DATA.THOUGHTS[new Date().getDate() % DATA.THOUGHTS.length];
-}
+// CHANGED: daily message comes from the editable /api/daily list.
+import { useDaily, todayIndex } from './useDaily.js';
 
 const FEATURED_KEYWORDS = ['life divine', 'synthesis of yoga', 'savitri', 'letters on yoga', 'essays on the gita', 'prayers and meditations'];
 
 export function HomeScreen({ go }) {
-  const t = todaysThought();
+  const messages = useDaily();
+  const t = messages.length ? messages[todayIndex(messages.length)] : null;
   const books = useBooks();
   const collections = deriveCollections(books);
   let featured = FEATURED_KEYWORDS
@@ -35,12 +34,14 @@ export function HomeScreen({ go }) {
           </button>
         </section>
 
-        <section className="serene-quote">
-          <Icon name="quote" size={26} style={{ color: "var(--gold)" }} />
-          <blockquote>{t.text}</blockquote>
-          <cite>{t.author} · {t.source}</cite>
-          <button className="text-link center" onClick={() => go({ name: "daily" })}>Thought for the day <Icon name="chevronRight" size={15} /></button>
-        </section>
+        {t && (
+          <section className="serene-quote">
+            <Icon name="quote" size={26} style={{ color: "var(--gold)" }} />
+            <blockquote>{t.text}</blockquote>
+            <cite>{t.author} · {t.source}</cite>
+            <button className="text-link center" onClick={() => go({ name: "daily" })}>Thought for the day <Icon name="chevronRight" size={15} /></button>
+          </section>
+        )}
 
         <section className="block">
           <SectionHead eyebrow="Begin here" title="Featured" action="All volumes" onAction={() => go({ name: "browse" })} />

@@ -15,6 +15,7 @@ import { fetchFilters, performTextSearch } from '../services/api';
 // CHANGED (Phase 3d): Browse/Volume use the real book list (/api/books) and
 // per-book TOC (/api/book_toc) instead of stub data.
 import { useBooks, deriveCollections, collectionFullName, authorCode } from './useBooks.js';
+import { useDaily, todayIndex } from './useDaily.js';
 
 /* ---------- BROWSE ----------------------------------------- */
 export function BrowseScreen({ route, go }) {
@@ -472,10 +473,17 @@ function MiniPlayer({ media, onClose }) {
 
 /* ---------- DAILY THOUGHT ---------------------------------- */
 export function DailyScreen() {
-  const dayIndex = new Date().getDate() % DATA.THOUGHTS.length;
-  const [idx, setIdx] = useState(dayIndex);
-  const t = DATA.THOUGHTS[idx];
+  const messages = useDaily();
+  const [offset, setOffset] = useState(0);
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  if (!messages.length) {
+    return <div className="screen daily-screen"><p className="daily-foot" style={{ textAlign: "center", padding: "48px 0" }}>Loading…</p></div>;
+  }
+
+  const idx = (todayIndex(messages.length) + offset) % messages.length;
+  const t = messages[idx];
+
   return (
     <div className="screen daily-screen">
       <div className="daily-card">
@@ -490,7 +498,7 @@ export function DailyScreen() {
           </div>
         </div>
         <div className="daily-actions">
-          <button className="btn-ghost" onClick={() => setIdx((idx + 1) % DATA.THOUGHTS.length)}><Icon name="sparkle" size={17} /> Another</button>
+          <button className="btn-ghost" onClick={() => setOffset((o) => o + 1)}><Icon name="sparkle" size={17} /> Another</button>
           <button className="iconbtn-lg" aria-label="Share"><Icon name="share" size={19} /></button>
           <button className="iconbtn-lg" aria-label="Bookmark"><Icon name="bookmark" size={19} /></button>
         </div>

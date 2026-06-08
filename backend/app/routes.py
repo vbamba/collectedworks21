@@ -1558,6 +1558,37 @@ def book_toc():
 
 
 # ──────────────────────────────────────────────────────────────────────
+# NEW: editable home-page "thought of the day" messages.
+# ──────────────────────────────────────────────────────────────────────
+# Curated list in content/daily_messages.json; edit that file to add or
+# change messages (no redeploy — the mtime-keyed cache picks it up on the
+# next request). The client date-seeds the selection so every visitor sees
+# the same thought on a given day.
+_DAILY_PATH = BASE_DIR / 'content' / 'daily_messages.json'
+_DAILY_CACHE: Dict[str, object] = {'mtime': None, 'data': None}
+
+
+@main.route('/api/daily', methods=['GET'])
+def daily_messages():
+    try:
+        mtime = _DAILY_PATH.stat().st_mtime
+    except OSError:
+        return jsonify({'messages': []}), 200
+    if _DAILY_CACHE['data'] is not None and _DAILY_CACHE['mtime'] == mtime:
+        return jsonify({'messages': _DAILY_CACHE['data']}), 200
+    try:
+        with open(_DAILY_PATH, encoding='utf-8') as fh:
+            data = json.load(fh)
+        if not isinstance(data, list):
+            data = []
+    except (OSError, ValueError):
+        data = []
+    _DAILY_CACHE['mtime'] = mtime
+    _DAILY_CACHE['data'] = data
+    return jsonify({'messages': data}), 200
+
+
+# ──────────────────────────────────────────────────────────────────────
 # SEO: bot-rendered homepage (/)
 # ──────────────────────────────────────────────────────────────────────
 # CHANGED (2026-05-25): Flask-rendered homepage for crawlers. nginx routes
