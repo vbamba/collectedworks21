@@ -34,9 +34,15 @@ export default function LibraryApp() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Reader is a full-screen takeover
+  // Reader is a full-screen takeover. CHANGED: still mount the MenuDrawer (and
+  // pass onMenu) so navigation is reachable while reading.
   if (route.name === "reader") {
-    return <div className="library-root"><ReaderScreen route={route} go={go} /></div>;
+    return (
+      <div className="library-root">
+        <ReaderScreen route={route} go={go} onMenu={() => setMenuOpen(true)} />
+        <MenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} go={go} />
+      </div>
+    );
   }
 
   let screen;

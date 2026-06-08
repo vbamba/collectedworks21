@@ -19,7 +19,7 @@ function loadReaderPrefs() {
   catch (e) { return { ...READER_DEFAULTS }; }
 }
 
-export function ReaderScreen({ route, go }) {
+export function ReaderScreen({ route, go, onMenu }) {
   const ch = route.chapter || {};
   const query = route.query || "";
   const resultType = route.resultType || "all";
@@ -90,10 +90,19 @@ export function ReaderScreen({ route, go }) {
       <div className="reader-progress"><span style={{ width: progress * 100 + "%" }} /></div>
 
       <header className={"reader-bar top" + (chrome ? "" : " hidden")}>
+        <button className="iconbtn" onClick={onMenu} aria-label="Menu"><Icon name="menu" /></button>
         <button className="iconbtn" onClick={back} aria-label="Back"><Icon name="arrowLeft" /></button>
         <div className="reader-bar-title"><span>{bookTitle || "Reading"}</span>{data?.parent_toc_title && <em>{data.parent_toc_title}</em>}</div>
         <button className="iconbtn" onClick={() => setShowSettings(true)} aria-label="Reading settings"><Icon name="type" /></button>
       </header>
+
+      {/* CHANGED: persistent menu button so navigation stays reachable even when
+          the reading chrome is hidden (tap-to-immerse). */}
+      {!chrome && (
+        <button className="reader-fab-menu" onClick={(e) => { e.stopPropagation(); onMenu(); }} aria-label="Menu">
+          <Icon name="menu" size={20} />
+        </button>
+      )}
 
       <div className="reader-scroll" ref={scrollRef} onClick={() => setChrome((c) => !c)}>
         <article className="reader-article" style={{ maxWidth: widthPx, fontSize: prefs.size, lineHeight: prefs.spacing, fontFamily: fontStack }}>
