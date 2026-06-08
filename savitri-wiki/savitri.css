@@ -1,0 +1,92 @@
+/* ============================================================
+   The Sunlit Path — Savitri Study site styling.
+   Brings the static Savitri site onto the shared visual identity.
+   Self-contained on purpose: this site deploys separately
+   (savitri.thesunlitpath.in), so it can't @import the repo's
+   design/tokens.css across origins — the :root below MIRRORS
+   design/tokens.css (keep them in sync). Fonts loaded via @import.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --paper:     #FAF6EE;
+  --paper-2:   #F4EDE0;
+  --ink:       #2A2620;
+  --ink-soft:  #6E665A;
+  --ink-faint: #A89F8F;
+  --line:      #E4D9C6;
+  --gold:      oklch(0.66 0.094 78);
+  --ui:      'Hanken Grotesk', system-ui, sans-serif;
+  --serif:   'Spectral', Georgia, serif;
+  --display: 'Cormorant Garamond', Georgia, serif;
+  --max-width: 40rem;
+}
+* { box-sizing: border-box; }
+html { font-size: 18px; }
+body {
+  font-family: var(--serif);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.7;
+  max-width: var(--max-width);
+  margin: 2.5rem auto;
+  padding: 0 1.25rem 4rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+header.site {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.6rem;
+  margin-bottom: 2rem;
+  font-family: var(--ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+header.site a { color: var(--ink-soft); text-decoration: none; }
+header.site a:hover { color: var(--gold); }
+h1, h2, h3 {
+  font-family: var(--display);
+  line-height: 1.15;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+h1 { font-size: 2.6rem; margin: 0 0 1.25rem; }
+h2 { font-size: 1.7rem; margin: 2.2rem 0 0.75rem; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; }
+h3 { font-size: 1.3rem; margin: 1.6rem 0 0.5rem; }
+p { margin: 0.85rem 0; }
+a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--gold); }
+a:hover { color: var(--gold); }
+a:visited { color: var(--ink); border-bottom-color: var(--ink-faint); }
+blockquote {
+  margin: 1.4rem 0;
+  padding: 0.5rem 0 0.5rem 1.2rem;
+  border-left: 3px solid var(--gold);
+  font-style: italic;
+  color: var(--ink-soft);
+  white-space: pre-line;
+  font-size: 1.05rem;
+  font-family: var(--serif);
+}
+blockquote p { margin: 0; }
+ul, ol { padding-left: 1.4rem; }
+li { margin: 0.3rem 0; }
+code {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  background: var(--paper-2);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+em { font-style: italic; }
+strong { font-weight: 600; }
+footer.site {
+  margin-top: 4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--ui);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
