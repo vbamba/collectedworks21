@@ -122,7 +122,10 @@ export function SavitriScreen({ go }) {
 
 /* ---------- VOLUME DETAIL ---------------------------------- */
 export function VolumeScreen({ route, go }) {
-  const book = route.book;
+  const books = useBooks();
+  // CHANGED (Phase 3e): resolve the book from navigation state (instant) or,
+  // on a deep link / refresh, look it up from /api/books by collection+slug.
+  const book = route.book || books.find((b) => b.collection === route.collection && b.book_slug === route.bookSlug);
   const [toc, setToc] = useState(null);
   const [err, setErr] = useState("");
 
@@ -137,7 +140,7 @@ export function VolumeScreen({ route, go }) {
     return () => { alive = false; };
   }, [book?.collection, book?.book_slug]);
 
-  if (!book) return <div className="screen"><p style={{ padding: 24 }}>No book selected.</p></div>;
+  if (!book) return <div className="screen"><p style={{ padding: 24 }}>{books.length ? "Book not found." : "Loading…"}</p></div>;
 
   const ac = authorCode(book.author);
   const showAuthor = book.author && !/various/i.test(book.author);

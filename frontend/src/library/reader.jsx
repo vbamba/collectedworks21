@@ -19,7 +19,7 @@ function loadReaderPrefs() {
   catch (e) { return { ...READER_DEFAULTS }; }
 }
 
-export function ReaderScreen({ route, go, onMenu }) {
+export function ReaderScreen({ route, go, goBack, onMenu }) {
   const ch = route.chapter || {};
   const query = route.query || "";
   const resultType = route.resultType || "all";
@@ -72,8 +72,9 @@ export function ReaderScreen({ route, go, onMenu }) {
     : prefs.font === "cormorant" ? "'Cormorant Garamond', Georgia, serif"
     : "'Spectral', Georgia, serif";
 
-  // Back to search, carrying the query so the results reappear.
-  const back = () => go({ name: "search", q: query });
+  // CHANGED (Phase 3e): real history now exists, so Back returns to wherever
+  // the reader was opened from (volume TOC or search). Falls back to search.
+  const back = () => (goBack ? goBack() : go({ name: "search", q: query }));
 
   // Prev/Next within the book (slug mode only — search results always carry
   // book_slug/slug). Disabled when the neighbour or book slug is unavailable.
@@ -121,7 +122,7 @@ export function ReaderScreen({ route, go, onMenu }) {
           {data && (
             <div className="reader-end">
               <span>∗ ∗ ∗</span>
-              <button className="btn-ghost" onClick={back}>Back to results</button>
+              <button className="btn-ghost" onClick={back}>Back</button>
             </div>
           )}
         </article>
