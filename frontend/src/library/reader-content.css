@@ -8,6 +8,10 @@
 .library-root .reader-article .chapter-body hr { border: 0; border-top: 1px solid var(--line); margin: 2em 0; }
 .library-root .reader-article .chapter-body mark { background: var(--gold-soft); color: inherit; padding: 0 0.05em; border-radius: 2px; }
 
+/* The reader is z-index 80; lift the menu drawer above it so the reader's
+   hamburger actually shows the drawer (it was opening behind the reader). */
+.library-root .drawer-scrim { z-index: 100; }
+
 /* Persistent menu button shown when the reader chrome is hidden. */
 .library-root .reader-fab-menu {
   position: fixed; top: 12px; left: 12px; z-index: 50;
