@@ -1,1619 +1,1620 @@
 {
-    "03-04CollectedPlaysAndStories.pdf": {
-        "book_title": "Collected Plays And Stories",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 10,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Letters-on-Savitri.pdf": {
-        "book_title": "Letters On Savitri",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "26TheFuturePoetry.pdf": {
-        "book_title": "The Future Poetry",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 20,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "19EssaysOnTheGita.pdf": {
-        "book_title": "Essays On The Gita",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "36AutobiographicalNotes.pdf": {
-        "book_title": "Autobiographical Notes",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 30,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Letters of Historical Interest"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "25TheHumanCycle.pdf": {
-        "book_title": "The Human Cycle",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 40,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "War and Self-Determination"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "14VedicAndPhilologicalStudies.pdf": {
-        "book_title": "Vedic And Philological Studies",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 20,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "is_sanskrit": true,
-        "sanskrit_format": "interspersed",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "28LettersOnYoga-I.pdf": {
-        "book_title": "Letters On Yoga - I",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "16HymnsToTheMysticFire.pdf": {
-        "book_title": "Hymns To The Mystic Fire",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 80,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Commentaries and Annotated Translations"
-        ],
-        "is_sanskrit": true,
-        "sanskrit_format": "verse_translation",
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "29LettersOnYoga-II.pdf": {
-        "book_title": "Letters On Yoga - II",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "13EssaysInPhilosophyAndYoga.pdf": {
-        "book_title": "Essays In Philosophy And Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 80,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Elements-of-Yoga.pdf": {
-        "book_title": "Elements Of Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "12EssaysDivineAndHuman.pdf": {
-        "book_title": "Essays Divine And Human",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 70,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "10-11RecordOfYoga.pdf": {
-        "book_title": "Record Of Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 70,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "32TheMotherWithLettersOnTheMother.pdf": {
-        "book_title": "The Mother With Letters On The Mother",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
-        "extra_header_phrases": [
-            "Letters on the Mother"
-        ]
-    },
-    "27LettersOnPoetryAndArt.pdf": {
-        "book_title": "Letters On Poetry And Art",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 70,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "On His Own and Others’ Poetry"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Bases-of-Yoga.pdf": {
-        "book_title": "Bases Of Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "02CollectedPoems.pdf": {
-        "book_title": "Collected Poems",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 90,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "35LettersOnHimselfAndTheAshram.pdf": {
-        "book_title": "Letters On Himself And The Ashram",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 70,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "31LettersOnYoga-IV.pdf": {
-        "book_title": "Letters On Yoga - IV",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "30LettersOnYoga-III.pdf": {
-        "book_title": "Letters On Yoga - III",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "21-22TheLifeDivine.pdf": {
-        "book_title": "The Life Divine",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "33-34Savitri.pdf": {
-        "book_title": "Savitri",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "break_after_long_paragraph": false,
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Lights-on-Yoga.pdf": {
-        "book_title": "Lights On Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "17IshaUpanishad.pdf": {
-        "book_title": "Isha Upanishad",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 90,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Letters-to-Mrinalini-Devi.pdf": {
-        "book_title": "Letters To Mrinalini Devi",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 20,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "05Translations.pdf": {
-        "book_title": "Translations",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 10,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "20TheRenaissanceInIndia.pdf": {
-        "book_title": "The Renaissance In India",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 40,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Sri-Aurobindo-Lyrical-Poems.pdf": {
-        "book_title": "Sri Aurobindo Lyrical Poems",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 20,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "01EarlyCulturalWritings.pdf": {
-        "book_title": "Early Cultural Writings",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 20,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "23-24TheSynthesisOfYoga.pdf": {
-        "book_title": "The Synthesis Of Yoga",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "The Yoga of Divine Love",
-            "The Yoga of Self-Perfection",
-            "The Yoga of Integral Knowledge",
-            "The Yoga of Divine Works"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "15TheSecretOfTheVeda.pdf": {
-        "book_title": "The Secret Of The Veda",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 80,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "06-07BandeMataram.pdf": {
-        "book_title": "Bande Mataram",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 70,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "TheFutureEvolutionofMan.pdf": {
-        "book_title": "The Future Evolution Of Man",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "disable_page_header_deletion": true,
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "18KenaAndOtherUpanishads.pdf": {
-        "book_title": "Kena And Other Upanishads",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 80,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "08Karmayogin.pdf": {
-        "book_title": "Karmayogin",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 80,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "TheYogaAndItsObjects.pdf": {
-        "book_title": "The Yoga And Its Objects",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "TheHourOfGod.pdf": {
-        "book_title": "The Hour Of God",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "Supramental-Manifestation.pdf": {
-        "book_title": "The Supramental Manifestation",
-        "author": "Sri Aurobindo",
-        "group": "CWSA",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
-    },
-    "The-Mother-MCW-Vol7-Questions-And-Answers-1955.pdf": {
-        "book_title": "Questions And Answers 1955",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol17-More-Answers-from-The-Mother.pdf": {
-        "book_title": "More Answers From The Mother",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Series Nine–To a Young Teacher"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol16-Some-Answers-from-The-Mother.pdf": {
-        "book_title": "Some Answers From The Mother",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol15-Words-Of-The-Mother-III.pdf": {
-        "book_title": "Words Of The Mother III",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Words of the Mother-III"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol13-Words-Of-The-Mother-I.pdf": {
-        "book_title": "Words Of The Mother I",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Words of the Mother-I"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol14-Words-Of-The-Mother-II.pdf": {
-        "book_title": "Words Of The Mother II",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Words of the Mother-II"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol3-Questions-and-Answers-1929-31.pdf": {
-        "book_title": "Questions And Answers 1929 31",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "extra_header_phrases": [
-            "Questions and Answers",
-            "On the Dhammapada"
-        ],
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol6-Questions-And-Answers-1954.pdf": {
-        "book_title": "Questions And Answers 1954",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "New-Correspondences-of-the-Mother-1.pdf": {
-        "book_title": "New Correspondences Of The Mother I",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "New Correspondences of the Mother - I",
-            "New Correspondences of the Mother"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol10-On-Aphorisms.pdf": {
-        "book_title": "On Aphorisms",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "On Thoughts and Aphorisms",
-            "Jnana",
-            "Karma",
-            "Bhakti"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The Mother - Agenda Vol1.pdf": {
-        "book_title": "Agenda Vol 1",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol2.pdf": {
-        "book_title": "Agenda Vol 2",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol3.pdf": {
-        "book_title": "Agenda Vol 3",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol4.pdf": {
-        "book_title": "Agenda Vol 4",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol5.pdf": {
-        "book_title": "Agenda Vol 5",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol6.pdf": {
-        "book_title": "Agenda Vol 6",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol7.pdf": {
-        "book_title": "Agenda Vol 7",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol8.pdf": {
-        "book_title": "Agenda Vol 8",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol9.pdf": {
-        "book_title": "Agenda Vol 9",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol10.pdf": {
-        "book_title": "Agenda Vol 10",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol11.pdf": {
-        "book_title": "Agenda Vol 11",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol12.pdf": {
-        "book_title": "Agenda Vol 12",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "The Mother - Agenda Vol13.pdf": {
-        "book_title": "Agenda Vol 13",
-        "author": "The Mother",
-        "group": "Agenda",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother",
-        "split_on_dates": true
-    },
-    "New-Correspondences-of-the-Mother-2.pdf": {
-        "book_title": "New Correspondences Of The Mother II",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "New Correspondences of the Mother - II"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol12-On-Education.pdf": {
-        "book_title": "On Education",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Centre of Education"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The Mothers Vision.pdf": {
-        "book_title": "The Mothers Vision",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "use_chapters": true,
-        "chapter_marker_regex": "^Chapter\\s+\\d+\\b",
-        "skip_toc_entries": [
-            "^Table of Contents$",
-            "^Publisher’s Note$"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol9-Questions-And-Answers-1957-58.pdf": {
-        "book_title": "Questions And Answers 1957 58",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol5-Questions-and-Answers-1953.pdf": {
-        "book_title": "Questions And Answers 1953",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol4-Questions-and-Answers-1950-51.pdf": {
-        "book_title": "Questions And Answers 1950 51",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol11-Notes-on-the-Way.pdf": {
-        "book_title": "Notes On The Way",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol2-Words-of-Long-Ago.pdf": {
-        "book_title": "Words Of Long Ago",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol8-Questions-And-Answers-1956.pdf": {
-        "book_title": "Questions And Answers 1956",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "extra_header_phrases": [
-            "Questions and Answers"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "The-Mother-MCW-Vol1-Prayers-and-Meditations.pdf": {
-        "book_title": "Prayers And Meditations",
-        "author": "The Mother",
-        "group": "CWM",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "An extensive account of spiritual experiences and teachings of The Mother"
-    },
-    "Light to Superlight.pdf": {
-        "book_title": "Light To Superlight",
-        "author": "Various",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "To-Thee-Our-Infinite-Gratitude.pdf": {
-        "book_title": "To Thee Our Infinite Gratitude",
-        "author": "Various",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Anie-Nunnally-The-Golden-Path.pdf": {
-        "book_title": "Anie Nunnally - The Golden Path",
-        "author": "anie",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Govindbhai-Patel-My-Pilgrimage-to-the-Spirit.pdf": {
-        "book_title": "Govindbhai - My Pilgrimage To The Spirit",
-        "author": "govindbhai",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Satprem-The-Mind-of-Cells.pdf": {
-        "book_title": "Satprem - The Mind Of Cells",
-        "author": "satprem",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Satprem-Sri-Aurobindo-or-The-Adventure-of-Consciousness.pdf": {
-        "book_title": "Satprem - Sri Aurobindo Or The Adventure Of Consciousness",
-        "author": "satprem",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nirodbaran-Twelve-Years-with-Sri-Aurobindo.pdf": {
-        "book_title": "Nirodbaran - Twelve Years With Sri Aurobindo",
-        "author": "nirodbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nirodbaran Talks With Sri Aurobindo 02.pdf": {
-        "book_title": "Nirodbaran - Talks With Sri Aurobindo II",
-        "author": "nirodbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nirodbaran Talks With Sri Aurobindo 01.pdf": {
-        "book_title": "Nirodbaran - Talks With Sri Aurobindo I",
-        "author": "nirodbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nirodbaran-Sri-Aurobindos-Humour.pdf": {
-        "book_title": "Nirodbaran - Sri Aurobindo's Humour",
-        "author": "nirodbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nirodbaran-An-Extraordinary-Girl.pdf": {
-        "book_title": "Nirodbaran - An Extraordinary Girl",
-        "author": "nirodbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nolini-Kanta-Gupta-Evolution-And-The-Earthly-Destiny.pdf": {
-        "book_title": "Nolini - Evolution And The Earthly Destiny",
-        "author": "nolini",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Pavitra-Conversations-with-Sri-Aurobindo.pdf": {
-        "book_title": "Pavitra - Conversations With Sri Aurobindo",
-        "author": "pavitra",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": "",
-        "split_on_dates": true
-    },
-    "Sahana-Devi-At-the-Feet-of-the-Mother-and-Sri-Aurobindo.pdf": {
-        "book_title": "Sahana - At The Feet Of The Mother And Sri Aurobindo",
-        "author": "sahana",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Janina-Stroka-Captive-of-Her-Love.pdf": {
-        "book_title": "Janina - Captive Of Her Love",
-        "author": "janina",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Anilbaran-Roy-Interviews-and-Conversations.pdf": {
-        "book_title": "Anilbaran - Interviews And Conversations",
-        "author": "anilbaran",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Sweet-Mother.pdf": {
-        "book_title": "Sarkar - Interviews And Conversations",
-        "author": "mona-sarkar",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nolini-Kanta-Gupta-On-Savitri.pdf": {
-        "book_title": "Nolini - On Savitri",
-        "author": "nolini",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nolini-Kanta-Gupta-The-Mother-Abides.pdf": {
-        "book_title": "Nolini - The Mother Abides",
-        "author": "nolini",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Nolini-Reminiscences.pdf": {
-        "book_title": "Nolini - Reminiscences",
-        "author": "nolini",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Kailas-I-am-with-you.pdf": {
-        "book_title": "Kailas I am with you",
-        "author": "kailas",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "AB-Purani-Evening-Talks-with-Sri-Aurobindo.pdf": {
-        "book_title": "Purani Evening Talks with Sri Aurobindo",
-        "author": "purani",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    },
-    "Growng-up-with-The-Mother.pdf": {
-        "book_title": "Growng up with The Mother",
-        "author": "Tara Jauhar",
-        "group": "Disciples",
-        "priority": 99,
-        "language": "English",
-        "isbn": "",
-        "tags": [
-            "Yoga",
-            "Philosophy",
-            "Spirituality"
-        ],
-        "format": "PDF",
-        "availability": "Public",
-        "description": ""
-    }
+  "03-04CollectedPlaysAndStories.pdf": {
+    "book_title": "Collected Plays And Stories",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 10,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Letters-on-Savitri.pdf": {
+    "book_title": "Letters On Savitri",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "26TheFuturePoetry.pdf": {
+    "book_title": "The Future Poetry",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 20,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "19EssaysOnTheGita.pdf": {
+    "book_title": "Essays On The Gita",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "36AutobiographicalNotes.pdf": {
+    "book_title": "Autobiographical Notes",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 30,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Letters of Historical Interest"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "25TheHumanCycle.pdf": {
+    "book_title": "The Human Cycle",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 40,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "War and Self-Determination"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "14VedicAndPhilologicalStudies.pdf": {
+    "book_title": "Vedic And Philological Studies",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 20,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "is_sanskrit": true,
+    "sanskrit_format": "interspersed",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "28LettersOnYoga-I.pdf": {
+    "book_title": "Letters On Yoga - I",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "16HymnsToTheMysticFire.pdf": {
+    "book_title": "Hymns To The Mystic Fire",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 80,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Commentaries and Annotated Translations"
+    ],
+    "is_sanskrit": true,
+    "sanskrit_format": "verse_translation",
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "29LettersOnYoga-II.pdf": {
+    "book_title": "Letters On Yoga - II",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "13EssaysInPhilosophyAndYoga.pdf": {
+    "book_title": "Essays In Philosophy And Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 80,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Elements-of-Yoga.pdf": {
+    "book_title": "Elements Of Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "12EssaysDivineAndHuman.pdf": {
+    "book_title": "Essays Divine And Human",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 70,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "10-11RecordOfYoga.pdf": {
+    "book_title": "Record Of Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 70,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "32TheMotherWithLettersOnTheMother.pdf": {
+    "book_title": "The Mother With Letters On The Mother",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "extra_header_phrases": [
+      "Letters on the Mother"
+    ]
+  },
+  "27LettersOnPoetryAndArt.pdf": {
+    "book_title": "Letters On Poetry And Art",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 70,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "On His Own and Others’ Poetry"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Bases-of-Yoga.pdf": {
+    "book_title": "Bases Of Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "02CollectedPoems.pdf": {
+    "book_title": "Collected Poems",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 90,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "35LettersOnHimselfAndTheAshram.pdf": {
+    "book_title": "Letters On Himself And The Ashram",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 70,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "31LettersOnYoga-IV.pdf": {
+    "book_title": "Letters On Yoga - IV",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "30LettersOnYoga-III.pdf": {
+    "book_title": "Letters On Yoga - III",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "21-22TheLifeDivine.pdf": {
+    "book_title": "The Life Divine",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "33-34Savitri.pdf": {
+    "book_title": "Savitri",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "break_after_long_paragraph": false,
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Lights-on-Yoga.pdf": {
+    "book_title": "Lights On Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "17IshaUpanishad.pdf": {
+    "book_title": "Isha Upanishad",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 90,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Letters-to-Mrinalini-Devi.pdf": {
+    "book_title": "Letters To Mrinalini Devi",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 20,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "05Translations.pdf": {
+    "book_title": "Translations",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 10,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "20TheRenaissanceInIndia.pdf": {
+    "book_title": "The Renaissance In India",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 40,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Sri-Aurobindo-Lyrical-Poems.pdf": {
+    "book_title": "Sri Aurobindo Lyrical Poems",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 20,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "01EarlyCulturalWritings.pdf": {
+    "book_title": "Early Cultural Writings",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 20,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "23-24TheSynthesisOfYoga.pdf": {
+    "book_title": "The Synthesis Of Yoga",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "The Yoga of Divine Love",
+      "The Yoga of Self-Perfection",
+      "The Yoga of Integral Knowledge",
+      "The Yoga of Divine Works"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "15TheSecretOfTheVeda.pdf": {
+    "book_title": "The Secret Of The Veda",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 80,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "06-07BandeMataram.pdf": {
+    "book_title": "Bande Mataram",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 70,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "TheFutureEvolutionofMan.pdf": {
+    "book_title": "The Future Evolution Of Man",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "disable_page_header_deletion": true,
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "18KenaAndOtherUpanishads.pdf": {
+    "book_title": "Kena And Other Upanishads",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 80,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "08Karmayogin.pdf": {
+    "book_title": "Karmayogin",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 80,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "TheYogaAndItsObjects.pdf": {
+    "book_title": "The Yoga And Its Objects",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "TheHourOfGod.pdf": {
+    "book_title": "The Hour Of God",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "Supramental-Manifestation.pdf": {
+    "book_title": "The Supramental Manifestation",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+  },
+  "The-Mother-MCW-Vol7-Questions-And-Answers-1955.pdf": {
+    "book_title": "Questions And Answers 1955",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol17-More-Answers-from-The-Mother.pdf": {
+    "book_title": "More Answers From The Mother",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Series Nine–To a Young Teacher"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol16-Some-Answers-from-The-Mother.pdf": {
+    "book_title": "Some Answers From The Mother",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol15-Words-Of-The-Mother-III.pdf": {
+    "book_title": "Words Of The Mother III",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Words of the Mother-III"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol13-Words-Of-The-Mother-I.pdf": {
+    "book_title": "Words Of The Mother I",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Words of the Mother-I"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol14-Words-Of-The-Mother-II.pdf": {
+    "book_title": "Words Of The Mother II",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Words of the Mother-II"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol3-Questions-and-Answers-1929-31.pdf": {
+    "book_title": "Questions And Answers 1929 31",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "extra_header_phrases": [
+      "Questions and Answers",
+      "On the Dhammapada"
+    ],
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol6-Questions-And-Answers-1954.pdf": {
+    "book_title": "Questions And Answers 1954",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "New-Correspondences-of-the-Mother-1.pdf": {
+    "book_title": "New Correspondences Of The Mother I",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "New Correspondences of the Mother - I",
+      "New Correspondences of the Mother"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol10-On-Aphorisms.pdf": {
+    "book_title": "On Aphorisms",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "On Thoughts and Aphorisms",
+      "Jnana",
+      "Karma",
+      "Bhakti"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The Mother - Agenda Vol1.pdf": {
+    "book_title": "Agenda Vol 1",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol2.pdf": {
+    "book_title": "Agenda Vol 2",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol3.pdf": {
+    "book_title": "Agenda Vol 3",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol4.pdf": {
+    "book_title": "Agenda Vol 4",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol5.pdf": {
+    "book_title": "Agenda Vol 5",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol6.pdf": {
+    "book_title": "Agenda Vol 6",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol7.pdf": {
+    "book_title": "Agenda Vol 7",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol8.pdf": {
+    "book_title": "Agenda Vol 8",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol9.pdf": {
+    "book_title": "Agenda Vol 9",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol10.pdf": {
+    "book_title": "Agenda Vol 10",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol11.pdf": {
+    "book_title": "Agenda Vol 11",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol12.pdf": {
+    "book_title": "Agenda Vol 12",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "The Mother - Agenda Vol13.pdf": {
+    "book_title": "Agenda Vol 13",
+    "author": "The Mother",
+    "group": "Agenda",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother",
+    "split_on_dates": true
+  },
+  "New-Correspondences-of-the-Mother-2.pdf": {
+    "book_title": "New Correspondences Of The Mother II",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "New Correspondences of the Mother - II"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol12-On-Education.pdf": {
+    "book_title": "On Education",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Centre of Education"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The Mothers Vision.pdf": {
+    "book_title": "The Mothers Vision",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "use_chapters": true,
+    "chapter_marker_regex": "^Chapter\\s+\\d+\\b",
+    "skip_toc_entries": [
+      "^Table of Contents$",
+      "^Publisher’s Note$"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol9-Questions-And-Answers-1957-58.pdf": {
+    "book_title": "Questions And Answers 1957 58",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol5-Questions-and-Answers-1953.pdf": {
+    "book_title": "Questions And Answers 1953",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol4-Questions-and-Answers-1950-51.pdf": {
+    "book_title": "Questions And Answers 1950 51",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol11-Notes-on-the-Way.pdf": {
+    "book_title": "Notes On The Way",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol2-Words-of-Long-Ago.pdf": {
+    "book_title": "Words Of Long Ago",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol8-Questions-And-Answers-1956.pdf": {
+    "book_title": "Questions And Answers 1956",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "extra_header_phrases": [
+      "Questions and Answers"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "The-Mother-MCW-Vol1-Prayers-and-Meditations.pdf": {
+    "book_title": "Prayers And Meditations",
+    "author": "The Mother",
+    "group": "CWM",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "An extensive account of spiritual experiences and teachings of The Mother"
+  },
+  "Light to Superlight.pdf": {
+    "book_title": "Light To Superlight",
+    "author": "Various",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "To-Thee-Our-Infinite-Gratitude.pdf": {
+    "book_title": "To Thee Our Infinite Gratitude",
+    "author": "Various",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Anie-Nunnally-The-Golden-Path.pdf": {
+    "book_title": "Anie Nunnally - The Golden Path",
+    "author": "anie",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Govindbhai-Patel-My-Pilgrimage-to-the-Spirit.pdf": {
+    "book_title": "Govindbhai - My Pilgrimage To The Spirit",
+    "author": "govindbhai",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Satprem-The-Mind-of-Cells.pdf": {
+    "book_title": "Satprem - The Mind Of Cells",
+    "author": "satprem",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Satprem-Sri-Aurobindo-or-The-Adventure-of-Consciousness.pdf": {
+    "book_title": "Satprem - Sri Aurobindo Or The Adventure Of Consciousness",
+    "author": "satprem",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "enable_italic_breaks": false
+  },
+  "Nirodbaran-Twelve-Years-with-Sri-Aurobindo.pdf": {
+    "book_title": "Nirodbaran - Twelve Years With Sri Aurobindo",
+    "author": "nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nirodbaran Talks With Sri Aurobindo 02.pdf": {
+    "book_title": "Nirodbaran - Talks With Sri Aurobindo II",
+    "author": "nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nirodbaran Talks With Sri Aurobindo 01.pdf": {
+    "book_title": "Nirodbaran - Talks With Sri Aurobindo I",
+    "author": "nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nirodbaran-Sri-Aurobindos-Humour.pdf": {
+    "book_title": "Nirodbaran - Sri Aurobindo's Humour",
+    "author": "nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nirodbaran-An-Extraordinary-Girl.pdf": {
+    "book_title": "Nirodbaran - An Extraordinary Girl",
+    "author": "nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nolini-Kanta-Gupta-Evolution-And-The-Earthly-Destiny.pdf": {
+    "book_title": "Nolini - Evolution And The Earthly Destiny",
+    "author": "nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Pavitra-Conversations-with-Sri-Aurobindo.pdf": {
+    "book_title": "Pavitra - Conversations With Sri Aurobindo",
+    "author": "pavitra",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "split_on_dates": true
+  },
+  "Sahana-Devi-At-the-Feet-of-the-Mother-and-Sri-Aurobindo.pdf": {
+    "book_title": "Sahana - At The Feet Of The Mother And Sri Aurobindo",
+    "author": "sahana",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Janina-Stroka-Captive-of-Her-Love.pdf": {
+    "book_title": "Janina - Captive Of Her Love",
+    "author": "janina",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Anilbaran-Roy-Interviews-and-Conversations.pdf": {
+    "book_title": "Anilbaran - Interviews And Conversations",
+    "author": "anilbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Sweet-Mother.pdf": {
+    "book_title": "Sarkar - Interviews And Conversations",
+    "author": "mona-sarkar",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nolini-Kanta-Gupta-On-Savitri.pdf": {
+    "book_title": "Nolini - On Savitri",
+    "author": "nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nolini-Kanta-Gupta-The-Mother-Abides.pdf": {
+    "book_title": "Nolini - The Mother Abides",
+    "author": "nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Nolini-Reminiscences.pdf": {
+    "book_title": "Nolini - Reminiscences",
+    "author": "nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Kailas-I-am-with-you.pdf": {
+    "book_title": "Kailas I am with you",
+    "author": "kailas",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "AB-Purani-Evening-Talks-with-Sri-Aurobindo.pdf": {
+    "book_title": "Purani Evening Talks with Sri Aurobindo",
+    "author": "purani",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  },
+  "Growng-up-with-The-Mother.pdf": {
+    "book_title": "Growng up with The Mother",
+    "author": "Tara Jauhar",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": ""
+  }
 }

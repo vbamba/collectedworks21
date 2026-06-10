@@ -535,7 +535,7 @@ def text_search_api():
 # Generic prose reflow utilities (+ poetry detection)
 # ──────────────────────────────────────────────────────────────────────
 
-_end_punct_rx = re.compile(r'[.!?…"”)\]]\s*$')
+_end_punct_rx = re.compile(r'[.!?…]["”)\]]*\s*$')
 _soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*$')
 
 # CHANGED: detect standalone "Month Day, Year" lines (e.g. "October 5, 1963")
