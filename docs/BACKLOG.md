@@ -39,11 +39,16 @@ for review). **C was attempted twice and reverted** — see its section below.
 - **New tooling:** `scripts/check_conservation.py` (per-book char-multiset
   conservation, tag/whitespace/mark-insensitive). Baseline snapshot kept at
   `~/Projects/collectedworks/out_chapters_baseline_20260612/`.
-- **NOT YET DEPLOYED.** Local `chapters.db` + `out_chapters` rebuilt and
-  fixups applied (strip_oversized, recover_letters_verse `--db`,
-  normalize_ligatures `--txt` [no-op], normalize_sanskrit_runs). Pre-rebuild db
-  backed up at `backend/db/chapters.db.prerebuild-20260625`. Deploy gated on
-  review.
+- **DEPLOYED 2026-06-26** (tag `deployed-2026-06-26`). Data-only deploy
+  (chapters.db atomic swap + out_chapters rsync per DEPLOY.md §0.5/§3; no
+  backend/frontend code change). Prod smoke-verified: `svāhā` search returns
+  hits, Hymns chapter renders clean (0 stranded marks), CollectedPoems "Light"
+  footer gone. EC2 snapshot at `backups/collectedworks21-pre-release-2026-06-26.tar.gz`;
+  local pre-rebuild db at `backend/db/chapters.db.prerebuild-20260625`.
+- **Also shipped:** CollectedPoems running page-footer strip (period/place
+  titles like "England and Baroda, 1883–1898" that leaked mid-poem) via
+  `extra_header_phrases` in book_mapping.json — 279 → 7 footer lines, 0
+  mid-poem. Surfaced during local testing, not part of the original B/B1/C.
 
 ---
 
