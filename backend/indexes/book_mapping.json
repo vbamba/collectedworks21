@@ -304,7 +304,16 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "extra_header_phrases": [
+      "England and Baroda, 1883–1898",
+      "Baroda, c. 1898–1902",
+      "Baroda and Bengal, c. 1900–1909",
+      "Calcutta and Chandernagore, 1907–1910",
+      "Pondicherry, c. 1910–1920",
+      "Baroda and Pondicherry, c. 1902–1936",
+      "Pondicherry, c. 1927–1947"
+    ]
   },
   "35LettersOnHimselfAndTheAshram.pdf": {
     "book_title": "Letters On Himself And The Ashram",
