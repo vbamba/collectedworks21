@@ -821,6 +821,7 @@
     "description": "An extensive account of spiritual experiences and teachings of The Mother"
   },
   "The-Mother-MCW-Vol10-On-Aphorisms.pdf": {
+    "skip_split": true,
     "book_title": "On Aphorisms",
     "author": "The Mother",
     "group": "CWM",

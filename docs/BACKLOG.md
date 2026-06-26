@@ -6,6 +6,47 @@ this one. Conda envs: splitter = `faiss_env`, serving = `collectedworks_env`.
 
 ---
 
+## STATUS UPDATE (2026-06-25) — B + B1 done, C deferred (regression found)
+
+A full corpus rebuild shipped **B1** and **B** locally (not yet deployed — held
+for review). **C was attempted twice and reverted** — see its section below.
+
+- **B1 (DONE, local).** Root cause re-diagnosed: the dominant bug is not
+  "orphan diacritics on their own line" but **TeX accent-before-base** — these
+  PDFs place the accent glyph *before* its letter, separated by a space, so
+  fitz extracts `sv ̄ah ̄a` for `svāhā`, `Ch ́enier` for `Chénier`. Measured
+  **11,636 cases across 46 books** (15SecretOfTheVeda 2,487; 19EssaysOnTheGita
+  1,562; 16Hymns 1,516…); every one also broke FTS5 search for that word. Fixed
+  in `split_pdf.py` `_reorder_stranded_marks()` (regex move mark→after base +
+  NFC), applied to body + footnote lines. Corpus stranded-mark count **11,636 →
+  420**. The residual 420 are out of scope: precomposed orphans on their own
+  line (the original Supramental `ṁ`/`ṣ` examples — need x-coordinate data),
+  the TeX dot-below `r.t`→`ṛt` pattern, and Hymns legacy-font Devanagari
+  mojibake (OCR territory).
+- **B (DONE, local).** Boundary fix applied corpus-wide. Per-book section-file
+  clear added (guarded by `if sections:` — see watch-out below) so re-runs no
+  longer accumulate orphans. Conservation check across all 93 books: **0 over
+  threshold, no missing books**; all deltas are small boundary-relocation
+  dedup, verified against source PDFs on canaries. Recovered ~88 real sections
+  (e.g. 02CollectedPoems: Goethe, God, The Fear of Death).
+- **Encrypted-PDF gap found + fixed.** 30/31 LettersOnYoga and 14Vedic are
+  **AES-encrypted**; `faiss_env` lacked PyCryptodome, so PyPDF2 silently
+  returned no outline and these books were skipped (their live sections were
+  stale legacy artifacts that only survived because the old code never
+  cleared). `pip install pycryptodome` in `faiss_env` fixed it; they now
+  regenerate cleanly (counts match baseline exactly). The guarded clear is the
+  safety net if any future book is ever un-processable.
+- **New tooling:** `scripts/check_conservation.py` (per-book char-multiset
+  conservation, tag/whitespace/mark-insensitive). Baseline snapshot kept at
+  `~/Projects/collectedworks/out_chapters_baseline_20260612/`.
+- **NOT YET DEPLOYED.** Local `chapters.db` + `out_chapters` rebuilt and
+  fixups applied (strip_oversized, recover_letters_verse `--db`,
+  normalize_ligatures `--txt` [no-op], normalize_sanskrit_runs). Pre-rebuild db
+  backed up at `backend/db/chapters.db.prerebuild-20260625`. Deploy gated on
+  review.
+
+---
+
 ## C — Corpus-wide italic quote fragmentation
 
 **Symptom.** Inline Sri Aurobindo quotes (italic) fragment across lines with
@@ -40,6 +81,33 @@ italic paragraphs instead of one continuous run.
 render spot-check the heavily-italic ones (Satprem *The Mind of Cells*, CWSA
 *Letters on Yoga* volumes, etc.), confirm set-off block quotes do not wrongly
 merge into adjacent prose. Compare against current live render.
+
+**TWO APPROACHES TRIED AND REVERTED (2026-06-25). Don't repeat these:**
+
+1. **Default-flip `enable_italic_breaks` → False.** Render-diff on canaries
+   showed it merged genuine set-off items: Agenda *dialogue turns* and Satprem
+   set-off Sri Aurobindo block quotes collapsed into surrounding prose (24/29
+   Mind-of-Cells sections regressed). Rejected.
+2. **Fix the italic-line *detector*** (count a line as italic when stripping
+   its `<i>…</i>` runs leaves no word chars, instead of the strict
+   `^\s*<i>.*</i>\s*$`). Helped poem/quote books (02CollectedPoems 145→8 frags)
+   but **regressed letter-heavy books**: New-Correspondences, nirodbaran,
+   mona-sarkar, Agenda Vol11 each *gained* frags. Root cause: **inline
+   italic-within-italic** — a journal title set in roman *inside* an italic
+   letter (`<i>…for </i>Mother India<i>. …`) makes continuation lines flip
+   italic↔prose, so the detector inserts a blank mid-sentence. Confirmed via
+   render-diff: `…hope of receiving` / [blank] / `from you "Words" for …` split
+   one sentence into two paragraphs. Rejected.
+
+**Conclusion:** C is genuinely a *per-book* problem; no blanket flag/detector
+change is safe corpus-wide. Frag count is also a poor proxy (a `</i>\n\n<i>`
+adjacency is correct for distinct dialogue turns, wrong only for one continuous
+quote). A real fix must distinguish "continuous quote across a line break" from
+"distinct set-off items" — likely per-book opt-in plus a continuation heuristic
+(next line starts lowercase / no sentence-end punctuation before the break).
+Validate each candidate book with a baseline-vs-new *rendered-paragraph* diff
+(reuse the reflow logic from `routes.py` `_reflow_lines_for_prose`), not a raw
+frag count.
 
 ---
 
