@@ -58,6 +58,61 @@ for review). **C was attempted twice and reverted** — see its section below.
 blank-line gaps, e.g. on a chapter page a quote renders as several separate
 italic paragraphs instead of one continuous run.
 
+### Prioritized attack plan (measured 2026-07-11) — start with Tier 1
+
+Per-book ranking of the `</i>\n\n<i>` adjacencies, scored by the **strict**
+signal: the next italic run starts **lowercase**, i.e. an unambiguous
+mid-sentence break. (This deliberately drops false positives that the raw
+frag count produces — e.g. Savitri's `Canto One` / `The Symbol Dawn` heading
+pair, whose next line is capitalised, so it does *not* count.) `ratio` =
+strict-wrong / total adjacencies, and is the **risk gauge**: near-100% means
+almost every break in the book is wrong, so the cheap per-book flag flip is
+low-risk; a low ratio means most breaks are legitimate set-off items
+(dialogue turns) that the flag would wrongly merge — see the two reverted
+attempts below.
+
+Reproduce: strict scorer over `out_chapters/**/section_*.txt` (script kept at
+scratchpad `rank_c_candidates.py`; the strict variant counts only
+lowercase-next).
+
+**Tier 1 — ratio ≥ 85%, do first via per-book `enable_italic_breaks: false`.**
+Spot-checked 2026-07-11: every one is genuine fragmentation (hyphenated-word
+splits like `madhu-` / `mān ūrmiḥ`, `scru-` / `tinise`, and mid-sentence
+verse/quote breaks), so the flag flip is the right fix and the over-merge
+risk is minimal.
+
+| book | wrong/total | ratio |
+|------|-------------|-------|
+| `sriaurobindo/15TheSecretOfTheVeda` | 42/42 | 100% |
+| `sriaurobindo/32TheMotherWithLettersOnTheMother` | 37/43 | 86% |
+| `mother/MCW-Vol7-Questions-And-Answers-1955` | 23/27 | 85% |
+| `sriaurobindo/29LettersOnYoga-II` | 13/14 | 93% |
+| `disciples/Light to Superlight` | 9/9 | 100% |
+| `sriaurobindo/19EssaysOnTheGita` | 7/7 | 100% |
+| `sriaurobindo/18KenaAndOtherUpanishads` | 5/5 | 100% |
+
+**Tier 2 — high count but mixed ratio (37–73%). Do NOT flag-flip these** —
+they carry many legitimate dialogue-turn breaks, so the flag would over-merge
+(exactly the reverted-attempt failure). These need the per-book continuation
+heuristic instead (join only when the next line continues the sentence).
+
+| book | wrong/total | ratio |
+|------|-------------|-------|
+| `mother/New-Correspondences-of-the-Mother-2` | 105/194 | 54% |
+| `sriaurobindo/10-11RecordOfYoga` | 69/94 | 73% |
+| `mother/MCW-Vol12-On-Education` | 67/100 | 67% |
+| `mother/New-Correspondences-of-the-Mother-1` | 51/106 | 48% |
+| `mother/MCW-Vol17-More-Answers` | 49/132 | 37% |
+| `mother/The Mother - Agenda Vol1…13` | 16–35 each | 16–53% |
+| `mother/MCW-Vol6/Vol13/Vol15`, `sriaurobindo/28LettersOnYoga-I` | 14–27 | 41–73% |
+
+**Validation gate (applies to every book, both tiers) — unchanged from the
+reverted attempts:** regenerate the candidate with the change, then diff
+baseline-vs-new *rendered paragraphs* (reuse `routes.py`
+`_reflow_lines_for_prose`), NOT raw frag counts. Confirm set-off block quotes
+/ dialogue turns did not wrongly merge before shipping. Then it rides the
+normal rebuild + DEPLOY.md §3 data path.
+
 **Two root causes — one is already fixed corpus-wide, one is not:**
 
 1. **Splitter `enable_italic_breaks` (NOT fixed corpus-wide).**
