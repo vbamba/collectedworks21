@@ -58,6 +58,41 @@ for review). **C was attempted twice and reverted** — see its section below.
 blank-line gaps, e.g. on a chapter page a quote renders as several separate
 italic paragraphs instead of one continuous run.
 
+### Tier-1 execution result (2026-07-11) — 2 shipped, 5 held
+
+Worked the Tier-1 list per-book with a rendered-paragraph-diff gate. **Key
+finding: the tier metric (italic↔italic adjacencies) over-predicts safety.**
+Setting `enable_italic_breaks:false` removes the blank at *every* italic↔prose
+boundary, not just the measured italic↔italic ones — so in books with Q&A,
+dramatic dialogue, or set-off letters it merges distinct items. The metric
+only reliably predicts safety for **pure verse/quote-commentary expository
+books**.
+
+- **SHIPPED (validated clean, 0 real set-off merges):**
+  `15TheSecretOfTheVeda` (−264 paras) and `19EssaysOnTheGita` (−14). Both
+  quote Sanskrit verse inline with commentary; every merge is a fragmented
+  verse rejoining its sentence. Flag left `false` in book_mapping.json.
+- **HELD — reverted to default (flag removed):**
+  - `MCW-Vol7-QA-1955` — Q&A book; flag merged 486 italic **questions** into
+    their prose answers (38% of merges). Hard regression.
+  - `18KenaAndOtherUpanishads` — dramatic dialogue; speaker labels
+    ("Nachiketas speaks:") merged into the following verse; also heavy
+    Devanagari mojibake.
+  - `29LettersOnYoga-II`, `32TheMotherWithLettersOnTheMother`,
+    `Light to Superlight` — letters/compilation class (the one the earlier
+    global attempts regressed). Flagged merges were mostly good quote-rejoins,
+    but held out of caution.
+- **Reclassification:** the 5 held books move to the **Tier-2 treatment**
+  (per-book continuation heuristic — join only when the next line continues
+  the sentence: starts lowercase / no sentence-end punctuation before the
+  break — NOT a blanket flag flip). The flag flip is now understood to be
+  safe *only* for verse/quote-commentary books; apply it to future Tier-1
+  candidates only after confirming the book has no Q&A / dialogue / letter
+  structure, and always gate on the rendered-paragraph diff.
+- **Validation harness kept** at scratchpad `tier1_validate.py` (set-off-merge
+  detector: a fully-italic paragraph ending in terminal punctuation that
+  merges = likely a wrongly-absorbed set-off item).
+
 ### Prioritized attack plan (measured 2026-07-11) — start with Tier 1
 
 Per-book ranking of the `</i>\n\n<i>` adjacencies, scored by the **strict**
