@@ -340,30 +340,67 @@ const ChapterPage = () => {
           // "mind is a mediator to divinity" strips stopwords down to
           // ["mind","mediator","divinity"]; on a long page like a Savitri
           // canto the first "mind" is hundreds of lines before where all
-          // three words actually appear together. Finding the smallest
-          // vertical-span window of K consecutive marks (in DOM order)
-          // lands the reader on the spot that matched the *intent* of the
-          // query, not the first incidental term hit. Also tolerates
-          // typos / extra words: if one query term doesn't appear, the
-          // remaining cluster still wins.
+          // three words actually appear together.
+          //
+          // CHANGED (2026-07-11): score windows by how many DISTINCT query
+          // words they cover, then by tightness — not by raw mark density.
+          // The old version looked for the smallest window of K consecutive
+          // marks regardless of which word each mark was, so a tight run of
+          // the SAME common word (three "mind"s in one line) beat the spot
+          // where all three distinct words actually co-occur. That's the
+          // "navigates to any of the words" behavior. Now: map each mark to
+          // its query word, then slide a window that maximizes distinct-word
+          // coverage first, smallest vertical span second.
           const scrollToCluster = () => {
-            const marks = Array.from(ctx.querySelectorAll('mark'));
-            if (!marks.length) return;
-            if (marks.length === 1) {
-              marks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const allMarks = Array.from(ctx.querySelectorAll('mark'));
+            if (!allMarks.length) return;
+
+            // Which query word did this mark match? (server stems + ligature
+            // fallbacks mean the mark text may be a prefix/extension of the
+            // query word, so allow either to be a prefix of the other.)
+            const termIdOf = (text) => {
+              const t = normalizeCompat(text).toLowerCase();
+              for (let wi = 0; wi < words.length; wi++) {
+                const w = words[wi];
+                if (t === w || t.startsWith(w) || w.startsWith(t)) return wi;
+              }
+              return -1;
+            };
+
+            // (vertical position, term id) for each mark that maps to a query
+            // word, in reading order.
+            const pts = allMarks
+              .map(m => ({ top: m.getBoundingClientRect().top, el: m, term: termIdOf(m.textContent) }))
+              .filter(p => p.term >= 0)
+              .sort((a, b) => a.top - b.top);
+            if (!pts.length) {
+              allMarks[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
               return;
             }
-            // Position by vertical offset within the scrollable parent;
-            // works regardless of fonts, line-height, or reflow status.
-            const tops = marks.map(m => m.getBoundingClientRect().top);
-            const K = Math.min(words.length, marks.length);
-            let bestStart = 0;
-            let bestSpan = Infinity;
-            for (let i = 0; i + K <= tops.length; i++) {
-              const span = tops[i + K - 1] - tops[i];
-              if (span < bestSpan) { bestSpan = span; bestStart = i; }
+
+            // Two-pointer: for each right edge, shrink the left as far as it
+            // goes without dropping a distinct term, then record the window's
+            // (distinct-word coverage, vertical span). Keep the max-coverage,
+            // min-span window. If one query term never appears near the
+            // others, the best-covered cluster still wins.
+            const counts = new Map();
+            let distinct = 0;
+            let l = 0;
+            let best = { cover: -1, span: Infinity, start: 0 };
+            for (let r = 0; r < pts.length; r++) {
+              const tr = pts[r].term;
+              counts.set(tr, (counts.get(tr) || 0) + 1);
+              if (counts.get(tr) === 1) distinct++;
+              while (counts.get(pts[l].term) > 1) {
+                counts.set(pts[l].term, counts.get(pts[l].term) - 1);
+                l++;
+              }
+              const span = pts[r].top - pts[l].top;
+              if (distinct > best.cover || (distinct === best.cover && span < best.span)) {
+                best = { cover: distinct, span, start: l };
+              }
             }
-            marks[bestStart].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            pts[best.start].el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           };
 
           markIns.mark(words, {

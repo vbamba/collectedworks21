@@ -20,12 +20,16 @@ import './BooksMenu.css';
 const COLLECTION_LABEL = {
   sriaurobindo: 'Sri Aurobindo',
   mother: 'The Mother',
+  // CHANGED (2026-07-11): new compilations/ collection folder (joint
+  // Sri Aurobindo & Mother compilation volumes).
+  compilations: 'Compilations',
   disciples: 'Disciples',
 };
 
 // CHANGED: render Disciples books in collection order (Sri Aurobindo →
-// Mother → Disciples) so the user's most likely target appears first.
-const COLLECTION_ORDER = ['sriaurobindo', 'mother', 'disciples'];
+// Mother → Compilations → Disciples) so the user's most likely target
+// appears first.
+const COLLECTION_ORDER = ['sriaurobindo', 'mother', 'compilations', 'disciples'];
 
 // CHANGED: build a /viewer?file=...&v=... URL the same way TextResultCard
 // does (~line 148) so the PDF opens through the in-app PdfViewer chrome
