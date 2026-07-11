@@ -61,7 +61,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "enable_italic_breaks": false
   },
   "36AutobiographicalNotes.pdf": {
     "book_title": "Autobiographical Notes",
@@ -544,7 +545,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "enable_italic_breaks": false
   },
   "06-07BandeMataram.pdf": {
     "book_title": "Bande Mataram",
