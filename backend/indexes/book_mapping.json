@@ -1291,7 +1291,7 @@
   },
   "Anie-Nunnally-The-Golden-Path.pdf": {
     "book_title": "Anie Nunnally - The Golden Path",
-    "author": "anie",
+    "author": "Anie-Nunnally",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1303,11 +1303,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "anie"
   },
   "Govindbhai-Patel-My-Pilgrimage-to-the-Spirit.pdf": {
     "book_title": "Govindbhai - My Pilgrimage To The Spirit",
-    "author": "govindbhai",
+    "author": "Govindbhai-Patel",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1319,11 +1320,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "govindbhai"
   },
   "Satprem-The-Mind-of-Cells.pdf": {
     "book_title": "Satprem - The Mind Of Cells",
-    "author": "satprem",
+    "author": "Satprem",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1335,11 +1337,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "satprem"
   },
   "Satprem-Sri-Aurobindo-or-The-Adventure-of-Consciousness.pdf": {
     "book_title": "Satprem - Sri Aurobindo Or The Adventure Of Consciousness",
-    "author": "satprem",
+    "author": "Satprem",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1352,107 +1355,12 @@
     "format": "PDF",
     "availability": "Public",
     "description": "",
-    "enable_italic_breaks": false
+    "enable_italic_breaks": false,
+    "folder": "satprem"
   },
   "Nirodbaran-Twelve-Years-with-Sri-Aurobindo.pdf": {
     "book_title": "Nirodbaran - Twelve Years With Sri Aurobindo",
-    "author": "nirodbaran",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Nirodbaran Talks With Sri Aurobindo 02.pdf": {
-    "book_title": "Nirodbaran - Talks With Sri Aurobindo II",
-    "author": "nirodbaran",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Nirodbaran Talks With Sri Aurobindo 01.pdf": {
-    "book_title": "Nirodbaran - Talks With Sri Aurobindo I",
-    "author": "nirodbaran",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Nirodbaran-Sri-Aurobindos-Humour.pdf": {
-    "book_title": "Nirodbaran - Sri Aurobindo's Humour",
-    "author": "nirodbaran",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Nirodbaran-An-Extraordinary-Girl.pdf": {
-    "book_title": "Nirodbaran - An Extraordinary Girl",
-    "author": "nirodbaran",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Nolini-Kanta-Gupta-Evolution-And-The-Earthly-Destiny.pdf": {
-    "book_title": "Nolini - Evolution And The Earthly Destiny",
-    "author": "nolini",
-    "group": "Disciples",
-    "priority": 99,
-    "language": "English",
-    "isbn": "",
-    "tags": [
-      "Yoga",
-      "Philosophy",
-      "Spirituality"
-    ],
-    "format": "PDF",
-    "availability": "Public",
-    "description": ""
-  },
-  "Pavitra-Conversations-with-Sri-Aurobindo.pdf": {
-    "book_title": "Pavitra - Conversations With Sri Aurobindo",
-    "author": "pavitra",
+    "author": "Nirodbaran",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1465,11 +1373,114 @@
     "format": "PDF",
     "availability": "Public",
     "description": "",
-    "split_on_dates": true
+    "folder": "nirodbaran"
+  },
+  "Nirodbaran Talks With Sri Aurobindo 02.pdf": {
+    "book_title": "Nirodbaran - Talks With Sri Aurobindo II",
+    "author": "Nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "folder": "nirodbaran"
+  },
+  "Nirodbaran Talks With Sri Aurobindo 01.pdf": {
+    "book_title": "Nirodbaran - Talks With Sri Aurobindo I",
+    "author": "Nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "folder": "nirodbaran"
+  },
+  "Nirodbaran-Sri-Aurobindos-Humour.pdf": {
+    "book_title": "Nirodbaran - Sri Aurobindo's Humour",
+    "author": "Nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "folder": "nirodbaran"
+  },
+  "Nirodbaran-An-Extraordinary-Girl.pdf": {
+    "book_title": "Nirodbaran - An Extraordinary Girl",
+    "author": "Nirodbaran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "folder": "nirodbaran"
+  },
+  "Nolini-Kanta-Gupta-Evolution-And-The-Earthly-Destiny.pdf": {
+    "book_title": "Nolini - Evolution And The Earthly Destiny",
+    "author": "Nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "folder": "nolini"
+  },
+  "Pavitra-Conversations-with-Sri-Aurobindo.pdf": {
+    "book_title": "Pavitra - Conversations With Sri Aurobindo",
+    "author": "Pavitra",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "",
+    "split_on_dates": true,
+    "folder": "pavitra"
   },
   "Sahana-Devi-At-the-Feet-of-the-Mother-and-Sri-Aurobindo.pdf": {
     "book_title": "Sahana - At The Feet Of The Mother And Sri Aurobindo",
-    "author": "sahana",
+    "author": "Sahana-Devi",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1481,11 +1492,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "sahana"
   },
   "Janina-Stroka-Captive-of-Her-Love.pdf": {
     "book_title": "Janina - Captive Of Her Love",
-    "author": "janina",
+    "author": "Janina-Stroka",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1497,11 +1509,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "janina"
   },
   "Anilbaran-Roy-Interviews-and-Conversations.pdf": {
     "book_title": "Anilbaran - Interviews And Conversations",
-    "author": "anilbaran",
+    "author": "Anilbaran-Roy",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1513,11 +1526,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "anilbaran"
   },
   "Sweet-Mother.pdf": {
     "book_title": "Sarkar - Interviews And Conversations",
-    "author": "mona-sarkar",
+    "author": "Mona-Sarkar",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1529,11 +1543,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "mona-sarkar"
   },
   "Nolini-Kanta-Gupta-On-Savitri.pdf": {
     "book_title": "Nolini - On Savitri",
-    "author": "nolini",
+    "author": "Nolini",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1545,11 +1560,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "nolini"
   },
   "Nolini-Kanta-Gupta-The-Mother-Abides.pdf": {
     "book_title": "Nolini - The Mother Abides",
-    "author": "nolini",
+    "author": "Nolini",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1561,11 +1577,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "nolini"
   },
   "Nolini-Reminiscences.pdf": {
     "book_title": "Nolini - Reminiscences",
-    "author": "nolini",
+    "author": "Nolini",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1577,11 +1594,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "nolini"
   },
   "Kailas-I-am-with-you.pdf": {
     "book_title": "Kailas I am with you",
-    "author": "kailas",
+    "author": "Kailas",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1593,11 +1611,12 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "kailas"
   },
   "AB-Purani-Evening-Talks-with-Sri-Aurobindo.pdf": {
     "book_title": "Purani Evening Talks with Sri Aurobindo",
-    "author": "purani",
+    "author": "Purani",
     "group": "Disciples",
     "priority": 99,
     "language": "English",
@@ -1609,7 +1628,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "purani"
   },
   "Growng-up-with-The-Mother.pdf": {
     "book_title": "Growng up with The Mother",
@@ -1625,6 +1645,276 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": ""
+    "description": "",
+    "folder": "tara"
+  },
+  "India-the-Mother.pdf": {
+    "book_title": "India The Mother",
+    "author": "Sri Aurobindo & The Mother",
+    "group": "Compilations",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Compilation of writings by Sri Aurobindo and the Mother on India — her spirit, mission and destiny."
+  },
+  "The-Inner-Attitude.pdf": {
+    "book_title": "The Inner Attitude",
+    "author": "Sri Aurobindo & The Mother",
+    "group": "Compilations",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Compilation from the works of Sri Aurobindo and the Mother on the inner attitude in life and sadhana."
+  },
+  "The-Problem-of-Rebirth.pdf": {
+    "book_title": "The Problem Of Rebirth",
+    "author": "Sri Aurobindo",
+    "group": "CWSA",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Sri Aurobindo's essays on rebirth and karma — the evolution of the soul through successive births."
+  },
+  "Kishor-Gandhi-Thoughts-from-Sri-Aurobindo.pdf": {
+    "book_title": "Thoughts From Sri Aurobindo",
+    "author": "Kishor-Gandhi",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Thoughts from Sri Aurobindo's writings, selected and arranged by Kishor Gandhi.",
+    "folder": "kishore-gandhi"
+  },
+  "Companion-to-Hymns-to-the-Mystic-Fire-vol1.pdf": {
+    "book_title": "Companion To Hymns To The Mystic Fire Vol 1",
+    "author": "Mukund-Ainapure",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "A companion volume to Sri Aurobindo's Hymns to the Mystic Fire by Mukund Ainapure.",
+    "folder": "mukund-ainapure"
+  },
+  "Companion-to-Hymns-to-the-Mystic-Fire-vol2.pdf": {
+    "book_title": "Companion To Hymns To The Mystic Fire Vol 2",
+    "author": "Mukund-Ainapure",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "A companion volume to Sri Aurobindo's Hymns to the Mystic Fire by Mukund Ainapure.",
+    "folder": "mukund-ainapure"
+  },
+  "Companion-to-Hymns-to-the-Mystic-Fire-vol3.pdf": {
+    "book_title": "Companion To Hymns To The Mystic Fire Vol 3",
+    "author": "Mukund-Ainapure",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "A companion volume to Sri Aurobindo's Hymns to the Mystic Fire by Mukund Ainapure.",
+    "folder": "mukund-ainapure"
+  },
+  "Mukund-Ainapure-Companion-to-the-Secret-of-Veda-vol1.pdf": {
+    "book_title": "Companion To The Secret Of The Veda Vol 1",
+    "author": "Mukund-Ainapure",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "A companion volume to Sri Aurobindo's The Secret of the Veda by Mukund Ainapure.",
+    "folder": "mukund-ainapure"
+  },
+  "Georges-Van-Vrekhem-Preparing-for-the-Miraculous.pdf": {
+    "book_title": "Preparing For The Miraculous",
+    "author": "Georges-Van-Vrekhem",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Talks by Georges Van Vrekhem on Sri Aurobindo, the Mother and the evolutionary future of humanity.",
+    "folder": "georges-van-vrekhem"
+  },
+  "TKodandarama-Rao-At-the-Feet-of-the-Master.pdf": {
+    "book_title": "At The Feet Of The Master",
+    "author": "T-Kodandarama-Rao",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Reminiscences of life with Sri Aurobindo by T. Kodandarama Rao.",
+    "folder": "tkodandarama-rao"
+  },
+  "Indra-Sen-Longings-for-the-Mother.pdf": {
+    "book_title": "Longings For The Mother",
+    "author": "Indra-Sen",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Indra Sen's devotional writings and reflections on the Mother.",
+    "folder": "indirasen"
+  },
+  "Nolini-Kanta-Gupta-Seer-Poets.pdf": {
+    "book_title": "Seer Poets",
+    "author": "Nolini",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Nolini Kanta Gupta's essays on seer-poetry and mystic poets.",
+    "folder": "nolini"
+  },
+  "Dinendra-Kumar-Roy-With-Sri-Aurobindo-in-Baroda.pdf": {
+    "book_title": "With Sri Aurobindo In Baroda",
+    "author": "Dinendra-Kumar-Roy",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Dinendra Kumar Roy's memoir of his years with Sri Aurobindo in Baroda.",
+    "folder": "dinendra-kumar-roy"
+  },
+  "The-Yoga-of-the-Bhagvat-Gita.pdf": {
+    "book_title": "The Yoga Of The Bhagvat Gita",
+    "author": "Krishnaprem",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Sri Krishna Prem's exposition of the Bhagavad Gita as a path of yoga.",
+    "folder": "krishnaprem"
+  },
+  "Amal-Kiran-The-Mother-Past-Present-Future.pdf": {
+    "book_title": "The Mother - Past Present Future",
+    "author": "Amal-Kiran",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Amal Kiran (K. D. Sethna) on the Mother — her past, present and future.",
+    "folder": "amal-kiran"
+  },
+  "Clifford-Gibson-Sunil-The-Mothers-Musician.pdf": {
+    "book_title": "Sunil - The Mother's Musician",
+    "author": "Clifford-Gibson",
+    "group": "Disciples",
+    "priority": 99,
+    "language": "English",
+    "isbn": "",
+    "tags": [
+      "Yoga",
+      "Philosophy",
+      "Spirituality"
+    ],
+    "format": "PDF",
+    "availability": "Public",
+    "description": "Clifford Gibson's account of Sunil Bhattacharya, the Mother's musician.",
+    "folder": "clifford-gibson"
   }
 }

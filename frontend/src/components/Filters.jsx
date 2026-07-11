@@ -2,7 +2,9 @@
 
 import React from 'react';
 
-const collectionOrder = ['CWSA','CWM','Agenda','Disciples'];
+// CHANGED (2026-07-11): added Compilations (joint Sri Aurobindo & Mother
+// compilation volumes) as its own collection shelf.
+const collectionOrder = ['CWSA','CWM','Agenda','Compilations','Disciples'];
 
 const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
   const handleChange = (e) => {
@@ -22,6 +24,8 @@ const Filters = ({ filters, selectedFilters, setSelectedFilters }) => {
     CWSA: 'Collected Works of Sri Aurobindo',
     CWM: 'Collected Works of The Mother',
     Agenda: 'Agenda',
+    // CHANGED (2026-07-11): label for the new Compilations group
+    Compilations: 'Compilations',
     Disciples: 'Works of Disciples',
   };
 

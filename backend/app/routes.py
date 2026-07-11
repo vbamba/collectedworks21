@@ -300,6 +300,30 @@ for pth, name in [(faiss_index_path, "FAISS index"),
         app_logger.error(f"{name} file not found at '{pth}'")
         raise FileNotFoundError(f"{name} file not found at '{pth}'")
 
+# CHANGED (2026-07-11): PDF subfolders now come from an explicit "folder" tag
+# in book_mapping.json instead of being derived from the author field. The
+# author field is now a human-readable display name (e.g. "Kishor Gandhi"),
+# which no longer matches the on-disk subfolder slug (kishore-gandhi), so
+# deriving paths from it broke Disciples PDF links. Loaded once at startup;
+# the mapping only changes alongside a rebuild + restart.
+try:
+    with open(book_mapping_path, 'r', encoding='utf-8') as _f:
+        _PDF_FOLDER_BY_FILE = {
+            fname: info['folder']
+            for fname, info in json.load(_f).items()
+            if info.get('folder')
+        }
+except Exception as _e:
+    app_logger.error("Could not load PDF folder map from book mapping: %s", _e)
+    _PDF_FOLDER_BY_FILE = {}
+
+def _pdf_rel_path(collection_folder: str, pdf_fname: str) -> str:
+    """Path under pdf/ for a source PDF: <collection>[/<folder tag>]/<file>."""
+    sub = _PDF_FOLDER_BY_FILE.get(pdf_fname, '')
+    if sub:
+        return f"{collection_folder}/{sub}/{pdf_fname}"
+    return f"{collection_folder}/{pdf_fname}"
+
 def _validate_query_arg(arg_name: str = 'query'):
     query = request.args.get(arg_name, '').strip()
     if not query:
@@ -353,7 +377,9 @@ def get_filters():
         app_logger.error(f"Error loading book mapping: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
-    group_order = ["CWSA", "CWM", "Disciples"]
+    # CHANGED (2026-07-11): added Compilations (and Agenda, which was
+    # previously unlisted and sorted last implicitly) to the shelf order.
+    group_order = ["CWSA", "CWM", "Agenda", "Compilations", "Disciples"]
     groups = sorted(
         {info['group'] for info in book_mapping.values()},
         key=lambda g: group_order.index(g) if g in group_order else len(group_order)
@@ -481,10 +507,10 @@ def text_search_api():
         enriched = []
         for r in merged:
             pdf_fname = r.get('file_path', r.get('pdf_file'))
-            if r.get('group') == 'Disciples' and r.get('author', '') != 'Various':
-                combined_path = f"{r['collection_folder']}/{r['author']}/{pdf_fname}"
-            else:
-                combined_path = f"{r['collection_folder']}/{pdf_fname}"
+            # CHANGED (2026-07-11): subfolder comes from the mapping's
+            # "folder" tag (_pdf_rel_path) instead of the author field,
+            # which is now a display name that no longer matches disk.
+            combined_path = _pdf_rel_path(r['collection_folder'], pdf_fname)
             r['pdf_url'] = url_for('main.serve_pdf', filename=combined_path)
 
             r['chapter_url'] = BACKEND_CHAPTER_URL + url_for(
@@ -1474,21 +1500,17 @@ def list_books():
             continue
         seen.add(key)
 
-        # CHANGED: build pdf_url via the same path convention as the
-        # search-result enrichment block (~line 282-288): Disciples books
-        # with a named author live at /api/pdfs/disciples/<author>/<file>
-        # because each disciple has their own subdir under pdf/disciples/;
-        # everything else is /api/pdfs/<collection>/<file>. None of this
-        # checks the file actually exists — caller will see a 404 from
+        # CHANGED (2026-07-11): build pdf_url from the mapping's "folder"
+        # tag via _pdf_rel_path (same convention as the search-result
+        # enrichment block) instead of deriving the subfolder from the
+        # author field, which is now a display name. None of this checks
+        # the file actually exists — caller will see a 404 from
         # /api/pdfs/... if it doesn't, which is the same failure mode the
         # search-result PDF link has had since launch.
         pdf_url = ''
         if pdf_file:
-            if collection == 'disciples' and author and author != 'Various':
-                pdf_path = f"{collection}/{author}/{pdf_file}"
-            else:
-                pdf_path = f"{collection}/{pdf_file}"
-            pdf_url = url_for('main.serve_pdf', filename=pdf_path)
+            pdf_url = url_for('main.serve_pdf',
+                              filename=_pdf_rel_path(collection, pdf_file))
 
         books.append({
             'collection': collection,

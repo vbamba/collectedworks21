@@ -45,7 +45,22 @@ def is_toc_snippet(snippet: str) -> bool:
 
 # Treat Agenda as CWM for priority
 PRIMARY_CWM = {"CWM", "Agenda"}
-PRIMARY_GROUPS = {"CWSA"} | PRIMARY_CWM
+# CHANGED (2026-07-11): Compilations (joint SA & Mother volumes) rank with the
+# primary works, not with Disciples.
+PRIMARY_GROUPS = {"CWSA", "Compilations"} | PRIMARY_CWM
+
+# CHANGED (2026-07-11): explicit display tiers for result ordering. The user
+# wants Savitri surfaced first, then all primary SA/Mother works (incl.
+# Compilations), then Disciples — regardless of how many times the phrase
+# happens to repeat in a given snippet. This tier sorts ABOVE the term-count
+# signals in sort_results(), so it decides ordering before snippet-occurrence
+# counts do. (The old scheme only separated primary-vs-disciples and let
+# term_count dominate within the primary group, which pushed Savitri down.)
+def result_tier(x):
+    """0 = Savitri, 1 = primary works (CWSA/CWM/Agenda/Compilations), 2 = rest."""
+    if (x.get('book_title') or '').strip().lower() == 'savitri':
+        return 0
+    return 1 if x.get('group') in PRIMARY_GROUPS else 2
 
 def build_result_dict(meta, snippet, idx, category_priority=1, distance=0.0):
     return {
@@ -68,7 +83,7 @@ def sort_results(results):
     Sort precedence:
       1) category_priority (exact → all → any → semantic)
       2) distance (lower first)
-      3) group priority (CWSA/CWM/Agenda before Disciples)
+      3) result_tier (Savitri → primary works+Compilations → Disciples)
       4) term_unique_count
       5) term_count
       6) priority
@@ -81,13 +96,16 @@ def sort_results(results):
 
     def key_fn(x):
         distance = x['distance'] if x.get('distance') is not None else float('inf')
-        group_penalty = 0 if x.get('group') in PRIMARY_GROUPS else 1
+        # CHANGED (2026-07-11): 3-tier ordering replaces the old binary
+        # primary-vs-disciples penalty so Savitri leads and Compilations
+        # rank with the primary works. See result_tier().
+        tier = result_tier(x)
         term_unique = x.get('term_unique_count', 0)
         term_total  = x.get('term_count', 0)
         return (
             x.get('category_priority', 999),
             distance,
-            group_penalty,
+            tier,
             -term_unique,
             -term_total,
             -x.get('priority', 0),
