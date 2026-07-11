@@ -130,6 +130,21 @@ rsync -av --delete -e "ssh -i $PEM" \
 ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
 ```
 
+**Also ship `book_mapping.json` (lives inside the excluded `backend/indexes/`).**
+The rsync above excludes all of `backend/indexes/` to avoid pushing the
+122 MB `faiss_index.bin` + 88 MB `metadata.json`. But `book_mapping.json`
+(~50 KB) lives in that same dir and IS a code-side config: `routes.py` reads
+it at startup to build `_PDF_FOLDER_BY_FILE` (PDF subfolder paths) and
+`get_filters` reads it for the collection/book dropdowns. If you added or
+re-grouped any book, ship it explicitly or the new books get wrong PDF URLs
+and don't appear in the filters:
+```bash
+rsync -av -e "ssh -i $PEM" \
+      backend/indexes/book_mapping.json \
+      "$EC2":/home/ec2-user/collectedworks21/backend/indexes/book_mapping.json
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'   # reload the map
+```
+
 The `--delete` is safe: excluded paths (`backend/db/`, `backend/indexes/`,
 etc.) are not walked at all, so rsync will not remove files inside them.
 
@@ -313,6 +328,37 @@ file handle until they recycle:
 ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
 ```
 
+## 3.5. Source PDFs — `backend/pdf/` (only when books were added/changed)
+
+**Skip this unless you added new books or modified existing PDFs** (e.g. the
+`add_pdf_bookmarks.py` outline injection). Like `chapters.db`, `backend/pdf/`
+ships out-of-band: it's excluded from the § 1 code rsync, and new files under
+it are `.gitignore`d (only the ~83 pre-ignore PDFs are tracked). So nothing in
+§ 1 or § 3 ships a newly added PDF — the book's chapters render fine (served
+from `chapters.db`/`out_chapters`), but its **"PDF" link 404s** because the
+source file never reached EC2.
+
+Ship with `rsync` but **without `--delete`** — additive only, so it can never
+remove a prod PDF (some tracked-but-old books may exist only on EC2):
+```bash
+rsync -av -e "ssh -i $PEM" \
+      --exclude 'metadata.json' --exclude '.DS_Store' \
+      backend/pdf/ \
+      "$EC2":/home/ec2-user/collectedworks21/backend/pdf/
+```
+- **`--exclude 'metadata.json'`**: an 88 MB FAISS artifact has historically
+  been misfiled under `backend/pdf/disciples/`; this keeps it from riding along.
+- rsync is incremental, so unchanged PDFs are skipped by size/mtime — only the
+  new + modified files transfer (a full new-book batch is ~20 MB).
+- No gunicorn restart needed — PDFs are served straight off disk by
+  `send_from_directory`, not cached in the Flask process.
+
+Verify a new book's PDF is reachable:
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  https://ask.collectedworksofsriaurobindo.com/api/pdfs/compilations/India-the-Mother.pdf
+```
+
 ## 4. Post-deploy smoke tests
 
 ```bash
@@ -334,6 +380,14 @@ curl -s 'https://ask.collectedworksofsriaurobindo.com/api/chapter?collection_fol
 
 # d) nginx access log sanity — confirm 2xx on /api/text_search after deploy
 ssh -i "$PEM" "$EC2" 'sudo tail -50 /var/log/nginx/access.log | grep text_search'
+
+# e) If books were added (validates § 1 book_mapping.json + § 3.5 PDF steps):
+#    new group present in filters, new book indexed, its PDF reachable.
+BASE=https://ask.collectedworksofsriaurobindo.com
+curl -s "$BASE/api/filters" | python3 -c 'import sys,json; print("groups:", json.load(sys.stdin)["groups"])'
+curl -s "$BASE/api/books" | python3 -c 'import sys,json; b=json.load(sys.stdin); print("books:", len(b))'
+curl -s -o /dev/null -w 'new PDF: %{http_code}\n' \
+  "$BASE/api/pdfs/compilations/India-the-Mother.pdf"   # swap for your new book
 ```
 
 ## 5. Rollback
