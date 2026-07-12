@@ -81,7 +81,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "enable_question_italics": true
   },
   "25TheHumanCycle.pdf": {
     "book_title": "The Human Cycle",
@@ -274,7 +275,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "enable_question_italics": true
   },
   "Bases-of-Yoga.pdf": {
     "book_title": "Bases Of Yoga",
@@ -331,7 +333,8 @@
     ],
     "format": "PDF",
     "availability": "Public",
-    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo."
+    "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
+    "enable_question_italics": true
   },
   "31LettersOnYoga-IV.pdf": {
     "book_title": "Letters On Yoga - IV",
