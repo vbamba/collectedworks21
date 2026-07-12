@@ -571,9 +571,21 @@ _soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*$')
 # on its own line, instead of being collapsed into the following paragraph by
 # prose reflow. Anchored to ^...$ so dates appearing mid-sentence inside prose
 # are never matched.
+# CHANGED (2026-07-12): also match the CWSA letters format "9 April 1933"
+# (Day Month Year, no comma). Letters volumes date each letter this way; when
+# a date line opens a raw block (date + subsection heading + next letter with
+# no blank lines between), the old US-only regex missed it, the subheading
+# detector then never ran (it only checks a block's first line, and a digit
+# fails its uppercase gate), and reflow glued date + heading + letter opening
+# into one paragraph — ~839 blocks across the letters volumes.
 _inline_date_rx = re.compile(
-    r'^\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)'
-    r'\s+\d{1,2}(?:st|nd|rd|th)?,\s+\d{4}\s*$',
+    r'^\s*(?:'
+    r'(?:January|February|March|April|May|June|July|August|September|October|November|December)'
+    r'\s+\d{1,2}(?:st|nd|rd|th)?,\s+\d{4}'
+    r'|'
+    r'\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)'
+    r'\s+\d{4}'
+    r')\s*$',
     re.IGNORECASE,
 )
 
