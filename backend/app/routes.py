@@ -562,7 +562,13 @@ def text_search_api():
 # ──────────────────────────────────────────────────────────────────────
 
 _end_punct_rx = re.compile(r'[.!?…]["”)\]]*\s*$')
-_soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*$')
+# CHANGED (2026-07-12): also de-hyphenate when the soft hyphen sits just inside
+# a closing italic tag ("...neces-</i>" + "<i>sarily..." -> "...neces</i><i>sarily...").
+# Italic content (Sanskrit terms, quoted titles, disciple questions) that breaks
+# across a line was never de-hyphenated because the </i> hid the trailing hyphen
+# from this reflow join, leaving visible "word- word" artifacts corpus-wide. The
+# optional group keeps the </i> so the italic run stays closed.
+_soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*(</i>)?\s*$')
 
 # CHANGED: detect standalone "Month Day, Year" lines (e.g. "October 5, 1963")
 # so chapter blocks that contain a date header inline — typical of Mother's
@@ -781,7 +787,9 @@ def _reflow_lines_for_prose(lines: List[str], width: int) -> List[str]:
 
         m = _soft_hyphen_split_rx.search(buf)
         if m:
-            buf = _soft_hyphen_split_rx.sub(r'\1', buf) + ln.lstrip()
+            # CHANGED (2026-07-12): preserve a trailing </i> (group 2) when
+            # stripping the soft hyphen, so an italic run isn't left unclosed.
+            buf = _soft_hyphen_split_rx.sub(lambda mm: mm.group(1) + (mm.group(2) or ''), buf) + ln.lstrip()
         else:
             if _end_punct_rx.search(buf):
                 paragraphs.append(buf.strip())
