@@ -254,7 +254,8 @@
     "description": "An extensive account of spiritual experiences and teachings of Sri Aurobindo.",
     "extra_header_phrases": [
       "Letters on the Mother"
-    ]
+    ],
+    "enable_question_italics": true
   },
   "27LettersOnPoetryAndArt.pdf": {
     "book_title": "Letters On Poetry And Art",
