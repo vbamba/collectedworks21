@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """
-convert_savitri_sources.py — expand <code>raw/<book>/<section>.txt</code>
-references in savitri-wiki/*.html into linked chapter URLs on
-ask.collectedworksofsriaurobindo.com.
+convert_savitri_sources.py — savitri-wiki build step. Two transforms on
+each .html file, both pure source→build (never modifies the source tree):
 
-Why this exists: wiki authors use the raw-path shorthand while drafting,
-which keeps the source files lightweight and matches the splitter's
-internal filenames. On deploy, those references should resolve to
-clickable links into the rendered chapter on the main site.
+  1. Expand <code>raw/<book>/<section>.txt</code> shorthand into linked
+     chapter URLs on ask.collectedworksofsriaurobindo.com. Authors use
+     the raw-path form while drafting (lightweight, matches splitter
+     filenames); deploy renders them as clickable links.
 
-This is a pure source→build transform; it never modifies the wiki source
-tree. Always writes to a separate build dir (default: savitri-wiki-build/).
-Run it before deploying via scripts/deploy_savitri.sh — that script
-already invokes it. See docs/DEPLOY.md §8.7.
+  2. Inject per-page SEO metadata into <head>: <meta name="description">,
+     <link rel="canonical">, Open Graph tags, Twitter card, and JSON-LD
+     Article schema. Description is derived from the lede paragraph after
+     <h1>; canonical from the filename.
 
-Looks up section title + slug from the splitter's metadata.json files
-(authoritative — same source the chapter URLs were generated from).
+Always writes to a separate build dir (default: savitri-wiki-build/).
+Run before deploying via scripts/deploy_savitri.sh — that script already
+invokes it. See docs/DEPLOY.md §8.7.
+
+Source citations look up section title + slug from the splitter's
+metadata.json files (authoritative — same source the chapter URLs were
+generated from).
 
 Usage:
     python3 scripts/convert_savitri_sources.py
@@ -23,6 +27,7 @@ Usage:
 """
 
 import argparse
+import html as htmllib
 import json
 import re
 import shutil
@@ -39,6 +44,24 @@ BOOKS = {
 }
 
 BASE_URL = 'https://ask.collectedworksofsriaurobindo.com/read/sriaurobindo'
+
+# CHANGED (2026-06-06): site identity for SEO injection. Used to build
+# canonical URLs and og:site_name / JSON-LD publisher fields.
+SITE_BASE = 'https://savitri.thesunlitpath.in'
+SITE_NAME = 'SavitriStudy'
+DESC_MAX_CHARS = 160  # Google typically truncates meta descriptions ~155-160
+# Fallback when a page has no lede paragraph to derive a description from.
+SITE_DESC = ("A reader's companion to Sri Aurobindo's Savitri — original "
+             "analysis of the epic by character, concept, and canto.")
+
+# CHANGED (2026-06-07): SEO-extraction patterns. TITLE/H1 are DOTALL because
+# the index <h1> spans lines via <br/>. LEDE_RX finds the first <p> after the
+# first <h1> (the article's opening paragraph, used for the description).
+TITLE_RX = re.compile(r'<title>(.*?)</title>', re.DOTALL | re.IGNORECASE)
+H1_RX    = re.compile(r'<h1[^>]*>(.*?)</h1>', re.DOTALL | re.IGNORECASE)
+LEDE_RX  = re.compile(r'<h1[^>]*>.*?</h1>\s*<p[^>]*>(.*?)</p>',
+                      re.DOTALL | re.IGNORECASE)
+TAG_RX   = re.compile(r'<[^>]+>')
 
 # Match each <li>...</li> block so we can resolve range patterns like
 #   <code>raw/Book/sec_X.txt</code> through <code>sec_Y.txt</code>
@@ -126,6 +149,77 @@ def convert(text: str, lookup: dict, unknowns: list) -> tuple[str, int]:
     return new_text, total
 
 
+# CHANGED (2026-06-07): SEO injection. Pure build-time transform — derives
+# per-page <meta name="description">, <link rel="canonical">, Open Graph,
+# Twitter card, and JSON-LD Article schema from each page's own <title>,
+# <h1>, and lede paragraph. Source files are never touched.
+
+def _strip_tags(s: str) -> str:
+    """Inner-HTML → plain text: drop tags, unescape entities, collapse space."""
+    return re.sub(r'\s+', ' ', htmllib.unescape(TAG_RX.sub('', s))).strip()
+
+
+def _truncate(s: str, n: int) -> str:
+    """Trim to <= n chars on a word boundary, with an ellipsis."""
+    if len(s) <= n:
+        return s
+    return s[:n].rsplit(' ', 1)[0].rstrip(' ,;:—-') + '…'
+
+
+def _canonical_url(filename: str) -> str:
+    # index.html is served at the site root (matches sitemap.xml's <loc>).
+    if filename == 'index.html':
+        return SITE_BASE + '/'
+    return f'{SITE_BASE}/{filename}'
+
+
+def inject_seo(text: str, filename: str) -> tuple[str, bool]:
+    """Insert SEO <head> tags before </head>. Returns (new_text, injected?).
+    Idempotent: skips a page that already carries a description meta."""
+    if 'name="description"' in text or '</head>' not in text:
+        return text, False
+
+    title_m = TITLE_RX.search(text)
+    title = _strip_tags(title_m.group(1)) if title_m else SITE_NAME
+    h1_m = H1_RX.search(text)
+    headline = _strip_tags(h1_m.group(1)) if h1_m else title
+    lede_m = LEDE_RX.search(text)
+    description = _truncate(_strip_tags(lede_m.group(1)), DESC_MAX_CHARS) \
+        if lede_m else SITE_DESC
+
+    canonical = _canonical_url(filename)
+    title_attr = htmllib.escape(title, quote=True)
+    desc_attr = htmllib.escape(description, quote=True)
+
+    ld = {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        'headline': headline,
+        'description': description,
+        'inLanguage': 'en',
+        'mainEntityOfPage': {'@type': 'WebPage', '@id': canonical},
+        'author': {'@type': 'Organization', 'name': SITE_NAME, 'url': SITE_BASE},
+        'publisher': {'@type': 'Organization', 'name': SITE_NAME, 'url': SITE_BASE},
+    }
+    ld_json = json.dumps(ld, ensure_ascii=False, indent=2)
+
+    block = (
+        f'<meta name="description" content="{desc_attr}">\n'
+        f'<link rel="canonical" href="{canonical}">\n'
+        f'<meta property="og:type" content="article">\n'
+        f'<meta property="og:title" content="{title_attr}">\n'
+        f'<meta property="og:description" content="{desc_attr}">\n'
+        f'<meta property="og:url" content="{canonical}">\n'
+        f'<meta property="og:site_name" content="{SITE_NAME}">\n'
+        f'<meta property="og:locale" content="en_US">\n'
+        f'<meta name="twitter:card" content="summary">\n'
+        f'<meta name="twitter:title" content="{title_attr}">\n'
+        f'<meta name="twitter:description" content="{desc_attr}">\n'
+        f'<script type="application/ld+json">\n{ld_json}\n</script>\n'
+    )
+    return text.replace('</head>', block + '</head>', 1), True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -164,18 +258,24 @@ def main() -> int:
     unknowns: list = []
     files_changed = 0
     total_subs = 0
+    seo_count = 0  # CHANGED (2026-06-07): count pages that got SEO metadata
     html_files = list(out.rglob('*.html'))
     for path in sorted(html_files):
         text = path.read_text(encoding='utf-8')
         new_text, n = convert(text, lookup, unknowns)
-        if n:
+        # CHANGED (2026-06-07): inject SEO head tags in the same build pass.
+        new_text, seo_added = inject_seo(new_text, path.name)
+        if n or seo_added:
             path.write_text(new_text, encoding='utf-8')
             files_changed += 1
             total_subs += n
+            if seo_added:
+                seo_count += 1
 
     print(f'scanned {len(html_files)} html files in {src}')
     print(f'built  {out}')
     print(f'rewrote {files_changed} files with {total_subs} source-link substitutions')
+    print(f'injected SEO metadata into {seo_count} pages')
     if unknowns:
         unique = sorted(set(unknowns))
         print(f'\nWARN: {len(unique)} unknown section refs (left as <code>):',
