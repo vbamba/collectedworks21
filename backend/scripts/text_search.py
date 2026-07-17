@@ -30,6 +30,8 @@ logger.setLevel(logging.DEBUG)
 DB_PATH = os.getenv("CHAPTERS_DB", "db/chapters.db")
 CHAPTER_SNIPPET_SIZE = int(os.getenv("CHAPTER_SNIPPET_SIZE", "200"))
 TEXT_SEARCH_DEBUG = os.getenv("TEXT_SEARCH_DEBUG", "0") == "1"
+# CHANGED (2026-07-15): window (in tokens) for the new proximity tier.
+NEAR_WINDOW = int(os.getenv("TEXT_SEARCH_NEAR_WINDOW", "10"))
 
 # ----------------------------------------------------------------------
 # Stop‐word list (minimal hard‐coded set so we don’t depend on NLTK)
@@ -42,7 +44,10 @@ STOPWORDS: Set[str] = {
 }
 
 def _connect():
-    return sqlite3.connect(DB_PATH)
+    # CHANGED (2026-07-15): read CHAPTERS_DB at call time (was bound at import),
+    # so tests that point CHAPTERS_DB at a fixture DB actually use it instead of
+    # silently querying the real db/chapters.db.
+    return sqlite3.connect(os.getenv("CHAPTERS_DB", DB_PATH))
 
 def _log_sql(tag: str, sql: str, params: List):
     compact = " ".join(line.strip() for line in sql.splitlines())
@@ -80,6 +85,99 @@ def _tokenize_query(q: str) -> List[str]:
     # Remove stopwords but keep at least something
     toks = [t for t in tokens if t not in STOPWORDS]
     return toks or tokens or []
+
+# ----------------------------------------------------------------------
+# NEW (2026-07-15): British/American spelling variants (query-side).
+# The FTS index keeps the printed (mostly British) spellings; instead of
+# rebuilding it with a custom tokenizer we expand the *query* so e.g.
+# "realize" also searches "realise". Over-generation is harmless: a bogus
+# variant ("powre") simply matches nothing.
+# ----------------------------------------------------------------------
+_VARIANT_RULES = [
+    # (pattern, replacement, min_token_len)
+    (re.compile(r"is(e|es|ed|ing|ation|ations|er|ers|able|ement|ements)$"), r"iz\1", 5),
+    (re.compile(r"iz(e|es|ed|ing|ation|ations|er|ers|able|ement|ements)$"), r"is\1", 5),
+    (re.compile(r"our(s)?$"), r"or\1", 5),    # colour → color
+    (re.compile(r"or(s)?$"), r"our\1", 5),    # honor → honour
+    (re.compile(r"re$"), r"er", 5),           # centre → center
+    (re.compile(r"er$"), r"re", 5),           # center → centre
+    (re.compile(r"ll(ed|ing|er|ers|ous)$"), r"l\1", 6),          # travelled → traveled
+    (re.compile(r"(?<=[aeiou])l(ed|ing|er|ers|ous)$"), r"ll\1", 6),  # traveled → travelled
+]
+_MAX_QUERY_VARIANTS = 4  # cap on cartesian phrase/token-list expansion
+
+def _spelling_variants(token: str) -> List[str]:
+    """Return [token] plus plausible UK/US spelling variants (lowercased)."""
+    low = token.lower()
+    out = [low]
+    for rx, repl, min_len in _VARIANT_RULES:
+        if len(low) >= min_len and rx.search(low):
+            var = rx.sub(repl, low)
+            if var not in out:
+                out.append(var)
+    return out
+
+_light_stem_re = re.compile(r"(ings|ing|ies|ied|ed|es|s)$")
+
+def _light_stem(token: str) -> str:
+    """Strip one common inflection suffix (much cruder than porter, used only
+    to *relax* the Python-side verification, never to add FTS matches)."""
+    stem = _light_stem_re.sub("", token)
+    return stem if len(stem) >= 4 else token
+
+def _fts_or_group(token: str) -> str:
+    """FTS5 term for *token*: a quoted word, or an OR-group of its variants."""
+    variants = _spelling_variants(token)
+    if len(variants) == 1:
+        return f'"{variants[0]}"'
+    return "(" + " OR ".join(f'"{v}"' for v in variants) + ")"
+
+_word_in_phrase_re = re.compile(r"^([\W_]*)([\w']+)([\W_]*)$")
+
+def _phrase_variants(phrase: str) -> List[str]:
+    """
+    All spelling-variant renderings of *phrase* (original first, capped at
+    _MAX_QUERY_VARIANTS). Punctuation around each word is preserved so the
+    Python exactness verifier can substring-match the raw content.
+    """
+    words = phrase.split()
+    variants = [words]
+    for i, w in enumerate(words):
+        m = _word_in_phrase_re.match(w)
+        if not m:
+            continue
+        pre, core, post = m.groups()
+        alts = _spelling_variants(core)[1:]
+        if not alts:
+            continue
+        new = []
+        for v in variants:
+            for alt in alts:
+                if len(variants) + len(new) >= _MAX_QUERY_VARIANTS:
+                    break
+                nv = list(v)
+                nv[i] = pre + alt + post
+                new.append(nv)
+        variants.extend(new)
+    return [" ".join(v) for v in variants]
+
+def _token_variant_combos(tokens: List[str]) -> List[List[str]]:
+    """Like _phrase_variants but over an already-tokenized word list."""
+    combos = [list(tokens)]
+    for i, t in enumerate(tokens):
+        alts = _spelling_variants(t)[1:]
+        if not alts:
+            continue
+        new = []
+        for c in combos:
+            for alt in alts:
+                if len(combos) + len(new) >= _MAX_QUERY_VARIANTS:
+                    break
+                nc = list(c)
+                nc[i] = alt
+                new.append(nc)
+        combos.extend(new)
+    return combos
 
 # ----------------------------------------------------------------------
 # Helpers for diversification by book
@@ -194,7 +292,9 @@ def _sql_exact_phrase_candidates(phrase: str, limit: int, filters: Optional[Dict
     filters = filters or {}
     where_clauses = ["non_content = 0", "content MATCH ?"]
     # Keep the original phrase quoted for FTS (may return 0 due to ligatures)
-    params = [f'"{_escape_fts5_phrase(phrase)}"']
+    # CHANGED (2026-07-15): OR the phrase with its UK/US spelling variants
+    # (e.g. "realize the divine" also searches "realise the divine").
+    params = [" OR ".join(f'"{_escape_fts5_phrase(v)}"' for v in _phrase_variants(phrase))]
 
     grp = filters.get("group")
     if grp:
@@ -230,6 +330,7 @@ def _sql_exact_phrase_candidates(phrase: str, limit: int, filters: Optional[Dict
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}
+      ORDER BY bm25(chapters)  -- CHANGED (2026-07-15): rank before LIMIT so the cutoff keeps the best rows, not arbitrary rowid order
       LIMIT ?;
     """
     params.append(limit * 5)
@@ -243,8 +344,12 @@ def _python_verify_exact(rowids: List[int], phrase: str) -> Set[int]:
     and check if phrase is a substring of content. Returns matching rowids.
     """
     ok: Set[int] = set()
-    norm_phrase = _normalize_compat(phrase).lower()
-    if not norm_phrase:
+    # CHANGED (2026-07-15): accept any UK/US spelling variant of the phrase,
+    # matching the variant expansion now used in the FTS query.
+    norm_phrases = [p for p in
+                    (_normalize_compat(v).lower() for v in _phrase_variants(phrase))
+                    if p]
+    if not norm_phrases:
         return ok
     placeholders = ",".join(["?"] * len(rowids)) if rowids else ""
     if not placeholders:
@@ -254,7 +359,7 @@ def _python_verify_exact(rowids: List[int], phrase: str) -> Set[int]:
             f"SELECT rowid, content FROM chapters WHERE rowid IN ({placeholders})", rowids
         ):
             norm_content = _normalize_compat(content).lower()
-            if norm_phrase in norm_content:
+            if any(p in norm_content for p in norm_phrases):
                 ok.add(rowid)
     return ok
 
@@ -272,7 +377,9 @@ def _exact_fallback_candidates(phrase: str, limit: int, filters: Optional[Dict[s
     # Use up to first 6 tokens to keep SQL performant, require AND
     # (they are already stopword-filtered)
     words_for_sql = tokens[:6]
-    query = " AND ".join(f'"{w}"' for w in words_for_sql)
+    # CHANGED (2026-07-15): each token becomes an OR-group of its UK/US
+    # spelling variants, e.g. ("realise" OR "realize") AND "divine".
+    query = " AND ".join(_fts_or_group(w) for w in words_for_sql)
 
     where_clauses = ["non_content = 0", "content MATCH ?"]
     params = [query]
@@ -311,6 +418,7 @@ def _exact_fallback_candidates(phrase: str, limit: int, filters: Optional[Dict[s
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}
+      ORDER BY bm25(chapters)  -- CHANGED (2026-07-15): rank before LIMIT so the cutoff keeps the best rows
       LIMIT ?;
     """
     params.append(limit * 10)  # a bit wider, Python will filter
@@ -365,6 +473,109 @@ def search_phrase(
     return diversified
 
 # ----------------------------------------------------------------------
+# NEW (2026-07-15): PROXIMITY (NEAR) SEARCH
+# Sits between the exact and all-words tiers. Rescues near-quotes: all query
+# tokens within a small window, plus "drop-one" subsets so a single
+# misremembered word (e.g. "vain OUR human power" for "vain ARE human power")
+# still finds the passage. Porter stemming makes power/powers equivalent.
+# ----------------------------------------------------------------------
+_MAX_NEAR_CLAUSES = 12
+
+def _near_match_query(tokens: List[str]) -> str:
+    """
+    Build 'NEAR(...) OR NEAR(...)' over:
+      1) the full token set (with UK/US spelling-variant combos), and
+      2) for 4+ tokens, each drop-one subset (base spellings only).
+    Full-set clauses match more terms so bm25 ranks them above drop-one hits.
+    """
+    def near(ts):
+        return "NEAR(" + " ".join(f'"{t}"' for t in ts) + f", {NEAR_WINDOW})"
+
+    clauses = [near(c) for c in _token_variant_combos(tokens)]
+    if 4 <= len(tokens) <= 8:
+        for i in range(len(tokens)):
+            if len(clauses) >= _MAX_NEAR_CLAUSES:
+                break
+            clauses.append(near(tokens[:i] + tokens[i + 1:]))
+    return " OR ".join(clauses)
+
+def search_near(
+    phrase: str,
+    limit: int = 10,
+    filters: Optional[Dict[str, str]] = None
+) -> List[Dict]:
+    filters = filters or {}
+    tokens = _tokenize_query(phrase)[:8]  # cap so NEAR queries stay cheap
+    if len(tokens) < 2:
+        return []  # proximity is meaningless for a single word
+
+    where_clauses = ["non_content = 0", "content MATCH ?"]
+    params: List = [_near_match_query(tokens)]
+    logger.info("search_near() tokens=%s limit=%s filters=%s", tokens, limit, filters)
+
+    grp = filters.get("group")
+    if grp:
+        if grp in ("CWM", "Agenda"):
+            where_clauses.append("group_name IN (?,?)")
+            params.extend(["CWM", "Agenda"])
+        else:
+            where_clauses.append("group_name = ?")
+            params.append(grp)
+
+    if filters.get("book_title"):
+        where_clauses.append("book_title = ?")
+        params.append(filters["book_title"])
+
+    where_sql = " AND ".join(where_clauses)
+    sql = f"""
+      SELECT
+        rowid,
+        chapter,
+        pdf_file,
+        collection_folder,
+        book_folder,
+        section_filename,
+        book_title,
+        author,
+        group_name AS "group",
+        priority,
+        start_page,
+        end_page,
+        slug,
+        book_slug,
+        parent_toc_title,
+        snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
+      FROM chapters
+      WHERE {where_sql}
+      ORDER BY bm25(chapters)
+      LIMIT ?;
+    """
+    params.append(limit * 5)
+    _log_sql("near", sql, params)
+    with _connect() as conn:
+        rows = conn.execute(sql, params).fetchall()
+    logger.debug("Fetched %d rows (near)", len(rows))
+
+    # category_priority/distance sit between exact (1 / 0.0) and all (2 / 0.1)
+    results = [
+        _row_to_result(r, idx, category_priority=2, distance=0.05, result_type="near")
+        for idx, r in enumerate(rows)
+    ]
+
+    for r in results:
+        r["term_count"] = _count_occurrences(r["snippet"], tokens)
+        r["term_unique_count"] = _count_unique_terms(r["snippet"], tokens)
+
+    filtered = apply_filters(results, filters)
+    filtered = [r for r in filtered if not is_toc_snippet(r["snippet"])]
+    sorted_res = sort_results(filtered)
+    diversified = diversify_by_book(sorted_res, top_k=limit)
+
+    if TEXT_SEARCH_DEBUG:
+        logger.debug("search_near(): returning %d", len(diversified))
+    return diversified
+
+# ----------------------------------------------------------------------
 # ALL‐WORDS SEARCH  (strict verification with Unicode normalization)
 # ----------------------------------------------------------------------
 def _verify_all_words_rowids(rowids: List[int], words_clean: List[str]) -> Tuple[Set[int], Dict[int, Dict[str, List[str]]]]:
@@ -378,7 +589,19 @@ def _verify_all_words_rowids(rowids: List[int], words_clean: List[str]) -> Tuple
     placeholders = ",".join(["?"] * len(rowids))
     # Normalize the tokens once
     words_norm = [ _normalize_compat(w).lower() for w in words_clean ]
-    regexes = [(w, re.compile(rf"\b{re.escape(w)}\b")) for w in words_norm]
+    # CHANGED (2026-07-15): the FTS index uses the porter stemmer, so a row can
+    # match on "powers" when the query says "power" (and vice versa) — the old
+    # literal \b..\b check then dropped it. Match on a lightly-stemmed prefix of
+    # each token (or any of its UK/US spelling variants) plus a short suffix,
+    # mirroring porter's looseness. This can only *keep* rows FTS already
+    # matched, never add new ones.
+    regexes = [
+        (w, re.compile(
+            r"\b(?:" + "|".join(re.escape(s) for v in _spelling_variants(w)
+                                for s in {v, _light_stem(v)}) + r")\w{0,6}"
+        ))
+        for w in words_norm
+    ]
 
     ok: Set[int] = set()
     debug_map: Dict[int, Dict[str, List[str]]] = {}
@@ -406,7 +629,9 @@ def search_all_words(
     # [CHANGED] robust tokenization (strip punctuation, NFKC)
     raw_tokens = _tokenize_query(" ".join(words))
     words_clean = raw_tokens  # already stopword-filtered & normalized
-    query = " AND ".join(f'"{w}"' for w in words_clean) if words_clean else ""
+    # CHANGED (2026-07-15): each token becomes an OR-group of its UK/US
+    # spelling variants, e.g. ("realise" OR "realize") AND "divine".
+    query = " AND ".join(_fts_or_group(w) for w in words_clean) if words_clean else ""
     logger.info("search_all_words() words=%s limit=%s filters=%s", words_clean, limit, filters)
 
     rows: List[tuple] = []
@@ -452,6 +677,7 @@ def search_all_words(
             snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
           FROM chapters
           WHERE {where_sql}
+          ORDER BY bm25(chapters)  -- CHANGED (2026-07-15): rank before LIMIT so the cutoff keeps the best rows
           LIMIT ?;
         """
         params.append(limit * 5)
@@ -500,6 +726,7 @@ def search_all_words(
                 snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
               FROM chapters
               WHERE {where_sql}
+              ORDER BY bm25(chapters)  -- CHANGED (2026-07-15): rank before LIMIT so the cutoff keeps the best rows
               LIMIT ?;
             """
             params.append(limit * 5)
@@ -565,7 +792,8 @@ def search_any_words(
     where_clauses = ["non_content = 0"]
     params: List = []
     if words_clean:
-        query = " OR ".join(f'"{w}"' for w in words_clean)
+        # CHANGED (2026-07-15): OR in UK/US spelling variants of each token.
+        query = " OR ".join(f'"{v}"' for w in words_clean for v in _spelling_variants(w))
         where_clauses.append("content MATCH ?")
         params.append(query)
 
@@ -605,6 +833,7 @@ def search_any_words(
         snippet(chapters, -1, '<b>', '</b>', '…', {CHAPTER_SNIPPET_SIZE}) AS snippet
       FROM chapters
       WHERE {where_sql}
+      ORDER BY bm25(chapters)  -- CHANGED (2026-07-15): rank before LIMIT so the cutoff keeps the best rows
       LIMIT ?;
     """
     params.append(limit * 5)

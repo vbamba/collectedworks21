@@ -25,7 +25,8 @@ from scripts.utils import apply_filters
 import nltk
 
 # text search helpers
-from scripts.text_search import search_phrase, search_all_words, search_any_words, STOPWORDS
+# CHANGED (2026-07-15): + search_near — new proximity tier between exact and all-words
+from scripts.text_search import search_phrase, search_near, search_all_words, search_any_words, STOPWORDS
 
 # NLTK data path (unchanged)
 nltk.data.path.append('/Users/vbamba/nltk_data')
@@ -481,15 +482,23 @@ def text_search_api():
         if mode == 'exact' or len(exact) >= limit:
             buckets = [exact]
         else:
+            # CHANGED (2026-07-15): proximity tier between exact and all-words.
+            # Rescues near-quotes (all tokens in a small window, one word
+            # allowed wrong via drop-one NEAR). Skipped for mode=all_words,
+            # whose contract is "every word present" — drop-one would break it.
+            near = search_near(q, limit, filters) if mode == 'all' else []
             raw_words = q.split()
             words_wo_sw = [w for w in raw_words if w.lower() not in STOPWORDS] or raw_words
-            allw = search_all_words(words_wo_sw, limit, filters)
-            merged_tmp = exact + allw
-            if len(merged_tmp) >= limit or mode == 'all_words':
-                buckets = [exact, allw]
+            if len(exact) + len(near) >= limit:
+                buckets = [exact, near]
             else:
-                anyw = search_any_words(words_wo_sw, limit, filters)
-                buckets = [exact, allw, anyw]
+                allw = search_all_words(words_wo_sw, limit, filters)
+                merged_tmp = exact + near + allw
+                if len(merged_tmp) >= limit or mode == 'all_words':
+                    buckets = [exact, near, allw]
+                else:
+                    anyw = search_any_words(words_wo_sw, limit, filters)
+                    buckets = [exact, near, allw, anyw]
 
         seen = set()
         merged: List[Dict] = []

@@ -43,6 +43,45 @@ function ligatureRegexEscape(str) {
     .replace(/fl/gi, '(?:fl|\\uFB02)');
 }
 
+// CHANGED (2026-07-17): UK/US spelling variants for highlighting — mirrors the
+// backend's _VARIANT_RULES (text_search.py). The server now matches across
+// spellings ("realize" finds "realise"), so the highlighter must too or a
+// variant hit would fall through to the per-word fallback and mark the wrong
+// spot. Over-generation is harmless: a bogus variant just never matches.
+const VARIANT_RULES = [
+  [/is(e|es|ed|ing|ation|ations|er|ers|able|ement|ements)$/, 'iz$1', 5],
+  [/iz(e|es|ed|ing|ation|ations|er|ers|able|ement|ements)$/, 'is$1', 5],
+  [/our(s)?$/, 'or$1', 5],    // colour → color
+  [/or(s)?$/, 'our$1', 5],    // honor → honour
+  [/re$/, 'er', 5],           // centre → center
+  [/er$/, 're', 5],           // center → centre
+  [/ll(ed|ing|er|ers|ous)$/, 'l$1', 6],           // travelled → traveled
+  [/([aeiou])l(ed|ing|er|ers|ous)$/, '$1ll$2', 6], // traveled → travelled
+];
+function spellingVariants(word) {
+  const low = word.toLowerCase();
+  const out = [low];
+  for (const [rx, repl, minLen] of VARIANT_RULES) {
+    if (low.length >= minLen && rx.test(low)) {
+      const v = low.replace(rx, repl);
+      if (!out.includes(v)) out.push(v);
+    }
+  }
+  return out;
+}
+// Regex fragment matching a phrase word or any of its spelling variants,
+// preserving punctuation around the word core (e.g. "realise," / "realize,").
+function variantPattern(word) {
+  const m = word.match(/^([\W_]*)([\w']+)([\W_]*)$/);
+  if (!m) return ligatureRegexEscape(word);
+  const [, pre, core, post] = m;
+  const alts = spellingVariants(core);
+  const coreAlt = alts.length === 1
+    ? ligatureRegexEscape(core)
+    : '(?:' + alts.map(ligatureRegexEscape).join('|') + ')';
+  return ligatureRegexEscape(pre) + coreAlt + ligatureRegexEscape(post);
+}
+
 const ChapterPage = () => {
   const [searchParams]    = useSearchParams();
   // CHANGED: useParams returns {} when the matched route has no path params
@@ -266,7 +305,15 @@ const ChapterPage = () => {
                 // wrong occurrence.
                 const WS_OR_TAG = '(?:\\s|<[^>]+>)+';
                 const normPhrase = normalizeCompat(phrase);
-                const pattern = ligatureRegexEscape(normPhrase).replace(/\s+/g, WS_OR_TAG);
+                // CHANGED (2026-07-17): per-word variant-aware pattern (was a
+                // whole-phrase escape) so an exact-tier hit found via a UK/US
+                // spelling variant ("realize" → "realise") still highlights as
+                // one contiguous phrase at the right position.
+                const pattern = normPhrase
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .map(variantPattern)
+                  .join(WS_OR_TAG);
                 const rx = new RegExp(pattern, 'i');
 
                 const html = ctx.innerHTML;
@@ -305,8 +352,10 @@ const ChapterPage = () => {
                   // joiner must tolerate inline tags (e.g. <br/>) so a stem
                   // phrase that crosses a line break still matches.
                   const STEM_JOIN = '(?:\\s|<[^>]+>)+';
+                  // CHANGED (2026-07-17): variantPattern (was ligatureRegexEscape)
+                  // so the stem pass also tolerates UK/US spelling variants.
                   const stemPat = words
-                    .map(w => ligatureRegexEscape(w) + '\\w{0,5}')
+                    .map(w => variantPattern(w) + '\\w{0,5}')
                     .join(STEM_JOIN);
                   const stemRx = new RegExp('\\b' + stemPat + '\\b', 'i');
                   const html = ctx.innerHTML;
@@ -323,9 +372,10 @@ const ChapterPage = () => {
               } catch {}
 
               // Final fallback: highlight individual non-stopwords
+              // CHANGED (2026-07-17): include UK/US spelling variants of each word
               const words = phrase.split(/\s+/).filter(w => w && !STOPWORDS.has(w.toLowerCase()));
               if (!words.length) return;
-              markIns.mark(words, { ...markOpts, separateWordSearch: true, done: scroll });
+              markIns.mark(words.flatMap(spellingVariants), { ...markOpts, separateWordSearch: true, done: scroll });
             }
           });
         } else {
@@ -334,6 +384,12 @@ const ChapterPage = () => {
             .split(/\s+/)
             .filter(w => w && !STOPWORDS.has(w.toLowerCase()));
           if (!words.length) return;
+          // CHANGED (2026-07-17): also mark UK/US spelling variants of each
+          // query word ("realize" also highlights "realise"); variantGroups
+          // lets termIdOf map a variant mark back to its original word index
+          // so distinct-word cluster scoring is unaffected.
+          const variantGroups = words.map(w => spellingVariants(w));
+          const markWords = variantGroups.flat();
 
           // CHANGED (2026-05-24): in all/any mode, scroll to the densest
           // cluster of <mark>s rather than the first match. A query like
@@ -360,9 +416,12 @@ const ChapterPage = () => {
             // query word, so allow either to be a prefix of the other.)
             const termIdOf = (text) => {
               const t = normalizeCompat(text).toLowerCase();
-              for (let wi = 0; wi < words.length; wi++) {
-                const w = words[wi];
-                if (t === w || t.startsWith(w) || w.startsWith(t)) return wi;
+              // CHANGED (2026-07-17): check each word's spelling variants so a
+              // variant mark still counts toward its original query word.
+              for (let wi = 0; wi < variantGroups.length; wi++) {
+                for (const w of variantGroups[wi]) {
+                  if (t === w || t.startsWith(w) || w.startsWith(t)) return wi;
+                }
               }
               return -1;
             };
@@ -403,14 +462,15 @@ const ChapterPage = () => {
             pts[best.start].el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           };
 
-          markIns.mark(words, {
+          // CHANGED (2026-07-17): markWords (words + spelling variants), was words
+          markIns.mark(markWords, {
             ...markOpts,
             separateWordSearch: true,
             done: () => {
               if (!ctx.querySelector('mark')) {
                 // ligature-tolerant per-term fallback
                 let html = ctx.innerHTML;
-                for (const t of words) {
+                for (const t of markWords) {
                   const rx = new RegExp('\\b(' + ligatureRegexEscape(t) + ')\\b', 'gi');
                   html = html.replace(rx, '<mark>$1</mark>');
                 }
