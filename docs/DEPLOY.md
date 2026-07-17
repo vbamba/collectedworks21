@@ -90,20 +90,20 @@ ssh -i "$PEM" "$EC2" "
   sudo tar -czf \$WEB_OUT -C /usr/share/nginx html
   sudo chown ec2-user:ec2-user \$WEB_OUT
 
+  # CHANGED (2026-07-17): auto-prune — keep only the newest 2 tarballs of each
+  # kind (the snapshot just taken + the previous release). The app tarballs are
+  # ~1.6 GB each, so letting them accumulate eats the 60 GB root disk fast.
+  # Runs as part of every snapshot so it can't be forgotten. Roll-back depth is
+  # therefore ONE release; anything older must be re-deployed from local.
+  echo '[backup] pruning to newest 2 of each kind:'
+  ls -1t /home/ec2-user/backups/collectedworks21-pre-*.tar.gz | tail -n +3 | xargs -r rm -v
+  ls -1t /home/ec2-user/backups/nginx-html-pre-*.tar.gz     | tail -n +3 | xargs -r rm -v
+
   echo '[backup] done.'
   ls -lh \$APP_OUT \$WEB_OUT
   echo '[backup] all snapshots:'
   ls -lh /home/ec2-user/backups/
 "
-```
-
-Housekeeping — prune old tarballs after a release is confirmed healthy
-(keep the last 3–5 of each kind so you can roll back more than one step):
-```bash
-ssh -i "$PEM" "$EC2" '
-  ls -1t /home/ec2-user/backups/collectedworks21-pre-*.tar.gz | tail -n +6 | xargs -r rm -v
-  ls -1t /home/ec2-user/backups/nginx-html-pre-*.tar.gz     | tail -n +6 | xargs -r rm -v
-'
 ```
 
 ## 1. Backend — rsync code + restart Flask
