@@ -163,8 +163,26 @@ const TextResultCard = ({
   }
 
   /* -------------------------  Build PDF link  ------------------------ */
+  // CHANGED (2026-07-31): when the reader arrived via a search, send them to
+  // /api/pdf_page, which finds the page their match is actually ON and
+  // redirects the viewer there. `start_page` is the CHAPTER's first page, so on
+  // a long chapter the old direct link landed them pages away from the text
+  // they searched for (reported: page 485 for a hit on page 509). The backend
+  // falls back to start_page whenever it can't locate the text, so this is
+  // never worse. With no query there is nothing to locate — keep the direct
+  // link and skip the extra request.
   let viewerLink = null;
-  if (start_page !== undefined && start_page !== null) {
+  const pdfCollection = collection_folder || result.collection_folder;
+  const pdfBookFolder = book_folder || result.book_folder;
+  if (query && pdfCollection && pdfBookFolder && section_filename) {
+    const qs = new URLSearchParams({
+      collection_folder: pdfCollection,
+      book_folder:       pdfBookFolder,
+      section_filename:  section_filename,
+      query:             query
+    });
+    viewerLink = withVersion(`/api/pdf_page?${qs.toString()}`);
+  } else if (start_page !== undefined && start_page !== null) {
     if (pdf_url) {
       // Preferred: use pdf_url exactly as supplied by backend
       viewerLink = withVersion(

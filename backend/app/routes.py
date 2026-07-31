@@ -9,7 +9,7 @@ from flask import Blueprint, request, abort, jsonify, render_template, send_from
 import json
 from pathlib import Path, PurePosixPath
 # CHANGED: urlencode for the /chapter?... fallback target in chapter_content_page.
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 import os
 from dotenv import load_dotenv
 from markupsafe import escape
@@ -367,6 +367,161 @@ def serve_pdf(filename):
     except (FileNotFoundError, NotFound):
         app_logger.error("PDF not found: %r", safe_filename)
         return jsonify({'error': 'File not found.'}), 404
+
+# ──────────────────────────────────────────────────────────────────────
+# PDF deep-link: open the PDF on the page the search hit is actually on
+# ──────────────────────────────────────────────────────────────────────
+# CHANGED (2026-07-31): the "PDF" button on a search result linked to the
+# chapter's start_page, so on a long chapter the reader landed pages away from
+# the text they searched for. Reported case: "still the union comes about" sits
+# on PDF page 509 of The Secret of the Veda, but the link opened page 485 — the
+# chapter's first page, 24 pages earlier. Measured across the corpus: 40% of
+# chapters are a single page (always correct, which is why this hid in casual
+# use), but 60% span more, 25% span >5 pages and 3% span >20.
+#
+# Resolved on demand rather than precomputed: the chapter's page range is
+# already in chapters.db, so only those pages are scanned (~90ms for a 44-page
+# chapter) and nothing is spent until the reader clicks through. Precomputing
+# would mean shipping a second copy of the corpus text; the PDFs are already on
+# disk here. PyMuPDF is imported lazily and EVERY failure path falls back to
+# start_page, so if the library is missing the button behaves exactly as before.
+_PDF_PAGE_SCAN_LIMIT = 250   # guard against a pathological chapter range
+
+def _norm_pdf_text(s: str) -> str:
+    """Fold PDF text and the query into one comparable form. Dropping every
+    non-alphanumeric character also absorbs the three things that otherwise
+    break matching in these TeX-set PDFs: line-break hyphenation ("un-\\nion"),
+    ligatures (ﬁ vs fi), and stranded combining accents."""
+    s = unicodedata.normalize('NFKD', s or '')
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r'[^a-z0-9]', '', s.lower())
+
+def _resolve_pdf_match_page(pdf_abs_path, start_page, end_page, query):
+    """Best 1-based PDF page for `query` within [start_page, end_page].
+
+    Falls back to start_page whenever the text can't be located, so the result
+    is never worse than the old behaviour.
+    """
+    needle = _norm_pdf_text(query)
+    if not needle:
+        return start_page
+    try:
+        import fitz  # PyMuPDF — optional at runtime; absent => old behaviour
+    except Exception:
+        app_logger.info("PDF page resolve skipped: PyMuPDF unavailable")
+        return start_page
+
+    doc = None
+    try:
+        doc = fitz.open(pdf_abs_path)
+        first = max(0, int(start_page) - 1)
+        last_req = int(end_page or start_page) - 1
+        last = min(doc.page_count - 1, max(first, last_req))
+        last = min(last, first + _PDF_PAGE_SCAN_LIMIT - 1)
+        if first > last:
+            return start_page
+
+        pages = []
+        for i in range(first, last + 1):
+            try:
+                pages.append(_norm_pdf_text(doc.load_page(i).get_text()))
+            except Exception:
+                pages.append('')
+
+        # 1) whole phrase on one page — the common case
+        for off, text in enumerate(pages):
+            if needle in text:
+                return first + off + 1
+
+        # 2) phrase straddling a page break: land on the page it starts on
+        for off in range(len(pages) - 1):
+            if needle in pages[off] + pages[off + 1]:
+                return first + off + 1
+
+        # 3) terms not contiguous (search_type=all/any, or an FTS stem match):
+        #    pick the page carrying the most distinct query terms.
+        terms = set()
+        for word in re.findall(r"[^\W\d_]+", query, flags=re.UNICODE):
+            t = _norm_pdf_text(word)
+            if len(t) >= 4 and t not in _PDF_MATCH_STOPWORDS:
+                terms.add(t)
+        if terms:
+            best_off, best_score = None, 0
+            for off, text in enumerate(pages):
+                score = sum(1 for t in terms if t in text)
+                if score > best_score:
+                    best_off, best_score = off, score
+            # require a real signal, not one incidental word
+            if best_off is not None and best_score >= max(2, (len(terms) + 1) // 2):
+                return first + best_off + 1
+
+        return start_page
+    except Exception as exc:
+        app_logger.warning("PDF page resolve failed for %s: %s", pdf_abs_path, exc)
+        return start_page
+    finally:
+        if doc is not None:
+            try:
+                doc.close()
+            except Exception:
+                pass
+
+_PDF_MATCH_STOPWORDS = {_norm_pdf_text(w) for w in STOPWORDS} if STOPWORDS else set()
+
+
+@main.route('/api/pdf_page', methods=['GET'])
+def pdf_page():
+    """Redirect to the PDF viewer at the page where `query` actually occurs
+    within the given chapter, instead of the chapter's first page."""
+    collection = request.args.get('collection_folder', '').strip()
+    book_folder = request.args.get('book_folder', '').strip()
+    section_filename = request.args.get('section_filename', '').strip()
+    query = request.args.get('query', '')[:MAX_QUERY_LENGTH]
+
+    if not (collection and book_folder and section_filename):
+        return jsonify({'error': 'collection_folder, book_folder and section_filename are required'}), 400
+
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        row = conn.execute(
+            """SELECT pdf_file, start_page, end_page FROM chapters
+                WHERE collection_folder = ? AND book_folder = ? AND section_filename = ?
+                LIMIT 1""",
+            (collection, book_folder, section_filename)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not row or not row[0]:
+        return jsonify({'error': 'chapter not found'}), 404
+    pdf_file, start_page, end_page = row
+
+    def _as_int(v, default=None):
+        try:
+            return int(str(v).strip())
+        except (TypeError, ValueError):
+            return default
+
+    start_page = _as_int(start_page)
+    if start_page is None:
+        return jsonify({'error': 'chapter has no page reference'}), 404
+    end_page = _as_int(end_page, start_page)
+
+    rel = _pdf_rel_path(collection, pdf_file)
+    safe_rel = _normalize_pdf_request_path(rel)
+    if safe_rel is None:
+        return jsonify({'error': 'File not found.'}), 404
+
+    page = start_page
+    abs_path = PDF_DIRECTORY / safe_rel
+    if os.path.exists(abs_path):
+        page = _resolve_pdf_match_page(abs_path, start_page, end_page, query)
+    else:
+        app_logger.warning("PDF missing on disk, using start_page: %s", abs_path)
+
+    pdf_url = url_for('main.serve_pdf', filename=safe_rel)
+    return redirect(f"/viewer?file={quote(pdf_url, safe='')}&page={page}", code=302)
+
 
 @main.route('/api/filters', methods=['GET'])
 def get_filters():

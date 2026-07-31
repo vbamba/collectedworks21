@@ -167,6 +167,20 @@ clobbered by the dev `.env`. If you ever need to push env changes,
 edit `/home/ec2-user/collectedworks21/backend/.env` on EC2 directly,
 then `sudo systemctl restart collectedworks`.
 
+**Prod venv needs `pymupdf`** (added 2026-07-31, `pymupdf==1.26.5`). The
+`/api/pdf_page` route opens the source PDFs to find the page a search hit is
+actually on, instead of dropping the reader at the chapter's first page. It is
+imported lazily and every failure path falls back to `start_page`, so a venv
+without it still serves fine — the PDF deep-link just **silently** goes back to
+opening chapter starts. If you ever rebuild or restore the venv, reinstall it:
+```bash
+ssh -i "$PEM" "$EC2" '/home/ec2-user/collectedworks21/backend/venv/bin/pip install pymupdf'
+ssh -i "$PEM" "$EC2" 'sudo systemctl restart collectedworks'
+# verify: should redirect to page 509, not 485
+curl -s -o /dev/null -w '%{redirect_url}\n' \
+  "https://ask.collectedworksofsriaurobindo.com/api/pdf_page?collection_folder=sriaurobindo&book_folder=15TheSecretOfTheVeda&section_filename=section_75_The_Guardians_of_the_Light.txt&query=still+the+union+comes+about"
+```
+
 Note on `backend/venv/` exclude: the Python virtualenv lives only on EC2
 (`/home/ec2-user/collectedworks21/backend/venv`) and is not in the local
 tree. Without this exclude, `--delete` wipes it and gunicorn fails to

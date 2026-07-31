@@ -3,3 +3,8 @@ flask-cors==5.0.0
 faiss-cpu==1.9.0
 sentence-transformers==3.1.1
 numpy==1.26.4
+# NEW (2026-07-31): /api/pdf_page reads the source PDFs to find the page a
+# search hit is on. Imported lazily and the route falls back to the chapter's
+# start_page if it's missing, so the app still runs without it — but the PDF
+# deep-link silently reverts to opening chapter starts. Keep it installed.
+pymupdf==1.26.5
