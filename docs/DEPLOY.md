@@ -315,9 +315,11 @@ ssh -i "$PEM" "$EC2" '
 '
 
 # out_chapters/ — same excludes as sync_from_splitter.sh
+# `*.bak` covers the backups recover_letters_verse_breaks.py leaves behind;
+# they are never indexed or served, so they must not ship to prod.
 rsync -av --delete -e "ssh -i $PEM" \
       --exclude "raw_section_*.txt" --exclude "diagnostic.*" \
-      --exclude "toc.json" --exclude "toc.txt" \
+      --exclude "toc.json" --exclude "toc.txt" --exclude "*.bak" \
       backend/data/out_chapters/ \
       "$EC2":/home/ec2-user/collectedworks21/backend/data/out_chapters/
 ```

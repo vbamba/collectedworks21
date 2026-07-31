@@ -75,11 +75,15 @@ mkdir -p "$DST_CHAPTERS" "$(dirname "$DST_DB")"
 #   - toc.{json,txt}    : raw TOC extractions (metadata.json already carries
 #                         the resolved structure)
 echo "[sync] rsync out_chapters..."
+# CHANGED (2026-07-30): also exclude *.bak — recover_letters_verse_breaks.py
+# writes a .txt.bak beside each file it rewrites, and those were riding along
+# into the serving tree (and on to prod). They are never indexed or served.
 rsync -a "${DRY_RUN[@]}" --delete \
   --exclude 'raw_section_*.txt' \
   --exclude 'diagnostic.*' \
   --exclude 'toc.json' \
   --exclude 'toc.txt' \
+  --exclude '*.bak' \
   "$SRC_CHAPTERS/" "$DST_CHAPTERS/"
 
 # CHANGED: copy DB via a temp file + mv so a concurrent Flask request can

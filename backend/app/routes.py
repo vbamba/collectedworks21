@@ -1652,7 +1652,7 @@ def sitemap_xml():
     try:
         rows = conn.execute(
             """
-            SELECT DISTINCT collection_folder, book_slug, slug
+            SELECT DISTINCT collection_folder, book_folder, book_slug, slug, section_filename
               FROM chapters
              WHERE non_content = 0
                AND slug IS NOT NULL AND slug != ''
@@ -1662,17 +1662,59 @@ def sitemap_xml():
     finally:
         conn.close()
 
-    parts = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-        # Homepage — search interface
-        f'<url><loc>{SITEMAP_BASE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>',
-    ]
-    for coll, book_slug, slug in rows:
+    # CHANGED (2026-07-30): emit <lastmod> per URL, taken from the mtime of the
+    # chapter's source .txt in out_chapters/. Without it a content-only deploy
+    # (e.g. the 2026-07-23 running-header fix, which changed visible text in 43
+    # books) gives crawlers no signal that anything changed, so corrected pages
+    # are re-indexed only on Google's organic schedule. rsync -a preserves
+    # mtimes, so the prod files carry the date the splitter actually wrote them.
+    #
+    # Path note: a chapter's directory is NOT always OUT_BASE/<collection>/<book>
+    # — disciple books nest an extra author level (disciples/<author>/<book>/).
+    # The per-chapter resolver elsewhere in this file uses rglob(), which is far
+    # too slow at ~7k URLs, so index the whole tree in one walk and key on
+    # (collection, book-dir name, filename).
+    mtimes = {}
+    for dirpath, _dirs, files in os.walk(OUT_BASE):
+        d = Path(dirpath)
+        try:
+            coll_part = d.relative_to(OUT_BASE).parts[0]
+        except (ValueError, IndexError):
+            continue
+        for fn in files:
+            if fn.startswith('section_') and fn.endswith('.txt'):
+                try:
+                    mtimes[(coll_part, d.name, fn)] = (d / fn).stat().st_mtime
+                except OSError:
+                    pass
+
+    url_parts = []
+    newest = 0.0
+    for coll, book_folder, book_slug, slug, section_filename in rows:
         # escape() handles the rare slugs with & or special chars; the data
         # in chapters.db is alnum + hyphens almost universally but be safe.
         loc = f"{SITEMAP_BASE_URL}/read/{escape(coll)}/{escape(book_slug)}/{escape(slug)}"
-        parts.append(f'<url><loc>{loc}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>')
+        lastmod = ''
+        mtime = mtimes.get((coll, book_folder, section_filename))
+        if mtime:
+            newest = max(newest, mtime)
+            lastmod = f'<lastmod>{time.strftime("%Y-%m-%d", time.gmtime(mtime))}</lastmod>'
+        # No .txt on disk (row present in the index only) — still list the URL,
+        # just without a lastmod claim.
+        url_parts.append(
+            f'<url><loc>{loc}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.8</priority></url>'
+        )
+
+    home_lastmod = (
+        f'<lastmod>{time.strftime("%Y-%m-%d", time.gmtime(newest))}</lastmod>' if newest else ''
+    )
+    parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        # Homepage — search interface; stamped with the newest chapter mtime.
+        f'<url><loc>{SITEMAP_BASE_URL}/</loc>{home_lastmod}<changefreq>weekly</changefreq><priority>1.0</priority></url>',
+    ]
+    parts.extend(url_parts)
     parts.append('</urlset>')
 
     return ('\n'.join(parts), 200, {'Content-Type': 'application/xml; charset=utf-8'})
