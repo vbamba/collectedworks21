@@ -297,6 +297,59 @@ curl -s -A "Mozilla/5.0 (Linux) Google-InspectionTool/1.0" \
 Should print the four book group headings, same as the Googlebot smoke test
 in §2.5.
 
+## 2.5c. nginx — bot-route the legacy + tool paths, kill the duplicate URLs
+
+**Applied 2026-08-01.** Backup: `ask.collectedworks.conf.bak-20260801-171942-pre-seo2`.
+
+The problem: bots were routed to Flask only for `/` and `/read/…`. Every other
+path fell through to the React shell, whose `<head>` is identical on every
+route — one generic `<title>`, one generic description, `og:url` hard-pointed at
+the homepage, and **no `<link rel="canonical">` at all**. To a crawler each of
+those URLs is the same page, so Google clusters them and picks one
+representative. That is what Search Console reports as *"Duplicate, Google chose
+different canonical than user"*. The biggest population was the pre-slug
+`/chapter?collection_folder=…&book_folder=…&section_filename=…` URLs, which
+Google still has indexed from before the slug migration.
+
+Four location blocks were added to `ask.collectedworks.conf` (see
+`docs/`-adjacent history or the `.bak-…-pre-seo2` backup for the exact diff):
+
+```nginx
+# crawlers → Flask, which 301s to the canonical /read/ URL. Humans keep the SPA.
+location = /chapter { ... if ($is_bot) { proxy_pass http://127.0.0.1:5000; break; }
+                      try_files /index.html =404; }
+
+# search forms / PDF viewer — no content of their own; Flask answers bots noindex
+location ~ ^/(search|searchtext|question|chat|ai|viewer)$ { ...same shape... }
+
+# /index.html is a byte-identical duplicate of /
+location = /index.html {
+    if ($request_uri ~ "^/index\.html") { return 301 https://ask.collectedworksofsriaurobindo.com/; }
+    try_files /index.html =404;
+}
+
+# inside location ^~ /read/ — a trailing slash used to 404 for bots
+rewrite ^/read/(.*)/$ /read/$1 permanent;
+```
+
+**The `$request_uri` guard on `/index.html` is not optional.** `try_files … /index.html`
+in the `/read/` and SPA-fallback blocks reaches that location by *internal
+redirect*, and `$request_uri` still holds the URL the client actually asked for.
+Without the guard, every SPA page load would 301 to the homepage.
+
+Verify (browser UA must keep getting the shell; bot UA must get the redirects):
+```bash
+H=https://ask.collectedworksofsriaurobindo.com
+# humans: 200 + SPA shell on all of these
+for u in "/read/mother/agenda-vol-10/january-29-1969" "/chapter?x=1" "/search?query=love" "/"; do
+  curl -s -A "Mozilla/5.0" "$H$u" | grep -c 'id="root"'
+done
+# crawlers: 301 to the canonical URL
+curl -sI -A Googlebot "$H/index.html" | grep -i location
+curl -sI -A Googlebot "$H/read/mother/agenda-vol-10/january-29-1969/" | grep -i location
+curl -sI -A Googlebot "$H/search" | grep -i x-robots-tag     # noindex, follow
+```
+
 ## 3. Data assets — `chapters.db` and `out_chapters/`
 
 Both are `.gitignore`d and ship out-of-band. Any schema change to
@@ -317,7 +370,23 @@ python3 backend/scripts/helpers/recover_letters_verse_breaks.py --db
 # c) strip PDF ligatures (ﬁ → fi etc.) so FTS5 queries with plain f+i match.
 #    `--txt` also rewrites out_chapters/*.txt so the rendered chapter page is clean.
 python3 backend/scripts/helpers/normalize_ligatures.py --txt
+
+# d) rescue the /read/ URLs this rebuild retired (2026-08-01). Chapter slugs
+#    carry a positional `-2`…`-9` dedup suffix, so a re-split can move or delete
+#    the URL that held a passage — 119 previously-indexable URLs died in the
+#    2026-06-25 rebuild, and they are live in Google's index and other people's
+#    links. Pass the snapshot you kept from BEFORE this rebuild; the script
+#    content-matches each dead URL to its new home and appends to the redirect
+#    map that routes.py serves as a 301. Skipping this turns those URLs into
+#    hard 404s and (per Search Console) duplicate-canonical reports.
+python3 backend/scripts/helpers/build_slug_redirects.py \
+        --old backend/db/chapters.db.prerebuild-<YYYYMMDD>
 ```
+
+The redirect map lives at `backend/app/data/slug_redirects.json` — inside
+`backend/app/` on purpose, since `backend/data/`, `backend/db/` and
+`backend/indexes/` are all excluded from the rsync in §1. It ships with the code,
+so no separate copy step. Run with `--dry-run` first to see what would change.
 
 ```bash
 # chapters.db — atomic swap so in-flight Flask requests don't see a half-copy
