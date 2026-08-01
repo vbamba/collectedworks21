@@ -1,0 +1,67 @@
+<!-- templates/book.html -->
+{# NEW (2026-08-01): per-book chapter index — the link-depth fix.
+
+   home.html gave each book one link, to its first chapter, and chapter.html
+   offers only Previous/Next. So chapter 100 of a book sat 100 hops from the
+   homepage and the sitemap was the only practical way in — the profile that
+   keeps piling URLs into Search Console's "Discovered – currently not indexed".
+   This page lists every chapter of one book, so the whole corpus is two hops
+   from the homepage.
+
+   Served to readers as well as crawlers: it's an ordinary table of contents,
+   and the SPA has no /books/ route, so a bot-only version would break for
+   anyone who clicked through. Same deliberately plain markup as home.html — no
+   framework, no JS, small payload.
+
+   Front matter is listed (a reader may well want the Publisher's Note) but
+   marked rel="nofollow" so crawlers aren't pushed toward pages that serve
+   noindex anyway. #}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ book_title }} — Contents</title>
+    <meta name="description" content="All chapters of {{ book_title }}{% if author %} by {{ author }}{% endif %} — Collected Works of Sri Aurobindo and The Mother.">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="{{ book_title }} — Contents">
+    <meta property="og:description" content="All chapters of {{ book_title }}.">
+    <meta property="og:url"         content="{{ canonical_url }}">
+    <meta property="og:site_name"   content="Collected Works of Sri Aurobindo and The Mother">
+    <style>
+      body { font-family: Georgia, serif; max-width: 70ch; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #222; }
+      h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+      .lead { color: #555; margin-bottom: 1.5rem; }
+      ol { padding-left: 1.5rem; }
+      li { margin: 0.35rem 0; }
+      a { color: #1a4480; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .parent { color: #777; font-size: 0.9em; }
+      nav { margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 0.75rem; font-size: 0.95em; }
+      @media (prefers-color-scheme: dark) {
+        body { background: #121212; color: #ddd; }
+        a { color: #8ab4f8; }
+        .lead, .parent { color: #aaa; }
+        nav { border-top-color: #333; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>{{ book_title }}</h1>
+    <p class="lead">{% if author %}<em>{{ author }}</em> — {% endif %}{{ chapters|length }}
+       chapter{{ '' if chapters|length == 1 else 's' }}.
+       <a href="/">Search the full corpus</a>.</p>
+
+    <ol>
+      {% for ch in chapters %}
+        <li>
+          <a href="/read/{{ collection }}/{{ book_slug }}/{{ ch.slug }}"{% if not ch.indexable %} rel="nofollow"{% endif %}>{{ ch.title }}</a>
+          {%- if ch.parent %} <span class="parent">— from {{ ch.parent }}</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+
+    <nav><a href="/">All books</a></nav>
+  </body>
+</html>

@@ -23,6 +23,7 @@ def test_serve_pdf_rejects_non_pdf_paths(client):
 # NEW (2026-08-01): SEO — retired /read/ URLs and fragment pages.
 # The redirect cases read a pair out of the live map rather than hard-coding
 # slugs, so regenerating slug_redirects.json after a rebuild can't stale them.
+import re
 import sqlite3
 
 import pytest
@@ -197,6 +198,96 @@ def test_chapter_titles_are_unique_within_a_book(client):
         data = client.get(f'/read/sriaurobindo/karmayogin/{slug}').get_data(as_text=True)
         titles.append(data.split('<title>')[1].split('</title>')[0])
     assert len(set(titles)) == len(titles), f'duplicate titles: {titles}'
+
+
+def test_substantial_non_content_page_is_indexable(client):
+    """
+    Regression guard (2026-08-01): non_content is a splitter heuristic for TOC /
+    Publisher's Note front matter, and it misfires on list-like chapters — verse
+    references, root indexes, diary entries. 227 flagged rows hold over 1,000
+    characters, up to a 216,000-character Record of Yoga entry. Trusting the flag
+    alone put noindex on all of them.
+    """
+    conn = sqlite3.connect(str(routes.DB_PATH))
+    try:
+        row = conn.execute(
+            """
+            SELECT collection_folder, book_slug, slug
+              FROM chapters
+             WHERE non_content = 1 AND slug != '' AND book_slug != ''
+               AND length(cast(content as blob)) > 50000
+             LIMIT 1
+            """
+        ).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        pytest.skip('no large non_content rows in this build')
+    collection, book_slug, slug = row
+    response = client.get(f'/read/{collection}/{book_slug}/{slug}')
+    assert response.status_code == 200
+    assert b'name="robots"' not in response.data, \
+        f'{book_slug}/{slug} is a large chapter but marked noindex'
+
+
+def test_sitemap_and_noindex_agree(client):
+    """A sitemap entry for a noindex page is a contradictory crawler signal."""
+    sitemap = client.get('/sitemap.xml').get_data(as_text=True)
+    conn = sqlite3.connect(str(routes.DB_PATH))
+    try:
+        rows = conn.execute(
+            """
+            SELECT collection_folder, book_slug, slug FROM chapters
+             WHERE slug != '' AND book_slug != ''
+             ORDER BY non_content DESC, length(cast(content as blob)) ASC LIMIT 15
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+    for collection, book_slug, slug in rows:
+        path = f'/read/{collection}/{book_slug}/{slug}'
+        listed = f'{path}<' in sitemap
+        noindexed = b'name="robots"' in client.get(path).data
+        assert listed != noindexed, f'{path}: in_sitemap={listed} noindex={noindexed}'
+
+
+def test_book_index_lists_every_chapter(client):
+    """The link-depth fix: one hub page per book listing all of its chapters."""
+    conn = sqlite3.connect(str(routes.DB_PATH))
+    try:
+        collection, book_slug = conn.execute(
+            "SELECT collection_folder, book_slug FROM chapters "
+            "WHERE slug != '' AND book_slug != '' LIMIT 1"
+        ).fetchone()
+        expected = conn.execute(
+            "SELECT count(*) FROM chapters WHERE collection_folder = ? AND book_slug = ? "
+            "AND slug != ''", (collection, book_slug)).fetchone()[0]
+    finally:
+        conn.close()
+    response = client.get(f'/books/{collection}/{book_slug}')
+    assert response.status_code == 200
+    found = response.get_data(as_text=True).count(f'href="/read/{collection}/{book_slug}/')
+    assert found == expected, f'index lists {found} of {expected} chapters'
+
+
+def test_book_index_404s_for_unknown_book(client):
+    assert client.get('/books/sriaurobindo/no-such-book').status_code == 404
+
+
+def test_crawl_depth_is_two_hops(client):
+    """Homepage → book index → chapter, for every book."""
+    home = client.get('/').get_data(as_text=True)
+    book_hrefs = re.findall(r'href="/books/([^"]+)"', home)
+    assert len(book_hrefs) > 100, f'homepage links only {len(book_hrefs)} book indexes'
+    index = client.get(f'/books/{book_hrefs[0]}')
+    assert index.status_code == 200
+    assert 'href="/read/' in index.get_data(as_text=True)
+
+
+def test_chapter_links_to_its_book_index(client):
+    """Gives each chapter a one-hop edge to all its siblings."""
+    data = client.get('/read/mother/agenda-vol-10/january-29-1969').get_data(as_text=True)
+    assert 'href="/books/mother/agenda-vol-10"' in data
 
 
 def test_chapter_title_has_no_markup(client):
