@@ -47,8 +47,12 @@
       <h2>{{ group_name or 'Other' }}</h2>
       <ul>
         {% for b in books %}
+          {# CHANGED (2026-08-01): link the book's chapter index rather than its
+             first chapter. Every chapter was previously reachable only by
+             walking Previous/Next from here, leaving deep chapters ~100 hops
+             from the homepage; via /books/ the whole corpus is two hops. #}
           <li>
-            <a href="/read/{{ b.collection }}/{{ b.book_slug }}/{{ b.first_slug }}">{{ b.title }}</a>{% if b.author %} — <em>{{ b.author }}</em>{% endif %}
+            <a href="/books/{{ b.collection }}/{{ b.book_slug }}">{{ b.title }}</a>{% if b.author %} — <em>{{ b.author }}</em>{% endif %}
           </li>
         {% endfor %}
       </ul>

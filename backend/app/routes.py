@@ -89,6 +89,33 @@ MIN_INDEXABLE_CHARS = 200
 _TAG_RX = re.compile(r'<[^>]+>')   # italic markup etc. — stripped before measuring text
 _WS_RX = re.compile(r'\s+')
 
+# CHANGED (2026-08-01): `non_content` alone must not decide indexability. The
+# splitter sets it heuristically to catch TOC / Publisher's Note front matter,
+# and it misfires on chapters whose text reads list-like — verse references,
+# philological root indexes, diary entries. 385 rows carry the flag; 227 hold
+# over 1,000 characters and 42 over 20,000, among them Record of Yoga entries of
+# 216,000 characters and Isha Upanishad's "Part II — Karmayoga: the Ideal".
+# Those are real chapters, and 14VedicAndPhilologicalStudies had 16 of its 45
+# freshly-split chapters flagged this way.
+#
+# Front matter is short by nature, so the flag is only trusted below this
+# length. Erring this way leaves a low-value TOC page indexable; erring the
+# other way hides an entire chapter.
+FRONT_MATTER_MAX_CHARS = 3000
+
+
+def _is_indexable(plain_len: int, non_content: bool) -> bool:
+    """
+    Single source of truth for "should this chapter page be in the index".
+    sitemap.xml and the noindex tag both derive from it so they cannot disagree —
+    listing a noindex page in the sitemap is a contradictory signal to crawlers.
+    """
+    if plain_len < MIN_INDEXABLE_CHARS:
+        return False                      # fragmentation artifact, not a page
+    if non_content and plain_len < FRONT_MATTER_MAX_CHARS:
+        return False                      # genuine front matter
+    return True
+
 
 # ──────────────────────────────────────────────────────────────────────
 # Query logging — lightweight per-request append for /query_stats CLI
@@ -1295,15 +1322,9 @@ def _render_chapter_template(collection: str, book: str, section: str):
     ) if _section_slug else ''
 
     # CHANGED (2026-08-01): decide whether this page should be indexed at all.
-    # Three cases get noindex:
-    #   - front matter / TOC pages (non_content=1). Already left out of
-    #     sitemap.xml, but they still return 200 and were being indexed.
-    #   - fragments under MIN_INDEXABLE_CHARS. Too little text to be a page;
-    #     Google clusters them and picks one canonical for the whole set, which
-    #     is what Search Console reports as "Duplicate, Google chose different
-    #     canonical than user".
-    #   - pages where no canonical could be built (unresolvable slug). If we
-    #     won't point crawlers at a URL, we shouldn't invite indexing either.
+    # _is_indexable covers fragments and (short) front matter; on top of that, a
+    # page with no resolvable canonical gets noindex too — if we won't point
+    # crawlers at a URL, we shouldn't invite indexing of it either.
     # It stays "follow" throughout: the nav links out of these pages are still
     # worth crawling, we just don't want the page itself in the index.
     _plain_len = len(chapter_text)
@@ -1311,7 +1332,7 @@ def _render_chapter_template(collection: str, book: str, section: str):
         _non_content = bool(rows[idx][5]) if 0 <= idx < len(rows) else False
     except (NameError, IndexError):
         _non_content = False
-    noindex = _non_content or _plain_len < MIN_INDEXABLE_CHARS or not canonical_url
+    noindex = not _is_indexable(_plain_len, _non_content) or not canonical_url
 
     # CHANGED (2026-08-01): chapter name for <title>, trimmed to the TOC title
     # and disambiguated against siblings. `sections` is already the full ordered
@@ -1499,6 +1520,83 @@ def spa_tool_noindex(tool):
         # the document (and to any future non-HTML response here).
         'X-Robots-Tag': 'noindex, follow',
     })
+
+
+# NEW (2026-08-01): per-book chapter index — the link-depth fix.
+# ─────────────────────────────────────────────────────────────────────────────
+# Before this, the only internal links to a chapter were Previous/Next on its
+# neighbours, plus one link per book from the homepage. So chapter 100 of a book
+# sat 100 hops from the homepage, and the sitemap was the only real way in.
+# Sitemap-only discovery at a deep link position is what Search Console reports
+# as "Discovered — currently not indexed": Google knows the URL and decides it
+# isn't worth crawling. Measured 2026-08-01, real Googlebot managed 185 requests
+# in 20 hours against 6,800+ URLs — roughly a 36-day pass — so link position is
+# what decides which pages it bothers with.
+#
+# One page per book listing every chapter collapses that to two hops for the
+# whole corpus: homepage → book index → chapter. Served to everyone (not just
+# bots) because it's a genuinely useful table of contents, and because a
+# UA-conditional page that the SPA has no route for would break for readers.
+
+@main.route('/books/<collection>/<book_slug>', methods=['GET'])
+def book_index_page(collection, book_slug):
+    collection = (collection or '').strip()
+    book_slug = (book_slug or '').strip()
+    if not (collection and book_slug):
+        abort(400, "collection and book_slug are required")
+
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        rows = conn.execute(
+            """
+            SELECT slug, section_filename, book_title, author, parent_toc_title,
+                   non_content,
+                   -- Only haul the text back for rows small enough that their
+                   -- exact length could matter; anything bigger is comfortably
+                   -- past both thresholds, and some chapters run to 200KB.
+                   CASE WHEN length(cast(content as blob)) < ?
+                        THEN content ELSE NULL END
+              FROM chapters
+             WHERE collection_folder = ? AND book_slug = ?
+               AND slug IS NOT NULL AND slug != ''
+             ORDER BY CAST(chapter AS INTEGER)
+            """,
+            (FRONT_MATTER_MAX_CHARS * 3, collection, book_slug),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    if not rows:
+        abort(404, "No such book")
+
+    # Front matter stays listed — a reader looking for the Publisher's Note
+    # should find it — but the page tells crawlers not to treat those entries as
+    # destinations, matching the noindex the chapters themselves serve.
+    siblings = [r[1] for r in rows]
+    chapters = []
+    for slug, section_filename, _bt, _au, parent_toc_title, non_content, small_text in rows:
+        plain_len = (len(_WS_RX.sub(' ', _TAG_RX.sub('', small_text)).strip())
+                     if small_text is not None else FRONT_MATTER_MAX_CHARS + 1)
+        chapters.append({
+            'slug': slug,
+            'title': _seo_heading(section_filename, '', siblings),
+            'parent': parent_toc_title or '',
+            'indexable': _is_indexable(plain_len, bool(non_content)),
+        })
+
+    book_title = next((r[2] for r in rows if r[2]), book_slug.replace('-', ' ').title())
+    author = next((r[3] for r in rows if r[3]), '')
+
+    return render_template(
+        'book.html',
+        collection=collection,
+        book_slug=book_slug,
+        book_title=book_title,
+        author=author,
+        chapters=chapters,
+        canonical_url=f"{SITEMAP_BASE_URL}/books/{collection}/{book_slug}",
+        build_version=BUILD_VERSION,
+    )
 
 
 # NEW (b.4): slug-based chapter URL. Renders chapter.html directly at the slug
@@ -2066,40 +2164,39 @@ SITEMAP_BASE_URL = "https://ask.collectedworksofsriaurobindo.com"
 def sitemap_xml():
     conn = sqlite3.connect(str(DB_PATH))
     try:
-        # CHANGED (2026-08-01): find the fragment pages so they can be left out
-        # below. Submitting 449 near-empty pages invites Google to treat them as
-        # one duplicate cluster; they also carry noindex from
-        # _render_chapter_template, and a sitemap entry for a noindex page is a
-        # contradictory signal.
+        # CHANGED (2026-08-01): collect the pages that _is_indexable() rejects,
+        # so the sitemap lists exactly what the pages themselves say is
+        # indexable. Two groups: fragments of any kind, and non_content rows
+        # short enough to really be front matter.
         #
-        # The byte-length prefilter keeps this cheap. Measuring plain-text length
+        # The byte-length prefilters keep this cheap. Measuring plain-text length
         # means stripping markup, and doing that for all ~7k chapters costs ~3s
         # of CPU per request — too much for a public endpoint. Plain text is
-        # never longer than the raw bytes, so anything at/above the cutoff is
-        # safely over MIN_INDEXABLE_CHARS and can be skipped without reading it.
-        # 600 bytes leaves ~3x headroom for markup and multi-byte characters; at
-        # that cutoff the prefilter examines ~920 rows in 0.06s and catches all
-        # 449 fragments. length(cast(... as blob)) rather than length(): the
-        # latter counts characters up to the first NUL byte, and some rows in
-        # this corpus contain one.
-        thin = {
+        # never longer than the raw bytes, so any row above a byte cutoff is
+        # safely above the corresponding character threshold and needn't be read.
+        # Each cutoff leaves ~3x headroom for markup and multi-byte characters.
+        # length(cast(... as blob)) rather than length(): the latter counts
+        # characters only up to the first NUL byte, and some rows contain one.
+        def _plain_len(content):
+            return len(_WS_RX.sub(' ', _TAG_RX.sub('', content or '')).strip())
+
+        unindexable = {
             (coll, book_folder, section_filename)
-            for coll, book_folder, section_filename, content in conn.execute(
+            for coll, book_folder, section_filename, content, non_content in conn.execute(
                 """
-                SELECT collection_folder, book_folder, section_filename, content
+                SELECT collection_folder, book_folder, section_filename, content, non_content
                   FROM chapters
-                 WHERE non_content = 0
-                   AND length(cast(content as blob)) < 600
-                """
+                 WHERE length(cast(content as blob)) < ?
+                """,
+                (FRONT_MATTER_MAX_CHARS * 3,)
             )
-            if len(_WS_RX.sub(' ', _TAG_RX.sub('', content or '')).strip()) < MIN_INDEXABLE_CHARS
+            if not _is_indexable(_plain_len(content), bool(non_content))
         }
         rows = conn.execute(
             """
             SELECT DISTINCT collection_folder, book_folder, book_slug, slug, section_filename
               FROM chapters
-             WHERE non_content = 0
-               AND slug IS NOT NULL AND slug != ''
+             WHERE slug IS NOT NULL AND slug != ''
                AND book_slug IS NOT NULL AND book_slug != ''
             """
         ).fetchall()
@@ -2136,9 +2233,9 @@ def sitemap_xml():
     newest = 0.0
     skipped_thin = 0
     for coll, book_folder, book_slug, slug, section_filename in rows:
-        # CHANGED (2026-08-01): fragments are served with noindex, so keep them
-        # out of the sitemap too.
-        if (coll, book_folder, section_filename) in thin:
+        # CHANGED (2026-08-01): these pages serve noindex, so keep them out of
+        # the sitemap too.
+        if (coll, book_folder, section_filename) in unindexable:
             skipped_thin += 1
             continue
         # escape() handles the rare slugs with & or special chars; the data
@@ -2161,12 +2258,27 @@ def sitemap_xml():
     home_lastmod = (
         f'<lastmod>{time.strftime("%Y-%m-%d", time.gmtime(newest))}</lastmod>' if newest else ''
     )
+    # CHANGED (2026-08-01): list the per-book chapter indexes too. They're the
+    # hubs that put every chapter two hops from the homepage, so they should be
+    # crawled early — higher priority than an individual chapter.
+    book_parts = []
+    seen_books = set()
+    for coll, _book_folder, book_slug, _slug, _section_filename in rows:
+        if (coll, book_slug) in seen_books:
+            continue
+        seen_books.add((coll, book_slug))
+        book_parts.append(
+            f'<url><loc>{SITEMAP_BASE_URL}/books/{escape(coll)}/{escape(book_slug)}</loc>'
+            f'{home_lastmod}<changefreq>weekly</changefreq><priority>0.9</priority></url>'
+        )
+
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
         # Homepage — search interface; stamped with the newest chapter mtime.
         f'<url><loc>{SITEMAP_BASE_URL}/</loc>{home_lastmod}<changefreq>weekly</changefreq><priority>1.0</priority></url>',
     ]
+    parts.extend(book_parts)
     parts.extend(url_parts)
     parts.append('</urlset>')
 
