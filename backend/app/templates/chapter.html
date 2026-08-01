@@ -9,12 +9,27 @@
        falls back to the book title alone if no heading was extracted. og:*
        and twitter:* mirror this so link previews on Slack/WhatsApp/Twitter
        show the chapter, not the generic homepage title. #}
-    {% set page_title = (chap_heading ~ ' — ' ~ title) if chap_heading else title %}
-    {% set desc = meta_description or (chap_heading and (chap_heading ~ ' — from ' ~ title)) or title %}
+    {# CHANGED (2026-08-01): strip markup from the heading before it reaches the
+       title. chap_heading is built from the chapter text, which carries <i>
+       tags, and Jinja's autoescaping turned those into literal "&lt;i&gt;" in
+       the SERP — e.g. "&lt;i&gt;(Regarding a text given by Mother…)&lt;/i&gt;".
+       striptags removes the tags; the description already went through a
+       tag-strip in routes.py. #}
+    {# CHANGED (2026-08-01): prefer seo_heading — the chapter name trimmed to its
+       TOC title and disambiguated against siblings (see _seo_heading in
+       routes.py). striptags on the fallback in case an older caller passes a
+       raw body heading. #}
+    {% set heading_text = seo_heading or (chap_heading|striptags if chap_heading else '') %}
+    {% set page_title = (heading_text ~ ' — ' ~ title) if heading_text else title %}
+    {% set desc = meta_description or (heading_text and (heading_text ~ ' — from ' ~ title)) or title %}
     {% set canonical = canonical_url or '' %}
     <title>{{ page_title }}</title>
     <meta name="description" content="{{ desc }}">
     {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+    {# CHANGED (2026-08-01): front matter, fragments under 200 chars, and pages
+       with no resolvable canonical are kept out of the index. "follow" so the
+       nav links out of them are still crawled. #}
+    {% if noindex %}<meta name="robots" content="noindex, follow">{% endif %}
 
     <meta property="og:type"        content="article">
     <meta property="og:title"       content="{{ page_title }}">

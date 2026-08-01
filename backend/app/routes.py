@@ -55,6 +55,40 @@ QUERY_LOG_PATH = BASE_DIR / os.getenv('QUERY_LOG_DB', 'db/query_log.db')
 BUILD_VERSION = os.getenv('BUILD_VERSION', 'dev')  # cache-busting for template assets
 PDF_DIRECTORY = BASE_DIR / os.getenv('PDF_DIRECTORY', 'pdf')
 
+# CHANGED (2026-08-01): slug → slug redirect map for /read/ URLs that a
+# chapters.db rebuild retired. Chapter slugs carry a positional `-2`…`-9` dedup
+# suffix, so a re-split can move or delete the URL that held a given passage —
+# 404 previously-indexable URLs died in the 2026-06-25 rebuild alone. Those URLs
+# are in Google's index and in other people's links; without this map they are
+# hard 404s. Regenerate after every rebuild with
+# backend/scripts/helpers/build_slug_redirects.py.
+SLUG_REDIRECTS_PATH = BASE_DIR / 'app' / 'data' / 'slug_redirects.json'
+try:
+    SLUG_REDIRECTS: Dict[str, str] = json.loads(
+        SLUG_REDIRECTS_PATH.read_text(encoding='utf-8'))
+except FileNotFoundError:
+    SLUG_REDIRECTS = {}
+    app_logger.warning("No slug redirect map at %s — retired /read/ URLs will 404",
+                       SLUG_REDIRECTS_PATH)
+except (ValueError, OSError) as exc:
+    # A malformed map must not take the whole site down; log loudly and serve
+    # without redirects (the pre-2026-08 behavior).
+    SLUG_REDIRECTS = {}
+    app_logger.error("Could not load slug redirect map %s: %s", SLUG_REDIRECTS_PATH, exc)
+else:
+    app_logger.info("Loaded %d slug redirects from %s",
+                    len(SLUG_REDIRECTS), SLUG_REDIRECTS_PATH)
+
+# CHANGED (2026-08-01): a chapter with less text than this is a fragmentation
+# artifact, not a page — 449 of them exist in the current build, some as short as
+# a single word. They get <meta name="robots" content="noindex"> and are left out
+# of sitemap.xml: hundreds of near-empty pages sharing one template read as
+# duplicates of each other to Google, which then picks one canonical for the
+# whole set. Measured in plain-text characters (markup stripped).
+MIN_INDEXABLE_CHARS = 200
+_TAG_RX = re.compile(r'<[^>]+>')   # italic markup etc. — stripped before measuring text
+_WS_RX = re.compile(r'\s+')
+
 
 # ──────────────────────────────────────────────────────────────────────
 # Query logging — lightweight per-request append for /query_stats CLI
@@ -988,6 +1022,85 @@ def _reflow_lines_for_prose(lines: List[str], width: int) -> List[str]:
 # Server-rendered chapter (HTML) with reflow + FORCE flag
 # ──────────────────────────────────────────────────────────────────────
 
+# NEW (2026-08-01): <title> construction for chapter pages.
+# ─────────────────────────────────────────────────────────────────────────────
+# The page title used to be the first ~2 lines of the chapter body, which runs
+# the chapter name straight into the opening prose ("January 29, 1969 What do
+# you have to tell me? Me, I") and, on books whose running header survived
+# extraction, is the same masthead on every page — all 33 Karmayogin chapters
+# titled themselves "KARMAYOGIN A WEEKLY REVIEW of National Religion…".
+# Identical titles across pages are one of the signals that got these URLs
+# clustered as duplicates in Search Console.
+#
+# section_filename carries the TOC title the splitter assigned, which is the
+# name a reader would recognise — but underscored, so its punctuation is gone.
+# So: trim the body heading to where the TOC title ends (keeping the body's
+# real punctuation), and fall back to the TOC title when the body heading isn't
+# the chapter name at all.
+
+def _toc_title_from_filename(section_filename: str) -> str:
+    """'section_04_Karmayogin_No__1__19th_June_1909.txt' → 'Karmayogin No 1 19th June 1909'."""
+    stem = re.sub(r'\.txt$', '', section_filename or '')
+    stem = re.sub(r'^section_\d+_', '', stem)
+    return _WS_RX.sub(' ', stem.replace('_', ' ')).strip()
+
+
+def _trim_heading_to_toc(heading: str, toc_title: str) -> str:
+    """
+    The prefix of `heading` that spells out `toc_title`, compared on letters and
+    digits only so underscore-flattened punctuation still matches. Returns '' when
+    the heading doesn't start with the TOC title — the caller then prefers the TOC
+    title, which is the running-header case.
+    """
+    key = re.sub(r'[^a-z0-9]', '', (toc_title or '').lower())
+    if not key:
+        return ''
+    seen = 0
+    for i, ch in enumerate(heading):
+        if not ch.isalnum():
+            continue
+        if ch.lower() != key[seen]:
+            return ''
+        seen += 1
+        if seen == len(key):
+            # Drop trailing separators left behind by the cut ("1969 —" → "1969").
+            return heading[:i + 1].strip().rstrip(' ,;:-—–')
+    return ''
+
+
+def _seo_heading(section_filename: str, chap_heading: str, sibling_filenames: List[str],
+                 body_start: str = '') -> str:
+    """
+    The chapter name for <title>, disambiguated within its book.
+
+    `body_start` is the opening of the chapter's plain text and is tried first,
+    because on journal-style books the date is its own block and so is missing
+    from chap_heading — trimming "January 29, 1969 What do you have to tell me?"
+    keeps the comma that the underscored filename lost.
+
+    An ordinal is appended when siblings share a TOC title (five Agenda letters
+    all filed under "Undated 1956"), numbered by position so it matches the
+    slug's own `-2`, `-3` suffixes. Collisions are detected on TOC titles rather
+    than final titles because sibling *content* isn't loaded here — and that's
+    sound: every title produced below either is the TOC title or starts with it,
+    so two pages can only collide if their TOC titles do.
+    """
+    toc = _toc_title_from_filename(section_filename)
+    plain_heading = _WS_RX.sub(' ', _TAG_RX.sub('', chap_heading or '')).strip()
+    title = (_trim_heading_to_toc(body_start, toc)
+             or _trim_heading_to_toc(plain_heading, toc)
+             or toc
+             or plain_heading)
+
+    same_toc = [fn for fn in sibling_filenames
+                if _toc_title_from_filename(fn).lower() == toc.lower()] if toc else []
+    if len(same_toc) > 1 and section_filename in same_toc:
+        position = same_toc.index(section_filename) + 1
+        if position > 1:
+            title = f"{title} ({position})"
+    return title
+
+
 # NEW (b.4): shared chapter.html render helper
 # ─────────────────────────────────────────────────────────────────────────────
 # Both the legacy `/api/chapter_content?...` route and the new slug-based
@@ -1001,6 +1114,12 @@ def _render_chapter_template(collection: str, book: str, section: str):
         abort(404, "Section not found")
 
     raw = candidate.read_text(encoding='utf-8')
+
+    # NEW (2026-08-01): the chapter as plain text, captured here because later
+    # block-building work reuses local names. Feeds two SEO decisions further
+    # down: how long the chapter is (indexable or a fragment) and where its
+    # punctuated chapter name ends.
+    chapter_text = _WS_RX.sub(' ', _TAG_RX.sub('', raw)).strip()
 
     # force_reflow override (unchanged behavior)
     force_flag = request.args.get('force_reflow', '').strip()
@@ -1147,16 +1266,20 @@ def _render_chapter_template(collection: str, book: str, section: str):
     for b in blocks:
         if b.get('type') != 'lines' or not b.get('lines'):
             continue
-        raw = ' '.join(b['lines'])
-        raw = re.sub(r'<[^>]+>', '', raw)                # drop <i> etc.
-        raw = re.sub(r'\s+', ' ', raw).strip()
+        # CHANGED (2026-08-01): was `raw`, which shadowed the chapter text read
+        # from disk at the top of this function. Harmless while nothing used
+        # `raw` afterwards, but the indexability check below needs the whole
+        # chapter's length, and silently got one block's instead.
+        block_text = ' '.join(b['lines'])
+        block_text = re.sub(r'<[^>]+>', '', block_text)   # drop <i> etc.
+        block_text = re.sub(r'\s+', ' ', block_text).strip()
         # CHANGED: skip the chapter-heading block (block 0 is usually the
         # title verbatim) and any block too short to function as a snippet.
         # Without this filter the description echoed the title, which is
         # redundant for Google's SERP and wastes the meta-description slot.
-        if raw.lower() == _chap_norm or len(raw) < 60:
+        if block_text.lower() == _chap_norm or len(block_text) < 60:
             continue
-        meta_description = (raw[:152] + '…') if len(raw) > 155 else raw
+        meta_description = (block_text[:152] + '…') if len(block_text) > 155 else block_text
         break
     # CHANGED: build canonical URL from the resolved (idx, slug) pair when
     # the section was found in `sections`; on a 404-ish fallback leave empty
@@ -1170,6 +1293,34 @@ def _render_chapter_template(collection: str, book: str, section: str):
         f"https://ask.collectedworksofsriaurobindo.com"
         f"/read/{collection}/{book_slug or book}/{_section_slug}"
     ) if _section_slug else ''
+
+    # CHANGED (2026-08-01): decide whether this page should be indexed at all.
+    # Three cases get noindex:
+    #   - front matter / TOC pages (non_content=1). Already left out of
+    #     sitemap.xml, but they still return 200 and were being indexed.
+    #   - fragments under MIN_INDEXABLE_CHARS. Too little text to be a page;
+    #     Google clusters them and picks one canonical for the whole set, which
+    #     is what Search Console reports as "Duplicate, Google chose different
+    #     canonical than user".
+    #   - pages where no canonical could be built (unresolvable slug). If we
+    #     won't point crawlers at a URL, we shouldn't invite indexing either.
+    # It stays "follow" throughout: the nav links out of these pages are still
+    # worth crawling, we just don't want the page itself in the index.
+    _plain_len = len(chapter_text)
+    try:
+        _non_content = bool(rows[idx][5]) if 0 <= idx < len(rows) else False
+    except (NameError, IndexError):
+        _non_content = False
+    noindex = _non_content or _plain_len < MIN_INDEXABLE_CHARS or not canonical_url
+
+    # CHANGED (2026-08-01): chapter name for <title>, trimmed to the TOC title
+    # and disambiguated against siblings. `sections` is already the full ordered
+    # list of section_filenames for this book, so no extra query.
+    seo_heading = _seo_heading(
+        section, chap_heading, sections,
+        # Opening of the chapter text, where the punctuated chapter name lives.
+        body_start=chapter_text[:300],
+    )
 
     return render_template(
         'chapter.html',
@@ -1191,6 +1342,10 @@ def _render_chapter_template(collection: str, book: str, section: str):
         build_version=BUILD_VERSION,  # ensure static links get cache-busted
         # NEW (2026-05-23): per-page SEO metadata for crawlers/social previews
         meta_description=meta_description,
+        # NEW (2026-08-01): keep front matter and fragments out of the index
+        noindex=noindex,
+        # NEW (2026-08-01): unique, punctuated chapter name for <title>
+        seo_heading=seo_heading,
         canonical_url=canonical_url,
     )
 
@@ -1268,6 +1423,84 @@ def chapter_content_page():
     return redirect(target, code=302)
 
 
+# NEW (2026-08-01): SEO — legacy /chapter?... URLs and the SPA tool routes.
+# ─────────────────────────────────────────────────────────────────────────────
+# `/chapter?collection_folder=…&book_folder=…&section_filename=…` was the chapter
+# URL before slugs, and Google still has those URLs. nginx serves them as the
+# React shell, whose <head> is the same on every route: one generic title, one
+# generic description, an og:url hard-pointed at the homepage, and no canonical
+# at all. To a crawler every such URL is the same page, so Google clusters them
+# and picks one representative — which is what Search Console reports as
+# "Duplicate, Google chose different canonical than user".
+#
+# The nginx `$is_bot` map routes these paths here for crawlers only; humans keep
+# getting the SPA, so in-app navigation is untouched. Crawlers get a 301 to the
+# canonical /read/ URL for /chapter, and an explicit noindex for the tool routes
+# (search forms, the PDF viewer) which have no content of their own to index.
+
+@main.route('/chapter', methods=['GET'])
+def legacy_chapter_redirect():
+    """301 a pre-slug /chapter?... URL to its /read/<coll>/<book_slug>/<slug> home."""
+    collection = request.args.get('collection_folder', '').strip()
+    book       = request.args.get('book_folder', '').strip()
+    section    = request.args.get('section_filename', '').strip()
+    if not (collection and book and section):
+        abort(404, "Not a resolvable chapter URL")
+
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        row = conn.execute(
+            "SELECT slug, book_slug FROM chapters "
+            "WHERE collection_folder = ? AND book_folder = ? AND section_filename = ? "
+            "LIMIT 1",
+            (collection, book, section),
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not (row and row[0] and row[1]):
+        # No slug for this section (pre-b.3 row, or a URL that never resolved).
+        # 404 rather than serving a shell that would just re-enter the duplicate
+        # cluster we're trying to break up.
+        abort(404, "Chapter not found for those parameters")
+
+    slug, book_slug = row
+    forwarded = {k: request.args[k] for k in ('query', 'result_type', 'search_type')
+                 if request.args.get(k)}
+    return redirect(url_for('main.chapter_by_slug_page',
+                            collection=collection, book_slug=book_slug, slug=slug,
+                            **forwarded), code=301)
+
+
+# The SPA's tool routes. Nothing here is content: /search and /searchtext are
+# result listings (Google asks that internal search results stay out of the
+# index), /question and /chat are the semantic-search form, /ai the AI search
+# page, /viewer the PDF frame. They shipped as canonical-less copies of the
+# homepage shell, so they need to say noindex explicitly rather than be left to
+# Google's clustering. "follow" keeps the links out of them crawlable.
+_NOINDEX_SPA_ROUTES = ('search', 'searchtext', 'question', 'chat', 'ai', 'viewer')
+
+
+@main.route(f'/<any({",".join(_NOINDEX_SPA_ROUTES)}):tool>', methods=['GET'])
+def spa_tool_noindex(tool):
+    body = (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="robots" content="noindex, follow">'
+        f'<title>{escape(tool.capitalize())} — Collected Works of Sri Aurobindo and The Mother</title>'
+        '<link rel="canonical" href="https://ask.collectedworksofsriaurobindo.com/">'
+        '</head><body>'
+        '<p>This is an interactive tool page. '
+        '<a href="/">Search the Collected Works of Sri Aurobindo and The Mother</a>.</p>'
+        '</body></html>'
+    )
+    return (body, 200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        # Belt and braces: the header applies even to clients that don't parse
+        # the document (and to any future non-HTML response here).
+        'X-Robots-Tag': 'noindex, follow',
+    })
+
+
 # NEW (b.4): slug-based chapter URL. Renders chapter.html directly at the slug
 # path (no redirect) so the browser URL bar stays on /read/<coll>/<book>/<slug>,
 # which is the whole point of slugs — stable, shareable URLs.
@@ -1296,6 +1529,34 @@ def chapter_by_slug_page(collection, book_slug, slug):
         conn.close()
 
     if not row:
+        # CHANGED (2026-08-01): before 404ing, check whether this URL was
+        # retired by a rebuild and its text now lives at a different slug. A 301
+        # sends the reader (and Google's index) to the passage they asked for
+        # instead of a dead end. Preserve the query string so a search-result
+        # link still highlights after the hop.
+        # CHANGED (2026-08-01): slugs in chapters.db are all lower-case, so a
+        # link that arrived capitalised (/read/Mother/…) used to 404 for
+        # crawlers while nginx served humans the SPA shell — two different
+        # answers for one URL. Send it to the canonical casing instead.
+        lowered = f"{collection.lower()}/{book_slug.lower()}/{slug.lower()}"
+        if lowered != f"{collection}/{book_slug}/{slug}":
+            url = f"/read/{lowered}"
+            if request.query_string:
+                url = f"{url}?{request.query_string.decode('utf-8', 'ignore')}"
+            return redirect(url, code=301)
+
+        target = SLUG_REDIRECTS.get(f"{collection}/{book_slug}/{slug}")
+        if target:
+            new_collection, new_book_slug, new_slug = target.split('/', 2)
+            url = url_for('main.chapter_by_slug_page',
+                          collection=new_collection,
+                          book_slug=new_book_slug,
+                          slug=new_slug)
+            if request.query_string:
+                url = f"{url}?{request.query_string.decode('utf-8', 'ignore')}"
+            app_logger.info("Slug redirect: /read/%s/%s/%s → %s",
+                            collection, book_slug, slug, target)
+            return redirect(url, code=301)
         abort(404, "Chapter not found for that slug")
 
     book_folder, section_filename = row
@@ -1805,6 +2066,34 @@ SITEMAP_BASE_URL = "https://ask.collectedworksofsriaurobindo.com"
 def sitemap_xml():
     conn = sqlite3.connect(str(DB_PATH))
     try:
+        # CHANGED (2026-08-01): find the fragment pages so they can be left out
+        # below. Submitting 449 near-empty pages invites Google to treat them as
+        # one duplicate cluster; they also carry noindex from
+        # _render_chapter_template, and a sitemap entry for a noindex page is a
+        # contradictory signal.
+        #
+        # The byte-length prefilter keeps this cheap. Measuring plain-text length
+        # means stripping markup, and doing that for all ~7k chapters costs ~3s
+        # of CPU per request — too much for a public endpoint. Plain text is
+        # never longer than the raw bytes, so anything at/above the cutoff is
+        # safely over MIN_INDEXABLE_CHARS and can be skipped without reading it.
+        # 600 bytes leaves ~3x headroom for markup and multi-byte characters; at
+        # that cutoff the prefilter examines ~920 rows in 0.06s and catches all
+        # 449 fragments. length(cast(... as blob)) rather than length(): the
+        # latter counts characters up to the first NUL byte, and some rows in
+        # this corpus contain one.
+        thin = {
+            (coll, book_folder, section_filename)
+            for coll, book_folder, section_filename, content in conn.execute(
+                """
+                SELECT collection_folder, book_folder, section_filename, content
+                  FROM chapters
+                 WHERE non_content = 0
+                   AND length(cast(content as blob)) < 600
+                """
+            )
+            if len(_WS_RX.sub(' ', _TAG_RX.sub('', content or '')).strip()) < MIN_INDEXABLE_CHARS
+        }
         rows = conn.execute(
             """
             SELECT DISTINCT collection_folder, book_folder, book_slug, slug, section_filename
@@ -1845,7 +2134,13 @@ def sitemap_xml():
 
     url_parts = []
     newest = 0.0
+    skipped_thin = 0
     for coll, book_folder, book_slug, slug, section_filename in rows:
+        # CHANGED (2026-08-01): fragments are served with noindex, so keep them
+        # out of the sitemap too.
+        if (coll, book_folder, section_filename) in thin:
+            skipped_thin += 1
+            continue
         # escape() handles the rare slugs with & or special chars; the data
         # in chapters.db is alnum + hyphens almost universally but be safe.
         loc = f"{SITEMAP_BASE_URL}/read/{escape(coll)}/{escape(book_slug)}/{escape(slug)}"
@@ -1859,6 +2154,9 @@ def sitemap_xml():
         url_parts.append(
             f'<url><loc>{loc}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.8</priority></url>'
         )
+
+    app_logger.info("sitemap.xml: %d URLs, %d fragments skipped",
+                    len(url_parts), skipped_thin)
 
     home_lastmod = (
         f'<lastmod>{time.strftime("%Y-%m-%d", time.gmtime(newest))}</lastmod>' if newest else ''
