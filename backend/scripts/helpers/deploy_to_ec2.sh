@@ -66,7 +66,14 @@ cd "$REPO_ROOT"
 
 REMOTE_APP=/home/ec2-user/collectedworks21
 REMOTE_DB="$REMOTE_APP/backend/db/chapters.db"
-REMOTE_SQL="$REMOTE_APP/backend/scripts/helpers/strip_oversized_sections.sql"
+# CHANGED (2026-08-02): was strip_oversized_sections.sql, a hard-coded list of
+# three (book_folder, section_filename) pairs that needed a new pair by hand
+# every time a rebuild produced another bundle — and two had been missed. The
+# .py finds them by size and only deletes one when its text is demonstrably
+# duplicated in properly-split siblings, so it can't eat a book whose only copy
+# happens to be one big row. The .sql is now unused; left in place rather than
+# deleted, since it documents which three rows were stripped historically.
+REMOTE_STRIP_OVERSIZED="$REMOTE_APP/backend/scripts/helpers/strip_oversized_sections.py"
 # CHANGED: Savitri parent_toc_title backfill ships alongside the SQL strip;
 # both are idempotent post-rebuild fixups for the chapters splitter.
 REMOTE_BACKFILL_SAVITRI="$REMOTE_APP/backend/scripts/helpers/backfill_savitri_toc.py"
@@ -154,7 +161,7 @@ step "2/6 restart gunicorn (collectedworks.service)"
 
 # ── 3. Apply chapters.db post-rebuild fixups (all idempotent) ────────────────
 # Three scripts run together so we only bounce gunicorn once:
-#   a) strip_oversized_sections.sql — drop the catch-all "Page_X" rows that the
+#   a) strip_oversized_sections.py — drop the catch-all "Page_X" rows that the
 #      splitter emits (1MB+ each, content already duplicated in proper chapters)
 #   b) backfill_savitri_toc.py — set chapters.parent_toc_title = "Book X — ..."
 #      for every Savitri canto, so the SPA chapter header and search-result
@@ -179,8 +186,8 @@ else
     BAK=$REMOTE_DB.bak-\$(date +%Y%m%d-%H%M%S)
     echo '[fixup] backing up prod DB -> '\$BAK
     cp $REMOTE_DB \$BAK
-    echo '[fixup] applying $REMOTE_SQL via python3'
-    python3 -c \"import sqlite3; c=sqlite3.connect('$REMOTE_DB'); c.executescript(open('$REMOTE_SQL').read()); c.commit(); c.close()\"
+    echo '[fixup] running $REMOTE_STRIP_OVERSIZED'
+    python3 $REMOTE_STRIP_OVERSIZED --db $REMOTE_DB --write
     echo '[fixup] running $REMOTE_BACKFILL_SAVITRI'
     python3 $REMOTE_BACKFILL_SAVITRI --db $REMOTE_DB
     echo '[fixup] running $REMOTE_STRIP_SAVITRI_HDRS (disk + DB)'
