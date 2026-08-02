@@ -350,6 +350,41 @@ curl -sI -A Googlebot "$H/read/mother/agenda-vol-10/january-29-1969/" | grep -i 
 curl -sI -A Googlebot "$H/search" | grep -i x-robots-tag     # noindex, follow
 ```
 
+## 2.5d. nginx — `/books/` chapter indexes (link depth)
+
+**Applied 2026-08-01.** Backup: `ask.collectedworks.conf.bak-20260801-214017-pre-books`.
+
+The problem this solves is crawl depth, not markup. The homepage gave each book
+a single link — to its *first* chapter — and chapter pages link only
+Previous/Next, so chapter 100 of a book sat 100 hops from the root and the
+sitemap was the only practical way in. Google discovers such URLs and then
+declines to spend budget on them, which is what Search Console reports as
+"Discovered – currently not indexed". Measured 2026-08-01: real Googlebot
+(66.249.*) did 185 requests in 20 hours against 6,900+ URLs — about a 36-day
+full pass — so link position decides what actually gets crawled.
+
+`/books/<collection>/<book_slug>` (Flask `book_index_page` → `book.html`) lists
+every chapter of one book. The homepage links the indexes, and each chapter
+links back to its own, so the whole corpus is two hops from the root.
+
+```nginx
+# Served to EVERY user-agent, not just bots: the React SPA has no /books/ route,
+# so a bot-only block would hand readers a blank shell.
+location ^~ /books/ {
+    limit_req zone=pages burst=30 nodelay;
+    limit_conn perip 20;
+    proxy_pass http://127.0.0.1:5000;
+}
+```
+
+Verify (both must return a page full of `/read/` links):
+```bash
+H=https://ask.collectedworksofsriaurobindo.com
+curl -s -A Googlebot   "$H/books/sriaurobindo/vedic-and-philological-studies" | grep -c 'href="/read/'
+curl -s -A "Mozilla/5.0" "$H/books/sriaurobindo/vedic-and-philological-studies" | grep -c 'href="/read/'
+curl -s -A Googlebot "$H/" | grep -c 'href="/books/'   # 108 book indexes
+```
+
 ## 3. Data assets — `chapters.db` and `out_chapters/`
 
 Both are `.gitignore`d and ship out-of-band. Any schema change to
@@ -361,8 +396,16 @@ must be refreshed alongside the code; otherwise API SELECTs 500.
 keeps reintroducing the same artifacts, so this is the standing fixup pass:
 
 ```bash
-# a) drop oversized Page_X sections (FTS5 bloat from the splitter)
-sqlite3 backend/db/chapters.db < backend/scripts/helpers/strip_oversized_sections.sql
+# a) drop oversized Page_X sections (FTS5 bloat from the splitter).
+#    CHANGED (2026-08-02): was a .sql file listing three rows by name, which
+#    needed hand-editing after every rebuild and had missed two — Hymns to the
+#    Mystic Fire carried a 924KB "page-13" duplicating its own 26 chapters. The
+#    .py finds bundles by size and deletes one only when its text is provably
+#    duplicated in properly-split siblings, so it cannot eat a book like
+#    Sunil - The Mother's Musician whose only copy IS one big row.
+#    Run without --write first; it explains every verdict.
+python3 backend/scripts/helpers/strip_oversized_sections.py
+python3 backend/scripts/helpers/strip_oversized_sections.py --write
 
 # b) recover verse line breaks inside Letters-on-Savitri italic quotes
 python3 backend/scripts/helpers/recover_letters_verse_breaks.py --db
