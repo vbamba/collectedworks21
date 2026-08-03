@@ -79,6 +79,31 @@ else:
     app_logger.info("Loaded %d slug redirects from %s",
                     len(SLUG_REDIRECTS), SLUG_REDIRECTS_PATH)
 
+# CHANGED (2026-08-02): secondary → primary map for texts printed in more than
+# one volume ("The Divine Body" in both Essays in Philosophy and Yoga and The
+# Supramental Manifestation; poems in Collected Poems, Lyrical Poems and The
+# Future Poetry; the 11 November 1923 talk twice in Purani's Evening Talks).
+# Each copy self-canonicalised, so Google clustered them and chose a
+# representative itself — reported as "Duplicate, Google chose different
+# canonical than user". Pages listed here point their canonical at the primary
+# and drop out of sitemap.xml, which should only list canonical URLs.
+# Regenerate with backend/scripts/helpers/build_canonical_overrides.py; the file
+# is meant to be hand-editable, since which volume owns a text is an editorial
+# call the script can only approximate.
+CANONICAL_OVERRIDES_PATH = BASE_DIR / 'app' / 'data' / 'canonical_overrides.json'
+try:
+    CANONICAL_OVERRIDES: Dict[str, str] = json.loads(
+        CANONICAL_OVERRIDES_PATH.read_text(encoding='utf-8'))
+except FileNotFoundError:
+    CANONICAL_OVERRIDES = {}
+except (ValueError, OSError) as exc:
+    CANONICAL_OVERRIDES = {}
+    app_logger.error("Could not load canonical overrides %s: %s",
+                     CANONICAL_OVERRIDES_PATH, exc)
+else:
+    app_logger.info("Loaded %d canonical overrides from %s",
+                    len(CANONICAL_OVERRIDES), CANONICAL_OVERRIDES_PATH)
+
 # CHANGED (2026-08-01): a chapter with less text than this is a fragmentation
 # artifact, not a page — 449 of them exist in the current build, some as short as
 # a single word. They get <meta name="robots" content="noindex"> and are left out
@@ -1321,6 +1346,15 @@ def _render_chapter_template(collection: str, book: str, section: str):
         f"/read/{collection}/{book_slug or book}/{_section_slug}"
     ) if _section_slug else ''
 
+    # CHANGED (2026-08-02): when this text is also printed in another volume,
+    # point the canonical at the copy we picked as primary instead of at
+    # ourselves, so Google isn't left to choose.
+    if _section_slug:
+        _primary = CANONICAL_OVERRIDES.get(
+            f"{collection}/{book_slug or book}/{_section_slug}")
+        if _primary:
+            canonical_url = f"{SITEMAP_BASE_URL}/read/{_primary}"
+
     # CHANGED (2026-08-01): decide whether this page should be indexed at all.
     # _is_indexable covers fragments and (short) front matter; on top of that, a
     # page with no resolvable canonical gets noindex too — if we won't point
@@ -2232,11 +2266,17 @@ def sitemap_xml():
     url_parts = []
     newest = 0.0
     skipped_thin = 0
+    skipped_duplicate = 0
     for coll, book_folder, book_slug, slug, section_filename in rows:
         # CHANGED (2026-08-01): these pages serve noindex, so keep them out of
         # the sitemap too.
         if (coll, book_folder, section_filename) in unindexable:
             skipped_thin += 1
+            continue
+        # CHANGED (2026-08-02): a duplicate copy points its canonical at the
+        # primary, and a sitemap should only list canonical URLs.
+        if f"{coll}/{book_slug}/{slug}" in CANONICAL_OVERRIDES:
+            skipped_duplicate += 1
             continue
         # escape() handles the rare slugs with & or special chars; the data
         # in chapters.db is alnum + hyphens almost universally but be safe.
@@ -2252,8 +2292,8 @@ def sitemap_xml():
             f'<url><loc>{loc}</loc>{lastmod}<changefreq>monthly</changefreq><priority>0.8</priority></url>'
         )
 
-    app_logger.info("sitemap.xml: %d URLs, %d fragments skipped",
-                    len(url_parts), skipped_thin)
+    app_logger.info("sitemap.xml: %d URLs, %d fragments skipped, %d duplicates skipped",
+                    len(url_parts), skipped_thin, skipped_duplicate)
 
     home_lastmod = (
         f'<lastmod>{time.strftime("%Y-%m-%d", time.gmtime(newest))}</lastmod>' if newest else ''
