@@ -103,8 +103,17 @@ else
     mkdir -p /home/ec2-user/backups
     APP_OUT=/home/ec2-user/backups/collectedworks21-pre-$TAG.tar.gz
     echo '[backup] flask app -> '\$APP_OUT
+    # CHANGED (2026-08-02): query_log.db is appended to on every search request,
+    # so one search landing mid-tar changed backend/db while it was being read.
+    # GNU tar exits 1 on that ('file changed as we read it') and set -e aborted
+    # the entire deploy at step 1 — nothing shipped, on a busy afternoon it would
+    # abort every time. The query log is analytics and irrelevant to a rollback,
+    # so exclude it; and tolerate tar's exit 1, which is a warning. Exit 2 is a
+    # real error and still fails the deploy.
     tar --exclude='collectedworks21/backups' \
-        -czf \$APP_OUT -C /home/ec2-user collectedworks21
+        --exclude='collectedworks21/backend/db/query_log.db*' \
+        --warning=no-file-changed \
+        -czf \$APP_OUT -C /home/ec2-user collectedworks21 || [ \$? -eq 1 ]
     WEB_OUT=/home/ec2-user/backups/nginx-html-pre-$TAG.tar.gz
     echo '[backup] nginx html -> '\$WEB_OUT
     sudo tar -czf \$WEB_OUT -C /usr/share/nginx html
