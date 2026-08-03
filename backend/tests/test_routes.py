@@ -290,6 +290,64 @@ def test_chapter_links_to_its_book_index(client):
     assert 'href="/books/mother/agenda-vol-10"' in data
 
 
+def _canonical_pair():
+    if not routes.CANONICAL_OVERRIDES:
+        pytest.skip('no canonical overrides loaded')
+    secondary = sorted(routes.CANONICAL_OVERRIDES)[0]
+    return secondary, routes.CANONICAL_OVERRIDES[secondary]
+
+
+def test_duplicate_copy_canonicals_to_primary(client):
+    """
+    Texts printed in two volumes used to self-canonicalise, leaving Google to
+    pick a representative — reported as "Duplicate, Google chose different
+    canonical than user".
+    """
+    secondary, primary = _canonical_pair()
+    data = client.get(f'/read/{secondary}').get_data(as_text=True)
+    assert f'rel="canonical" href="{routes.SITEMAP_BASE_URL}/read/{primary}"' in data
+
+
+def test_primary_copy_still_self_canonicals(client):
+    _secondary, primary = _canonical_pair()
+    data = client.get(f'/read/{primary}').get_data(as_text=True)
+    assert f'rel="canonical" href="{routes.SITEMAP_BASE_URL}/read/{primary}"' in data
+
+
+def test_sitemap_lists_only_canonical_urls(client):
+    sitemap = client.get('/sitemap.xml').get_data(as_text=True)
+    listed = [k for k in routes.CANONICAL_OVERRIDES if f'/read/{k}<' in sitemap]
+    assert not listed, f'non-canonical URLs in sitemap: {listed[:3]}'
+
+
+def test_every_canonical_primary_is_indexable(client):
+    """
+    A canonical must point at a page that can actually be indexed. Three poems
+    were first assigned primaries the splitter had flagged non_content (344-594
+    characters, mistaken for front matter), so the secondary said "the real one
+    is over there" while that page served noindex — neither copy would survive.
+    """
+    primaries = set(routes.CANONICAL_OVERRIDES.values())
+    if not primaries:
+        pytest.skip('no canonical overrides loaded')
+    sitemap = client.get('/sitemap.xml').get_data(as_text=True)
+    for primary in primaries:
+        response = client.get(f'/read/{primary}')
+        assert response.status_code == 200, primary
+        assert b'name="robots"' not in response.data, f'{primary} is a noindex primary'
+        assert f'/read/{primary}<' in sitemap, f'{primary} missing from sitemap'
+
+
+def test_no_primary_is_a_positional_slug(client):
+    """
+    A `-2`…`-9` suffix is assigned by section order and moves when chapter
+    boundaries change, so it must never be the canonical URL for a cluster.
+    """
+    import re as _re
+    bad = [p for p in routes.CANONICAL_OVERRIDES.values() if _re.search(r'-[2-9]$', p)]
+    assert not bad, f'positional slugs chosen as primary: {bad[:3]}'
+
+
 def test_chapter_title_has_no_markup(client):
     """chap_heading carries <i> tags; they must not reach the <title>."""
     response = client.get('/read/mother/agenda-vol-13/february-7-1973')
