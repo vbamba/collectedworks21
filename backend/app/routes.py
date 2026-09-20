@@ -359,6 +359,39 @@ _allow_raw  = os.getenv('REFLOW_ALLOW_RE', '')
 # verse-recovery <br/> markers (see scripts/helpers/recover_letters_verse_breaks.py).
 # Match only the actual Savitri verse folder by name.
 _deny_raw   = os.getenv('REFLOW_DENY_RE', r'(?i)33-34Savitri')
+# CHANGED (2026-08-09): new REFLOW_FORCE_RE — a book-folder allowlist that is
+# consulted BEFORE the poetry heuristic, so it can rescue prose that
+# _looks_like_poetry() false-positives on. REFLOW_ALLOW_RE cannot do this: it
+# is only reached after the poetry check has already returned False.
+# Needed for New-Correspondences-of-the-Mother, whose letters are prose but
+# trip the heuristic — the print edition sets the Mother's replies on a narrow
+# measure (short_ratio 0.68) and separates each letter/reply/date/asterisk
+# with a blank line (stanza_density 0.39). With reflow off, ChapterPage joins
+# the server's textwrap(100) chunks with <br/>, pinning breaks that match
+# neither the PDF nor the viewport.
+# Deliberately a separate knob rather than reordering ALLOW above the poetry
+# check: that reorder flips 508 sections across 38 books (mostly short Agenda
+# and Evening Talks sections that the heuristic misreads as verse purely
+# because they are short). That is a real but distinct bug — fixing it needs
+# its own pass with sampling, not a side effect of this one. This knob changes
+# 14 sections, all in the two books named.
+# CHANGED (2026-08-13): added (?i)Agenda. The Agenda volumes are conversation
+# transcripts and are already in REFLOW_ALLOW_RE (i.e. the config already
+# declares them prose), but 415 of their 3,020 sections were still rendering
+# unreflowed because _looks_like_poetry() misfires on them in two ways:
+#   - 2-line sections, which cannot fail the test (one <=55-char line gives
+#     short_ratio 1.00 vs the 0.60 threshold; one trailing blank gives
+#     stanza_density 0.33 vs the 0.10 threshold);
+#   - dialogue-heavy sections where one- and two-word lines (speech fragments
+#     and stage directions, several at 85-90% of all lines) outnumber real
+#     prose lines, so short_ratio clears 0.60 on extraction noise.
+# In both cases the line breaks are artifacts, not verse, so joining them is
+# a repair. This takes Agenda from 86.3% to 100% self-consistent.
+# Deliberately NOT forced here: Companion-to-Hymns-to-the-Mystic-Fire (19
+# sections), Nolini-On-Savitri and Seer-Poets. Those carry real Vedic/poetic
+# verse whose line breaks are meaningful, and reflow would destroy them. They
+# need per-book review, not a blanket force.
+_force_raw  = os.getenv('REFLOW_FORCE_RE', r'(?i)New-Correspondences,(?i)Agenda')
 
 def _compile_list(patterns_raw: str):
     pats = []
@@ -376,8 +409,10 @@ def _compile_list(patterns_raw: str):
 
 REFLOW_ALLOW_PATTERNS = _compile_list(_allow_raw)
 REFLOW_DENY_PATTERNS  = _compile_list(_deny_raw)
+# CHANGED (2026-08-09): compile the new force list (see _force_raw above).
+REFLOW_FORCE_PATTERNS = _compile_list(_force_raw)
 
-app_logger.info("Reflow mode=%s allow=%s deny=%s", REFLOW_MODE, _allow_raw or '-', _deny_raw or '-')
+app_logger.info("Reflow mode=%s allow=%s deny=%s force=%s", REFLOW_MODE, _allow_raw or '-', _deny_raw or '-', _force_raw or '-')
 app_logger.info(f"Faiss Index Path='{faiss_index_path}'")
 
 for pth, name in [(faiss_index_path, "FAISS index"),
@@ -961,6 +996,14 @@ def _should_reflow(collection_folder: str, book_folder: str, raw_text: str) -> b
     if _matches_any(REFLOW_DENY_PATTERNS, combined):
         app_logger.debug("Reflow: DENY matched for %s", combined)
         return False
+
+    # CHANGED (2026-08-09): FORCE beats the poetry heuristic (but not DENY, so
+    # an explicit deny still wins). This is the only way to reflow a book the
+    # heuristic misclassifies as verse — REFLOW_ALLOW_RE is checked further
+    # down, after the poetry check has already bailed out. See _force_raw.
+    if _matches_any(REFLOW_FORCE_PATTERNS, combined):
+        app_logger.debug("Reflow: FORCE matched for %s", combined)
+        return True
 
     if _looks_like_poetry(raw_text.splitlines()):
         app_logger.debug("Reflow: looks like poetry, skip for %s", combined)
