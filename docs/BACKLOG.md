@@ -246,6 +246,77 @@ positives**), Satprem Adventure (done), `Light to Superlight` (27), Govindbhai
 
 ---
 
+## D — Splitter de-hyphenation damage (2 residual defects)
+
+**How this surfaced.** A reader comparing
+`/read/disciples/nirodbaran-talks-with-sri-aurobindo-ii/11-april-1940`
+against the PDF found eight differences. Six were render-time and were fixed
+and deployed on 2026-09-19 (`9b8e97c`). The two below are baked into
+`out_chapters/` and `chapters.db`, so no serve-time change can reach them.
+
+**Shared root cause.** `merge_lines()` in `~/Projects/collectedworks/scripts/split_pdf.py`
+(line 340; the hyphen branch at 348) de-hyphenates a line-wrapped word by
+pulling only the *alphabetic* fragment up to the previous line and leaving the
+remainder where it sat:
+
+```
+PDF   'X made a mis-' / 'take, for which he got...'
+txt   'X made a mistake' / ', for which he got...'
+```
+
+Note `_repair_page_joins()` (line 486) already does this correctly for hyphens
+that fall across a *page* break (`stripped_prev + nxt_raw.lstrip()` — the whole
+continuation line is consumed). `merge_lines()` is the inconsistent one.
+
+### D1 — Real compound hyphens are eaten
+
+`merge_lines()` strips **every** trailing `-`, including hyphens that belong to
+the word. `non-` + `Communists` becomes `nonCommunists`; likewise `proGerman`,
+`antiBritish`, `proAllies`, `nonBengalis`, `preVedic`.
+
+**Why it matters beyond looks:** this breaks search. `non-Communists` returns
+**0 hits** on prod today.
+
+**Scale:** ~60–80 real English cases. A naive `[a-z]{2,}[A-Z][a-z]{2,}` scan
+reports 1,174, but the bulk is Sanskrit transliteration noise from B1 (716 in
+16Hymns alone) — filter by known prefixes (`non|self|pre|post|anti|pro|semi|
+sub|inter|multi|well|half|quasi|ex|counter|over|under|co|re`) to get the real
+list.
+
+**Fix:** keep the hyphen when the following fragment is capitalised, i.e.
+narrow the `re.match(r'\s*([A-Za-z]+)', next_line)` fragment class to
+lowercase for the de-hyphenation branch. Cheap in the splitter; needs a
+rebuild, or a targeted repair pass over the ~80 known words in both
+`out_chapters/` and `chapters.db` (FTS rows too).
+
+### D2 — Paragraph breaks invented at line wraps
+
+`_end_punct_rx` in `backend/app/routes.py` splits a paragraph whenever a line
+ends with sentence punctuation. That is load-bearing — in the talks volumes it
+is the only thing separating consecutive speaker turns, which carry no blank
+line between them. But it also fires when a sentence merely *ends at a line
+wrap* mid-paragraph, inventing a break the PDF does not have. Two on the page
+above (`...hasn't come here yet.` / `...inheritance of the age.`).
+
+**Scale:** of 77,791 breaks the rule creates, **~8,334 (11%)** follow a
+full-measure line and are therefore probably spurious. That is a proxy
+(character count vs. the block's longest line), not ground truth.
+
+**Why it cannot be fixed at serve time:** the text alone does not say whether a
+line ended because the paragraph ended or because it hit the right margin. The
+real signal is geometry — a paragraph's last line stops short of the text
+block's right edge. That means capturing it in the splitter (fitz gives a bbox
+per line) and encoding it in the `.txt`, e.g. by emitting a real blank line at
+genuine paragraph ends and letting reflow stop guessing.
+
+**Watch out:** this would be the first change to make the `.txt` paragraph
+structure authoritative. Sequence it *after* D1 and fold both into one rebuild
+— and re-read the slug-churn warning in `project_slug_churn_seo` before
+starting, since any re-split shifts positional `-N` slug suffixes and kills
+indexed URLs unless a 301 map is emitted.
+
+---
+
 ## Rebuild + deploy reference
 
 **Splitter build (local test, no auto-sync):**
