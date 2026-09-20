@@ -218,3 +218,62 @@ def test_all_words_verify_allows_stem_match(monkeypatch):
 
     res = search_all_words(["power", "soul"], limit=10, filters={})
     assert len(res) == 1
+
+
+# ----------------------------------------------------------------------
+# CHANGED (2026-09-20): curly apostrophes + contraction/expansion variants.
+# Reported from /read/.../canto-five...?query=All's+miracle+here — the corpus
+# prints "All’s miracle here" (U+2019) but a query carries U+0027, and
+# searching the expanded "all is miracle here" found nothing.
+# ----------------------------------------------------------------------
+CURLY_PASSAGE = "All’s miracle here and can by miracle change."
+
+
+def test_exact_phrase_curly_apostrophe_in_text(monkeypatch):
+    # Straight-quote query, curly-quote text.
+    db = mk_db([{"content": CURLY_PASSAGE, "book_title": "Savitri"}])
+    monkeypatch.setenv("CHAPTERS_DB", db)
+
+    res = search_phrase("All's miracle here", limit=10, filters={})
+    assert len(res) == 1
+    assert res[0]["result_type"] == "exact"
+
+
+def test_exact_phrase_straight_apostrophe_in_text(monkeypatch):
+    # The reverse: curly query, straight-quote text.
+    db = mk_db([{"content": "All's miracle here and can by miracle change."}])
+    monkeypatch.setenv("CHAPTERS_DB", db)
+
+    res = search_phrase("All’s miracle here", limit=10, filters={})
+    assert len(res) == 1
+
+
+def test_exact_phrase_expanded_contraction_finds_contracted_text(monkeypatch):
+    # "all is ..." must reach "All's ..." — the originally reported miss.
+    db = mk_db([{"content": CURLY_PASSAGE, "book_title": "Savitri"}])
+    monkeypatch.setenv("CHAPTERS_DB", db)
+
+    res = search_phrase("all is miracle here", limit=10, filters={})
+    assert len(res) == 1
+
+
+def test_exact_phrase_contracted_query_finds_expanded_text(monkeypatch):
+    db = mk_db([{"content": "He has gone beyond the mind."}])
+    monkeypatch.setenv("CHAPTERS_DB", db)
+
+    res = search_phrase("he's gone beyond", limit=10, filters={})
+    assert len(res) == 1
+
+
+def test_contraction_variant_changing_word_count_does_not_crash(monkeypatch):
+    # Regression: contraction variants are SHORTER than the original phrase
+    # ("vain are human power" -> "vain're human power"). The spelling-variant
+    # loop indexes by position, so feeding it lists of differing length raised
+    # IndexError on nv[i] and took down every phrase search containing a word
+    # that collapses. Guarded by expanding each base independently.
+    db = mk_db([{"content": SAVITRI_PASSAGE, "book_title": "Savitri"}])
+    monkeypatch.setenv("CHAPTERS_DB", db)
+
+    res = search_phrase("vain are human power", limit=10, filters={})
+    assert len(res) == 1
+    assert res[0]["result_type"] == "exact"
