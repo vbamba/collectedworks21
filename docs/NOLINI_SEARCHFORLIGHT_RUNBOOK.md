@@ -1,6 +1,6 @@
 # Nolini-SearchForLight — EC2 Runbook
 
-Last updated: 2026-09-18
+Last updated: 2026-09-19
 
 This box is separate from the `ask.collectedworksofsriaurobindo.com` server covered in
 `OPERATIONS_HARDENING.md`. Different instance, different login user, different key.
@@ -144,9 +144,9 @@ times out no matter what the target is doing. That misleading result sent us dow
 Runs from **vbamba's** crontab (not root's, not ubuntu's):
 
 ```cron
-# 15:00 UTC = 9am Mountain (MDT) / 8am (MST). Must stay after 02:30 UTC
+# 16:45 UTC = 10:45am Mountain (MDT) / 9:45am (MST). Must stay after 02:30 UTC
 # or the script's IST 0800 cutoff flips target_date to the previous day.
-0 15 * * * /home/vbamba/bin/import_pharmacy.sh >> /home/vbamba/logs/pharmacy_import.log 2>&1
+45 16 * * * /home/vbamba/bin/import_pharmacy.sh >> /home/vbamba/logs/pharmacy_import.log 2>&1
 ```
 
 What it does each run: downloads `pharmacy` and `medical` SQL dumps from `162.241.194.125`, resets
@@ -174,8 +174,10 @@ in the log:
 There is no error and no warning. The run reports success. You would only find out by noticing the
 data is a day behind.
 
-The current 15:00 UTC slot lands at 20:30 IST — comfortably past the cutoff and still well before
-IST midnight. Keep any future schedule inside roughly **03:00–20:00 UTC** and this stays safe.
+The current 16:45 UTC slot lands at 22:15 IST — well past the cutoff, and still 1h45m clear of IST
+midnight. Keep any future schedule inside roughly **03:00–18:00 UTC** and this stays safe. Note the
+upper bound: past about 18:30 UTC the job crosses into the next IST day and `target_date` moves
+forward, which is the same stale-data failure from the other direction.
 
 ### Do not use CRON_TZ on this server
 
@@ -200,7 +202,7 @@ strings /usr/sbin/cron | grep -i cron_tz    # empty output = not supported
 ```
 
 Because of this, the schedule is **set directly in UTC** and drifts one hour across daylight
-saving: 9am Mountain in summer, 8am in winter. For an unattended database import that nobody is
+saving: 10:45am Mountain in summer, 9:45am in winter. For an unattended database import that nobody is
 waiting on, that drift does not matter, and a plain crontab line is far easier to maintain than
 the alternative.
 
