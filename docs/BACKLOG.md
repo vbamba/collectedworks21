@@ -377,8 +377,16 @@ SKIP_SERVING_SYNC=1 python build_chapter_index.py
 sqlite3 backend/db/chapters.db < backend/scripts/helpers/strip_oversized_sections.sql
 python3 backend/scripts/helpers/recover_letters_verse_breaks.py --db
 python3 backend/scripts/helpers/normalize_ligatures.py --txt
+python3 backend/scripts/helpers/restore_compound_hyphens.py --write   # D1, see above
 python3 backend/scripts/helpers/normalize_sanskrit_runs.py      # see B1 in memory
 ```
+
+DEPLOY.md §3 is the authoritative copy of this list — it carries the flags,
+the ordering rationale and the dry-run-first advice. Two things this short
+version gets wrong and §3 gets right: `strip_oversized_sections` is now a `.py`
+(the `.sql` listed above was superseded 2026-08-02 because it named rows by
+hand and had missed two), and `build_slug_redirects.py` belongs in the sequence
+too. Trust §3 over this block.
 
 **Deploy (see [docs/DEPLOY.md](DEPLOY.md)):** §0.5 backup → §1 code rsync →
 §3 data (chapters.db atomic swap + out_chapters) → restart `collectedworks` →
