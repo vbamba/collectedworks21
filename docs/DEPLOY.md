@@ -414,7 +414,24 @@ python3 backend/scripts/helpers/recover_letters_verse_breaks.py --db
 #    `--txt` also rewrites out_chapters/*.txt so the rendered chapter page is clean.
 python3 backend/scripts/helpers/normalize_ligatures.py --txt
 
-# d) rescue the /read/ URLs this rebuild retired (2026-08-01). Chapter slugs
+# d) put back the compound hyphens the splitter eats (2026-09-19). merge_lines()
+#    drops every trailing '-' when de-hyphenating a wrapped word, including the
+#    ones that belong to the word: 'non-' + 'Communists' ships as
+#    'nonCommunists'. That is unreachable by search -- FTS5 indexes it as one
+#    token -- and for a compound whose only instance in the corpus is a glued
+#    one the query returns nothing at all.
+#    The splitter fix (collectedworks 3e7bc91) prevents NEW ones, so on a
+#    rebuild done with a current splitter this should report "nothing to do".
+#    Run it anyway: it is the check that the splitter fix actually took, and
+#    any book re-split with an older tree still needs it. 334 words / 452
+#    occurrences on the first pass.
+#    Re-derives its word list from the source PDFs (needs PyMuPDF and
+#    backend/pdf/ present), so it never goes stale. Idempotent.
+#    Run without --write first; it prints every replacement it would make.
+python3 backend/scripts/helpers/restore_compound_hyphens.py
+python3 backend/scripts/helpers/restore_compound_hyphens.py --write
+
+# e) rescue the /read/ URLs this rebuild retired (2026-08-01). Chapter slugs
 #    carry a positional `-2`…`-9` dedup suffix, so a re-split can move or delete
 #    the URL that held a passage — 119 previously-indexable URLs died in the
 #    2026-06-25 rebuild, and they are live in Google's index and other people's
