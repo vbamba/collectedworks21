@@ -307,12 +307,42 @@ Verified on prod: all 12 sampled compounds now return hits on `/api/text_search`
 (`mode=exact`); controls `PONDICHERRY` / `COM-PLETE` stayed glued; conservation
 exact at +406 chars with row and book counts unchanged.
 
-**Careful with which endpoint you measure.** `/api/search` is the *semantic*
-FAISS path and reads `backend/indexes/`, not chapters.db -- its `exact` param is
-ignored entirely. The FTS path is `/api/text_search` with `mode=all|all_words|exact`.
-Measuring D1 on `/api/search` gives meaningless numbers. (The FAISS index dates
-from Apr 2025, predates this bug and already holds the correct hyphens, so it
-never needed repairing -- but it is stale in other respects.)
+**The site is `/api/text_search` only — measure there.** `/api/text_search`
+(`mode=all|all_words|exact`) is the FTS path over chapters.db and is what the
+reader actually uses. `/api/search` is the *semantic* FAISS path: it reads
+`backend/indexes/`, not chapters.db, and silently ignores an `exact` param, so
+measuring a text/data fix on it gives meaningless numbers (this produced a
+false "11 FAILs" report during the D1 deploy).
+
+`/api/search` is also not user-facing. Its only consumer is `SearchPage.jsx`
+via `SemanticPage`, routed at `/question` and `/chat`, and the NavBar entry is
+disabled behind `{false && …}` — "semantic-search UX is being rebuilt". The
+prod query log bears that out: **1 real semantic query since logging began**
+(2026-07-12) against 1,141 text searches.
+
+Two consequences worth a decision (see D-dead-weight below).
+
+Also note FTS5's porter tokenizer splits a hyphenated query, so `Anglo-Indian`
+matched correctly-spelled instances all along; a glued compound only returned
+nothing when its sole instance in the corpus was the glued one.
+
+### D-dead-weight — the semantic/FAISS path is effectively unused
+
+Not a defect; a decision to make. `/api/search`, `backend/indexes/faiss_index.bin`
+(117 MB) and `backend/indexes/metadata.json` (85 MB) serve a UI surface that is
+switched off, and have taken **one** real query since logging began. The index
+was built Apr 2025 and predates several rebuilds, so anything it returns is
+answered from stale text.
+
+Options: (a) leave it — costs disk and a slow import at startup, nothing else;
+(b) retire the route, `SearchPage.jsx`/`SemanticPage.jsx` and `performSearch`,
+and drop the two index files, reclaiming 202 MB; (c) keep it but rebuild the
+embeddings so it stops answering from Apr-2025 text, only worth doing if the
+semantic UX is actually coming back.
+
+Whoever decides should check first whether the rebuilt semantic UX is still
+planned — (b) is hard to reverse cheaply, since regenerating embeddings is the
+expensive step.
 
 ### D1-residual — the same loss with a LOWERCASE continuation
 
