@@ -61,6 +61,8 @@ def _escape_fts5_phrase(text: str) -> str:
 # ----------------------------------------------------------------------
 # NEW: Unicode-compat normalization + safe tokenization
 # ----------------------------------------------------------------------
+_APOS_RE = re.compile(r"[\u2018\u2019\u02BC\u201B\u0060\u00B4]")
+
 def _normalize_compat(text: str) -> str:
     """
     Normalize text to NFKC so compatibility characters (e.g., ﬁ/ﬂ ligatures)
@@ -69,6 +71,11 @@ def _normalize_compat(text: str) -> str:
     if not text:
         return ""
     norm = unicodedata.normalize("NFKC", text)
+    # CHANGED (2026-09-20): fold curly/modifier apostrophes to ASCII. NFKC does
+    # NOT do this (U+2019 is not a compatibility character), so the printed
+    # "All’s miracle here" and a typed "All's miracle here" normalized to
+    # different strings and _python_verify_exact's substring check failed.
+    norm = _APOS_RE.sub("'", norm)
     # Normalize whitespace runs to a single space for phrase checks
     norm = re.sub(r"\s+", " ", norm)
     return norm
@@ -134,6 +141,58 @@ def _fts_or_group(token: str) -> str:
 
 _word_in_phrase_re = re.compile(r"^([\W_]*)([\w']+)([\W_]*)$")
 
+# ----------------------------------------------------------------------
+# CHANGED (2026-09-20): contraction <-> expansion variants.
+# The corpus prints contractions ("All’s miracle here and can by miracle
+# change."), and FTS5 tokenizes that as [all, s, miracle, here]. A reader who
+# searches the expanded form, "all is miracle here", produces
+# [all, is, miracle, here] and matches nothing -- with no hint why.
+# So expand the QUERY both ways, exactly as the UK/US spelling rules do.
+# Over-generation is harmless: "John is book" simply matches nothing.
+# "'s" is deliberately ambiguous (is/has) and both are emitted; the
+# _MAX_QUERY_VARIANTS cap keeps the cartesian blow-up bounded.
+# ----------------------------------------------------------------------
+_CONTRACT_SUFFIX = {           # following word -> suffix glued onto the previous
+    "is": "'s", "has": "'s", "are": "'re", "will": "'ll",
+    "have": "'ve", "would": "'d", "had": "'d",
+}
+_EXPAND_SUFFIX = {             # suffix -> the word(s) it stands for
+    "'s": ["is", "has"], "'re": ["are"], "'ll": ["will"],
+    "'ve": ["have"], "'d": ["would", "had"],
+}
+_suffix_re = re.compile(r"^(.*?)('s|'re|'ll|'ve|'d)$", re.IGNORECASE)
+
+
+def _contraction_variants(words: List[str]) -> List[List[str]]:
+    """Alternate word-lists for *words* with contractions collapsed/expanded."""
+    out: List[List[str]] = []
+
+    # "all is"  ->  "all's"
+    for i in range(len(words) - 1):
+        suf = _CONTRACT_SUFFIX.get(words[i + 1].lower())
+        if suf and words[i]:
+            out.append(words[:i] + [words[i] + suf] + words[i + 2:])
+
+    # "all's"  ->  "all is" / "all has"
+    for i, w in enumerate(words):
+        m = _suffix_re.match(w)
+        if not m:
+            continue
+        base, suf = m.group(1), m.group(2).lower()
+        if not base:
+            continue
+        for repl in _EXPAND_SUFFIX.get(suf, []):
+            out.append(words[:i] + [base, repl] + words[i + 1:])
+
+    # de-duplicate, preserve order
+    seen, uniq = set(), []
+    for v in out:
+        k = " ".join(v).lower()
+        if k not in seen:
+            seen.add(k)
+            uniq.append(v)
+    return uniq
+
 def _phrase_variants(phrase: str) -> List[str]:
     """
     All spelling-variant renderings of *phrase* (original first, capped at
@@ -141,6 +200,26 @@ def _phrase_variants(phrase: str) -> List[str]:
     Python exactness verifier can substring-match the raw content.
     """
     words = phrase.split()
+
+    # CHANGED (2026-09-20): contraction/expansion forms are separate BASES, not
+    # extra entries in the spelling-variant list. They change the word COUNT
+    # ("vain are human power" -> "vain're human power"), and the spelling loop
+    # below indexes by position into its own base, so mixing lists of different
+    # lengths raised IndexError on nv[i]. Each base is expanded independently.
+    out: List[List[str]] = []
+    for base in [words] + _contraction_variants(words):
+        for v in _spelling_expand(base):
+            if len(out) >= _MAX_QUERY_VARIANTS:
+                break
+            if v not in out:
+                out.append(v)
+        if len(out) >= _MAX_QUERY_VARIANTS:
+            break
+    return [" ".join(v) for v in out]
+
+
+def _spelling_expand(words: List[str]) -> List[List[str]]:
+    """UK/US spelling renderings of one word-list. All results keep its length."""
     variants = [words]
     for i, w in enumerate(words):
         m = _word_in_phrase_re.match(w)
@@ -159,7 +238,7 @@ def _phrase_variants(phrase: str) -> List[str]:
                 nv[i] = pre + alt + post
                 new.append(nv)
         variants.extend(new)
-    return [" ".join(v) for v in variants]
+    return variants
 
 def _token_variant_combos(tokens: List[str]) -> List[List[str]]:
     """Like _phrase_variants but over an already-tokenized word list."""

@@ -184,13 +184,21 @@
           .replace(/\uFB01/g, 'fi')  // ﬁ
           .replace(/\uFB02/g, 'fl')  // ﬂ
           .replace(/\u00A0/g, ' ')   // nbsp
+          // CHANGED (2026-09-20): fold curly/modifier apostrophes to ASCII.
+          // The corpus prints U+2019 ("All’s miracle here") while a query
+          // carries U+0027, so the exact pass matched nothing. Mirrors the
+          // same fix in frontend/src/pages/ChapterPage.jsx — keep them in sync.
+          .replace(/[\u2018\u2019\u02BC\u201B]/g, "'")
           .replace(/\s+/g, ' ');
       }
+      // CHANGED (2026-09-20): any apostrophe matches any other.
+      const APOS_CLASS = "['\\u2018\\u2019\\u02BC\\u201B]";
       function ligatureRegexEscape(str) {
         const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         return esc(str)
           .replace(/fi/gi, '(?:fi|\\uFB01)')
-          .replace(/fl/gi, '(?:fl|\\uFB02)');
+          .replace(/fl/gi, '(?:fl|\\uFB02)')
+          .replace(/['\u2018\u2019\u02BC\u201B]/g, APOS_CLASS);
       }
 
       document.addEventListener('DOMContentLoaded', () => {
@@ -227,7 +235,9 @@
               markInstance.mark(phrase, {
                 separateWordSearch: false,
                 acrossElements: true,
-                ignorePunctuation: ":;.,–—()[]'\"-_",
+                // CHANGED (2026-09-20): added the curly apostrophes/quotes so
+                // mark.js can bridge a typed "All's" against a printed "All’s".
+                ignorePunctuation: ":;.,–—()[]'\"-_\u2018\u2019\u201C\u201D\u02BC\u201B",
                 diacritics: true,
                 ignoreJoiners: true,
                 done: () => {
@@ -264,7 +274,9 @@
               markInstance.mark(terms, {
                 separateWordSearch: true,
                 acrossElements: true,
-                ignorePunctuation: ":;.,–—()[]'\"-_",
+                // CHANGED (2026-09-20): added the curly apostrophes/quotes so
+                // mark.js can bridge a typed "All's" against a printed "All’s".
+                ignorePunctuation: ":;.,–—()[]'\"-_\u2018\u2019\u201C\u201D\u02BC\u201B",
                 diacritics: true,
                 ignoreJoiners: true,
                 done: () => {

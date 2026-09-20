@@ -33,14 +33,23 @@ function normalizeCompat(str) {
     .replace(/\uFB01/g, 'fi')  // ﬁ
     .replace(/\uFB02/g, 'fl')  // ﬂ
     .replace(/\u00A0/g, ' ')   // nbsp
+    // CHANGED (2026-09-20): fold curly/modifier apostrophes to the ASCII one.
+    // The corpus prints U+2019 ("All’s miracle here") but a query typed in a
+    // browser or pasted from a URL carries U+0027, so every match pass missed.
+    .replace(/[\u2018\u2019\u02BC\u201B]/g, "'")
     .replace(/\s+/g, ' ');
 }
+// CHANGED (2026-09-20): any apostrophe matches any other, so a straight-quote
+// query still highlights curly-quote text (and vice versa).
+const APOS_CLASS = "['\\u2018\\u2019\\u02BC\\u201B]";
 // NEW: ligature-aware escape
 function ligatureRegexEscape(str) {
   const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return esc(str)
     .replace(/fi/gi, '(?:fi|\\uFB01)')
-    .replace(/fl/gi, '(?:fl|\\uFB02)');
+    .replace(/fl/gi, '(?:fl|\\uFB02)')
+    // CHANGED (2026-09-20): see APOS_CLASS.
+    .replace(/['\u2018\u2019\u02BC\u201B]/g, APOS_CLASS);
 }
 
 // CHANGED (2026-07-17): UK/US spelling variants for highlighting — mirrors the
@@ -72,7 +81,7 @@ function spellingVariants(word) {
 // Regex fragment matching a phrase word or any of its spelling variants,
 // preserving punctuation around the word core (e.g. "realise," / "realize,").
 function variantPattern(word) {
-  const m = word.match(/^([\W_]*)([\w']+)([\W_]*)$/);
+  const m = word.match(/^([\W_]*)([\w'\u2018\u2019\u02BC\u201B]+)([\W_]*)$/);
   if (!m) return ligatureRegexEscape(word);
   const [, pre, core, post] = m;
   const alts = spellingVariants(core);
@@ -277,7 +286,10 @@ const ChapterPage = () => {
 
         const markOpts = {
           acrossElements: true,
-          ignorePunctuation: ":;.,–—()[]'\"-_",
+          // CHANGED (2026-09-20): added the curly apostrophes/quotes. The list
+          // had only the ASCII ' , so mark.js could not bridge "All's" (typed)
+          // against "All’s" (printed) and the exact pass returned 0.
+          ignorePunctuation: ":;.,–—()[]'\"-_\u2018\u2019\u201C\u201D\u02BC\u201B",
           diacritics: true,
           ignoreJoiners: true,
         };
