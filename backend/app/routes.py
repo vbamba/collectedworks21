@@ -855,6 +855,50 @@ _end_punct_rx = re.compile(r'[.!?…]["”)\]]*\s*$')
 # optional group keeps the </i> so the italic run stays closed.
 _soft_hyphen_split_rx = re.compile(r'([A-Za-z])-\s*(</i>)?\s*$')
 
+# CHANGED (2026-09-19): the splitter's merge_lines() de-hyphenates a wrapped
+# word by pulling ONLY the alphabetic fragment up to the previous line and
+# leaving the rest where it was — so "X made a mis-/take, for which" becomes
+# "X made a mistake" + ", for which". The residue line now starts with
+# punctuation, and the space-join below rendered it as "a mistake , for which".
+# ~13k paragraphs across 105 books. Join with no space when the continuation
+# opens with punctuation that can never follow one.
+#   - straight " is deliberately narrower than the curly quotes: Record of
+#     Yoga's expense ledgers use it as a ditto mark ('Meals 0-7-0 " Breakfast'),
+#     so it only counts when another punctuation mark follows immediately.
+#   - '-' + a letter is the real-compound case ("psycho" + "-spiritual").
+_orphan_punct_rx = re.compile(
+    r'^(?:'
+    r'[,;:.!?]'                            # bare clause / sentence punctuation
+    r'|[)\]\}]'                            # closing bracket
+    r'|"(?=[,;:.!?)\]])'                   # straight quote ONLY when punct follows
+    r'|[”’](?=[\s,;:.!?)\]]|$)'            # curly close quote: unambiguous
+    r'|-(?=[A-Za-z])'                      # continuation of a compound
+    r')'
+)
+
+# CHANGED (2026-09-19): _end_punct_rx alone cannot see a sentence end that sits
+# behind a closing inline tag or a stage direction, so reflow never broke the
+# paragraph there. That glued speaker turns together ("...from <i>Ends and
+# Means?</i> SRI AUROBINDO: No, it is from...") and swallowed section headings
+# that follow a "(Laughter)" ("...fine houses." (<i>Laughter</i>) AFTERNOON").
+# ~2.1k blocks, mostly the Nirodbaran talks, Sahana Devi and the Anilbaran
+# conversations. Peel trailing tags/parentheticals off a copy, then re-test.
+_trail_tag_rx   = re.compile(r'(?:\s*</?[a-zA-Z][^>]*>)+\s*$')
+_trail_paren_rx = re.compile(r'\s*\((?:<[^>]*>|[^()<>])*\)\s*$')
+
+def _ends_sentence(s: str) -> bool:
+    """_end_punct_rx, but blind to trailing inline tags and stage directions."""
+    t = s.rstrip()
+    if _end_punct_rx.search(t):
+        return True
+    for _ in range(3):          # e.g. "...</i>) (<i>Laughter</i>)" needs 2 passes
+        prev = t
+        t = _trail_tag_rx.sub('', t)
+        t = _trail_paren_rx.sub('', t)
+        if t == prev:
+            break
+    return bool(_end_punct_rx.search(t))
+
 # CHANGED: detect standalone "Month Day, Year" lines (e.g. "October 5, 1963")
 # so chapter blocks that contain a date header inline — typical of Mother's
 # Agenda where the splitter cuts at page boundaries and folds multiple dates
@@ -1084,11 +1128,22 @@ def _reflow_lines_for_prose(lines: List[str], width: int) -> List[str]:
             # stripping the soft hyphen, so an italic run isn't left unclosed.
             buf = _soft_hyphen_split_rx.sub(lambda mm: mm.group(1) + (mm.group(2) or ''), buf) + ln.lstrip()
         else:
-            if _end_punct_rx.search(buf):
+            nxt = ln.lstrip()
+            # CHANGED (2026-09-19): _ends_sentence() replaces the bare
+            # _end_punct_rx test so a sentence hidden behind "</i>" or a
+            # "(Laughter)" still ends the paragraph. See _ends_sentence.
+            if _ends_sentence(buf):
                 paragraphs.append(buf.strip())
-                buf = ln.strip()
+                buf = nxt
+            # CHANGED (2026-09-19): orphaned punctuation left behind by the
+            # splitter's de-hyphenation joins with NO space. Deliberately
+            # checked AFTER the sentence-end test: the Agenda marks elided
+            # passages with a leading "...", and testing this first glued
+            # "them nightmares!" + "... Unbelievable." into one paragraph.
+            elif _orphan_punct_rx.match(nxt):
+                buf = buf.rstrip() + nxt
             else:
-                buf = (buf.rstrip() + " " + ln.lstrip()).replace("  ", " ")
+                buf = (buf.rstrip() + " " + nxt).replace("  ", " ")
 
     out_lines: List[str] = []
     for p in paragraphs:
