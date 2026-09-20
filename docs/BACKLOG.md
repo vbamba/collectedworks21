@@ -246,7 +246,7 @@ positives**), Satprem Adventure (done), `Light to Superlight` (27), Govindbhai
 
 ---
 
-## D — Splitter de-hyphenation damage (2 residual defects)
+## D — Splitter de-hyphenation damage (D1 done; D1-residual + D2 open)
 
 **How this surfaced.** A reader comparing
 `/read/disciples/nirodbaran-talks-with-sri-aurobindo-ii/11-april-1940`
@@ -268,14 +268,18 @@ Note `_repair_page_joins()` (line 486) already does this correctly for hyphens
 that fall across a *page* break (`stripped_prev + nxt_raw.lstrip()` — the whole
 continuation line is consumed). `merge_lines()` is the inconsistent one.
 
-### D1 — Real compound hyphens are eaten
+### D1 — Real compound hyphens are eaten  [FIXED]
 
 `merge_lines()` strips **every** trailing `-`, including hyphens that belong to
 the word. `non-` + `Communists` becomes `nonCommunists`; likewise `proGerman`,
 `antiBritish`, `proAllies`, `nonBengalis`, `preVedic`.
 
-**Why it matters beyond looks:** this breaks search. `non-Communists` returns
-**0 hits** on prod today.
+**Why it matters beyond looks:** the glued occurrences are unfindable. FTS5
+indexes `nonCommunists` as one token, so no query reaches it. Note the damage
+is narrower than "search is broken": the porter tokenizer splits a query like
+`Anglo-Indian` into two tokens and still matches the *correctly* spelled
+instances elsewhere, so that query looks fine. It returns nothing only for a
+compound whose sole instance in the corpus is the glued one -- 59 of them.
 
 **Scale:** ~60–80 real English cases. A naive `[a-z]{2,}[A-Z][a-z]{2,}` scan
 reports 1,174, but the bulk is Sanskrit transliteration noise from B1 (716 in
@@ -288,6 +292,47 @@ narrow the `re.match(r'\s*([A-Za-z]+)', next_line)` fragment class to
 lowercase for the de-hyphenation branch. Cheap in the splitter; needs a
 rebuild, or a targeted repair pass over the ~80 known words in both
 `out_chapters/` and `chapters.db` (FTS rows too).
+
+### D1 — DONE, deployed 2026-09-19
+
+Fixed in the splitter (`collectedworks` `3e7bc91`): `merge_lines()` keeps the
+hyphen when the continuation fragment is Capitalised-then-lowercase, and still
+drops it for an all-caps wrap (`PONDI-`+`CHERRY`). Already-built data repaired
+in place by `backend/scripts/helpers/restore_compound_hyphens.py` -- 460
+replacements in 322 `.txt` files, 406 in 307 chapters.db rows, 334 words across
+82 books. The script re-derives everything from the source PDFs, so it is safe
+to re-run after any rebuild; add it to the §3 post-rebuild fixups.
+
+Verified on prod: all 12 sampled compounds now return hits on `/api/text_search`
+(`mode=exact`); controls `PONDICHERRY` / `COM-PLETE` stayed glued; conservation
+exact at +406 chars with row and book counts unchanged.
+
+**Careful with which endpoint you measure.** `/api/search` is the *semantic*
+FAISS path and reads `backend/indexes/`, not chapters.db -- its `exact` param is
+ignored entirely. The FTS path is `/api/text_search` with `mode=all|all_words|exact`.
+Measuring D1 on `/api/search` gives meaningless numbers. (The FAISS index dates
+from Apr 2025, predates this bug and already holds the correct hyphens, so it
+never needed repairing -- but it is stale in other respects.)
+
+### D1-residual — the same loss with a LOWERCASE continuation
+
+`consciousness-` + `force` -> `consciousnessforce`; `self-` + `imposed` ->
+`selfimposed`. 4 known occurrences (Life Divine ×2, Hour of God, Satprem
+*Adventure*). Shape cannot separate these from a genuine soft hyphen
+(`un-`+`happy`), which is why D1 deliberately scoped itself to capitalised
+continuations.
+
+**A dictionary split does NOT work** -- tried and rejected 2026-09-19.
+`/usr/share/dict/words` (web2) flags 2,475 tokens / 19,482 occurrences,
+including `bringing` -> `brin-ging` and `creating` -> `crea-ting`, because web2
+carries enough archaic fragments to split almost anything.
+
+**What should work instead:** ask the corpus, not a dictionary. For each
+PDF line-end hyphen with a lowercase continuation, test whether the hyphenated
+form occurs *mid-line elsewhere in the corpus*. `consciousness-force` does;
+`unhappy` never appears as `un-happy` mid-line. That is a data-driven
+discriminator with no external wordlist. Unmeasured so far -- size it before
+committing to it.
 
 ### D2 — Paragraph breaks invented at line wraps
 
