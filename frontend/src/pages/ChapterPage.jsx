@@ -326,7 +326,12 @@ const ChapterPage = () => {
                 // but this joiner required whitespace — the hit fell through
                 // to the per-word fallback and scrolled to the first bare
                 // "shadow" instead (Savitri II.4).
-                const WS_OR_TAG = '(?:[\\s\\-\\u2010-\\u2015]|<[^>]+>)+';
+                // CHANGED (2026-11-10): widened to ANY non-word run (plus
+                // entities like &nbsp;), matching FTS, which ignores all
+                // punctuation between tokens. Verse lines are joined with a
+                // bare <br/>, so a phrase crossing a line that ends in
+                // punctuation ("foaming top:<br/>It whirled") still missed.
+                const WS_OR_TAG = '(?:[^\\w<&]|&#?\\w+;|<[^>]+>)+';
                 const normPhrase = normalizeCompat(phrase);
                 // CHANGED (2026-07-17): per-word variant-aware pattern (was a
                 // whole-phrase escape) so an exact-tier hit found via a UK/US
@@ -337,7 +342,11 @@ const ChapterPage = () => {
                   .filter(Boolean)
                   .map(variantPattern)
                   .join(WS_OR_TAG);
-                const rx = new RegExp(pattern, 'i');
+                // CHANGED (2026-11-11): whole-word edges. With the joiner now
+                // bridging punctuation, "light the" matched "Light. / There"
+                // before the real "light, / The". Lookarounds rather than \b
+                // so a query word that starts/ends in punctuation still works.
+                const rx = new RegExp('(?<!\\w)' + pattern + '(?!\\w)', 'i');
 
                 const html = ctx.innerHTML;
                 // Match against raw HTML (tags included) — `normalizeCompat`
@@ -374,8 +383,8 @@ const ChapterPage = () => {
                   // CHANGED (2026-05-23): see ligature-fallback note above —
                   // joiner must tolerate inline tags (e.g. <br/>) so a stem
                   // phrase that crosses a line break still matches.
-                  // CHANGED (2026-11-10): hyphens/dashes too — see WS_OR_TAG.
-                  const STEM_JOIN = '(?:[\\s\\-\\u2010-\\u2015]|<[^>]+>)+';
+                  // CHANGED (2026-11-10): any non-word run — see WS_OR_TAG.
+                  const STEM_JOIN = '(?:[^\\w<&]|&#?\\w+;|<[^>]+>)+';
                   // CHANGED (2026-07-17): variantPattern (was ligatureRegexEscape)
                   // so the stem pass also tolerates UK/US spelling variants.
                   const stemPat = words
