@@ -315,7 +315,13 @@ const ChapterPage = () => {
                 // — \s+ alone wouldn't bridge that and the highlight would
                 // fall through to the per-word fallback, landing on the
                 // wrong occurrence.
-                const WS_OR_TAG = '(?:\\s|<[^>]+>)+';
+                // CHANGED (2026-11-10): also accept hyphens/dashes between
+                // words. The server's FTS tokenizer splits "shadow-self" into
+                // two tokens, so the exact tier returns it for "shadow self",
+                // but this joiner required whitespace — the hit fell through
+                // to the per-word fallback and scrolled to the first bare
+                // "shadow" instead (Savitri II.4).
+                const WS_OR_TAG = '(?:[\\s\\-\\u2010-\\u2015]|<[^>]+>)+';
                 const normPhrase = normalizeCompat(phrase);
                 // CHANGED (2026-07-17): per-word variant-aware pattern (was a
                 // whole-phrase escape) so an exact-tier hit found via a UK/US
@@ -363,7 +369,8 @@ const ChapterPage = () => {
                   // CHANGED (2026-05-23): see ligature-fallback note above —
                   // joiner must tolerate inline tags (e.g. <br/>) so a stem
                   // phrase that crosses a line break still matches.
-                  const STEM_JOIN = '(?:\\s|<[^>]+>)+';
+                  // CHANGED (2026-11-10): hyphens/dashes too — see WS_OR_TAG.
+                  const STEM_JOIN = '(?:[\\s\\-\\u2010-\\u2015]|<[^>]+>)+';
                   // CHANGED (2026-07-17): variantPattern (was ligatureRegexEscape)
                   // so the stem pass also tolerates UK/US spelling variants.
                   const stemPat = words
