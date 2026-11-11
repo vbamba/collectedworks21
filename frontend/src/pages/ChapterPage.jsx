@@ -289,7 +289,12 @@ const ChapterPage = () => {
           // CHANGED (2026-09-20): added the curly apostrophes/quotes. The list
           // had only the ASCII ' , so mark.js could not bridge "All's" (typed)
           // against "All’s" (printed) and the exact pass returned 0.
-          ignorePunctuation: ":;.,–—()[]'\"-_\u2018\u2019\u201C\u201D\u02BC\u201B",
+          // CHANGED (2026-11-10): .split('') — mark.js only honours an ARRAY
+          // here (Array.isArray check in createJoinersRegExp); the string was
+          // silently ignored, so no punctuation was ever skipped. Note this
+          // still doesn't bridge typed ' vs printed ’ (a literal ' in the
+          // query stays required); the regex fallbacks below handle that.
+          ignorePunctuation: ":;.,–—()[]'\"-_\u2018\u2019\u201C\u201D\u02BC\u201B".split(''),
           diacritics: true,
           ignoreJoiners: true,
         };
